@@ -12,36 +12,38 @@
 
 using namespace metal;
 
-struct vertex_t
+struct FSTUFF_Vertex
 {
     float4 position [[position]];
     float4 color;
 };
 
-vertex vertex_t vertex_circle_fill(constant float4 * position [[buffer(0)]],
-                                   constant constants_t * constants [[buffer(1)]],
-                                   uint vid [[vertex_id]],
-                                   uint iid [[instance_id]])
+vertex FSTUFF_Vertex FSTUFF_VertexShader(constant float4 * position [[buffer(0)]],
+                                         constant FSTUFF_ShapeInstance * shapes [[buffer(1)]],
+                                         constant FSTUFF_GPUShapeTemplate * shapeConstants [[buffer(2)]],
+                                         uint vertexId [[vertex_id]],
+                                         uint shapeId [[instance_id]])
 {
-    vertex_t vert;
-    vert.position = constants[iid].modelview_projection_matrix * position[vid];
-    vert.color = constants[iid].color_fill;
+    FSTUFF_Vertex vert;
+    vert.position = shapes[shapeId].modelview_projection_matrix * position[vertexId];
+    vert.color = shapeConstants->color;
     return vert;
 }
 
-vertex vertex_t vertex_circle_edge(constant float4 * position [[buffer(0)]],
-                                   constant constants_t * constants [[buffer(1)]],
-                                   uint vid [[vertex_id]],
-                                   uint iid [[instance_id]])
-{
-    vertex_t vert;
-    vert.position = constants[iid].modelview_projection_matrix * position[vid];
-    vert.color = constants[iid].color_edge;
-    return vert;
-}
+//vertex FSTUFF_Vertex vertex_circle_edge(constant float4 * position [[buffer(0)]],
+//                                   constant FSTUFF_ShapeInstance * constants [[buffer(1)]],
+//                                   constant FSTUFF_GPUShapeTemplate * shapeConstants [[buffer(2)]],
+//                                   uint vid [[vertex_id]],
+//                                   uint iid [[instance_id]])
+//{
+//    FSTUFF_Vertex vert;
+//    vert.position = constants[iid].modelview_projection_matrix * position[vid];
+//    vert.color = shapeConstants->color;
+//    return vert;
+//}
 
 
-fragment float4 fragment_main(vertex_t vert [[stage_in]])
+fragment float4 fragment_main(FSTUFF_Vertex vert [[stage_in]])
 {
     return vert.color;
 }

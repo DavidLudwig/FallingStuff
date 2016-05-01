@@ -20,9 +20,13 @@
 typedef struct
 {
     matrix_float4x4 modelview_projection_matrix;
-    vector_float4 color_edge;
-    vector_float4 color_fill;
-} constants_t;
+    vector_float4 color;
+} FSTUFF_ShapeInstance;
+
+typedef struct
+{
+    vector_float4 color;
+} FSTUFF_GPUShapeTemplate;
 
 #endif /* SharedStructures_h */
 

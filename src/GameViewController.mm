@@ -12,18 +12,194 @@
 #import <MetalKit/MetalKit.h>
 #import "SharedStructures.h"
 
+static matrix_float4x4 matrix_from_translation(float x, float y, float z);
+static matrix_float4x4 matrix_from_scaling(float x, float y, float z);
+static matrix_float4x4 matrix_from_rotation(float radians, float x, float y, float z);
+
+
+
 // The max number of command buffers in flight
 static const NSUInteger kMaxInflightBuffers = 3;
 
 // Max API memory buffer size.
-static const size_t kMaxBytesPerFrame = 1024*1024;
+static const size_t kMaxBytesPerFrame = 1024 * 1024; //64; //sizeof(vector_float4) * 3; //*1024;
 
 static const NSUInteger kNumberOfObjects = 2;
+static const unsigned kNumCircleParts = 128;
 
+enum FSTUFF_ShapeType : uint8_t {
+    FSTUFF_ShapeCircleFilled = 0,
+    FSTUFF_ShapeCircleEdged,
+};
 
-// Uncomment/choose only *ONE* of these
-#define DRAW_CIRCLE_FILLS 1
-#define DRAW_CIRCLE_EDGES 1
+enum FSTUFF_PrimitiveType : uint8_t {
+    FSTUFF_PrimitiveUnknown = 0,
+    FSTUFF_PrimitiveTriangles,
+    FSTUFF_PrimitiveTriangleFan,
+};
+
+struct FSTUFF_ShapeTemplate {
+    const char * debugName = "";
+    int numVertices = 0;
+    vector_float4 colorRGBA = {0.0f, 0.0f, 0.0f, 0.0f};
+    FSTUFF_ShapeType shapeType = FSTUFF_ShapeCircleFilled;
+    union {
+        uint32_t _shapeGenParamsRaw = 0;
+        struct {
+            uint32_t numParts;
+        } circle;
+    };
+    FSTUFF_PrimitiveType primitiveType = FSTUFF_PrimitiveUnknown;
+    id <MTLBuffer> gpuVertexBuffer = nil;
+    id <MTLBuffer> gpuConstants = nil;
+};
+
+#define RAD_IDX(I) (((float)I) * kRadStep)
+#define COS_IDX(I) ((float)cos(RAD_IDX(I)))
+#define SIN_IDX(I) ((float)sin(RAD_IDX(I)))
+
+void FSTUFF_MakeCircleFilledTriangles(vector_float4 * vertices, int maxVertices, int * numVertices, int numPartsToGenerate)
+{
+    // TODO: check the size of the vertex buffer!
+    static const int kVertsPerPart = 3;
+    const float kRadStep = ((((float)M_PI) * 2.0f) / (float)numPartsToGenerate);
+    *numVertices = numPartsToGenerate * kVertsPerPart;
+    for (unsigned i = 0; i < numPartsToGenerate; ++i) {
+        vertices[(i * kVertsPerPart) + 0] = {           0,            0, 0, 1};
+        vertices[(i * kVertsPerPart) + 1] = {COS_IDX( i ), SIN_IDX( i ), 0, 1};
+        vertices[(i * kVertsPerPart) + 2] = {COS_IDX(i+1), SIN_IDX(i+1), 0, 1};
+    }
+}
+
+void FSTUFF_MakeCircleEdgedTriangleStrip(vector_float4 * vertices, int maxVertices, int * numVertices, int numPartsToGenerate)
+{
+    // TODO: check the size of the vertex buffer!
+    static const float kInner = 0.9;
+    static const float kOuter = 1.0;
+    const float kRadStep = ((((float)M_PI) * 2.0f) / (float)numPartsToGenerate);
+    *numVertices = 2 + (numPartsToGenerate * 2);
+    for (unsigned i = 0; i <= numPartsToGenerate; ++i) {
+        vertices[(i * 2) + 0] = {COS_IDX(i)*kInner, SIN_IDX(i)*kInner, 0, 1};
+        vertices[(i * 2) + 1] = {COS_IDX(i)*kOuter, SIN_IDX(i)*kOuter, 0, 1};
+    }
+}
+
+void FSTUFF_ShapeInit(FSTUFF_ShapeTemplate * shape, void * buffer, size_t bufSize, id <MTLDevice> device)
+{
+    // Generate vertices in CPU-accessible memory
+    {
+        vector_float4 * vertices = (vector_float4 *) buffer;
+        const int maxElements = (int)(bufSize / sizeof(vector_float4));
+        switch (shape->shapeType) {
+            case FSTUFF_ShapeCircleEdged: {
+                shape->primitiveType = FSTUFF_PrimitiveTriangleFan;
+                FSTUFF_MakeCircleEdgedTriangleStrip(vertices, maxElements, &shape->numVertices, shape->circle.numParts);
+            } break;
+                
+            case FSTUFF_ShapeCircleFilled: {
+                shape->primitiveType = FSTUFF_PrimitiveTriangles;
+                FSTUFF_MakeCircleFilledTriangles(vertices, maxElements, &shape->numVertices, shape->circle.numParts);
+            } break;
+        }
+
+        shape->gpuVertexBuffer = [device newBufferWithBytes:vertices
+                                                     length:(shape->numVertices * sizeof(vector_float4))
+                                                    options:MTLResourceOptionCPUCacheModeDefault];
+    }
+    
+    // Generate other resources
+    shape->gpuConstants = [device newBufferWithBytes:&shape->colorRGBA
+                                              length:sizeof(shape->colorRGBA)
+                                             options:MTLResourceOptionCPUCacheModeDefault];
+
+    shape->gpuConstants.label = [[NSString alloc] initWithFormat:@"%s.gpuConstants", shape->debugName];
+    
+}
+
+constexpr vector_float4 FSTUFF_Color(uint32_t rgb, uint8_t a)
+{
+    return {
+        ((((uint32_t)rgb) >> 16) & 0xFF) / 255.0f,
+        ((((uint32_t)rgb) >> 8) & 0xFF) / 255.0f,
+        (rgb & 0xFF) / 255.0f,
+        (a) / 255.0f
+    };
+}
+
+struct FSTUFF_Simulation {
+    FSTUFF_ShapeTemplate circleFilled;
+    FSTUFF_ShapeTemplate circleEdged;
+};
+
+void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
+                         size_t count,
+                         id<MTLRenderCommandEncoder> gpuRenderer,
+                         id<MTLBuffer> gpuShapeInstances);
+
+void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSize, id<MTLDevice> gpuDevice)
+{
+    sim->circleFilled.debugName = "CircleFills";
+    sim->circleFilled.shapeType = FSTUFF_ShapeCircleFilled;
+    sim->circleFilled.circle.numParts = kNumCircleParts;
+    sim->circleFilled.colorRGBA = FSTUFF_Color(0xffffff, 0x40);
+    FSTUFF_ShapeInit(&(sim->circleFilled), buffer, bufSize, gpuDevice);
+    
+    sim->circleEdged.debugName = "CircleEdges";
+    sim->circleEdged.shapeType = FSTUFF_ShapeCircleEdged;
+    sim->circleEdged.circle.numParts = kNumCircleParts;
+    sim->circleEdged.colorRGBA = FSTUFF_Color(0xffffff, 0xff);
+    FSTUFF_ShapeInit(&(sim->circleEdged), buffer, bufSize, gpuDevice);
+}
+
+void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_ShapeInstance * shapeInstances)
+{
+/*
+ Colors = {
+	blue = "#0000ff",
+	brown = "#A52A2A",
+	gray = "#808080",
+	green = "#00ff00",
+	indigo = "#4B0082",
+	light_purple = "#FF0080", -- not in html
+	orange = "#FFA500",
+	purple = "#800080",
+	red = "#ff0000",
+	turquoise = "#00ffff", -- "#40E0D0"
+	violet = "#EE82EE",
+	white = "#ffffff",
+	yellow = "#ffff00",
+ }
+ 
+ 	self.peg_colors = {
+		Colors.red,
+		Colors.red,
+		Colors.green,
+		Colors.green,
+		Colors.blue,
+		Colors.blue,
+		Colors.yellow,
+		Colors.turquoise,
+	}
+
+	self.unlit_peg_fill_alpha_min = 0.25
+	self.unlit_peg_fill_alpha_max = 0.45
+
+ pb.fill_alpha = rand_in_range(self.unlit_peg_fill_alpha_min, self.unlit_peg_fill_alpha_max)
+*/
+
+    for (int i = 0; i < kNumberOfObjects; i++) {
+        shapeInstances[i].modelview_projection_matrix = matrix_from_translation(i * 0.2f, 0, 0);
+    }
+}
+
+void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
+                             id <MTLRenderCommandEncoder> gpuRenderer,
+                             id <MTLBuffer> gpuShapeInstances)
+{
+    FSTUFF_RenderShapes(&sim->circleFilled, kNumberOfObjects, gpuRenderer, gpuShapeInstances);
+    FSTUFF_RenderShapes(&sim->circleEdged, kNumberOfObjects, gpuRenderer, gpuShapeInstances);
+}
+
 
 
 @interface GameViewController()
@@ -42,25 +218,12 @@ static const NSUInteger kNumberOfObjects = 2;
     id <MTLDevice> _device;
     id <MTLCommandQueue> _commandQueue;
     id <MTLLibrary> _defaultLibrary;
-    
-    // uniforms
-    matrix_float4x4 _projectionMatrix;
-    matrix_float4x4 _viewMatrix;
-//    uniforms_t _uniform_buffer;
-
-    id <MTLBuffer> _dynamicConstantBuffer[kMaxInflightBuffers];
-    uint8_t _constantDataBufferIndex;
-
-    //
-#if DRAW_CIRCLE_FILLS
-    id<MTLBuffer> _positionBuffer;
     id <MTLRenderPipelineState> _pipelineState;
-#endif
-
-#if DRAW_CIRCLE_EDGES
-    id<MTLBuffer> _positionBuffer2;
-    id <MTLRenderPipelineState> _pipelineState2;
-#endif
+    uint8_t _constantDataBufferIndex;
+    
+    // game
+    FSTUFF_Simulation _sim;
+    id <MTLBuffer> _gpuShapeInstances[kMaxInflightBuffers];
 }
 
 - (void)viewDidLoad
@@ -119,66 +282,17 @@ static const NSUInteger kNumberOfObjects = 2;
     _defaultLibrary = [_device newDefaultLibrary];
 }
 
-
-#define VEC4_SET(V, A, B, C, D) \
-    (V)[0] = (A); \
-    (V)[1] = (B); \
-    (V)[2] = (C); \
-    (V)[3] = (D);
-
-#define VEC4_SETRGBX(V, R, G, B, X) \
-    VEC4_SET((V), ((float)(R))/255.0, ((float)(G))/255.0, ((float)(B))/255.0, ((float)(X))/255.0)
-
-#define VEC4_SETRGB(V, R, G, B) \
-    VEC4_SETRGBX(V, R, G, B, 0xff)
-
-#define VEC4_SETRGBHEX(V, C) \
-    VEC4_SETRGB(V, ((((uint32_t)(C)) >> 16) & 0xFF), ((((uint32_t)(C)) >> 8) & 0xFF), ((C) & 0xFF))
-
-#define VEC4_SETRGBAHEX(V, C, A) \
-    VEC4_SETRGBX(V, ((((uint32_t)(C)) >> 16) & 0xFF), ((((uint32_t)(C)) >> 8) & 0xFF), ((C) & 0xFF), (A))
-
-
-static const unsigned kNumParts = 128;                  // REQUIRED
-const float kRadStep = ((((float)M_PI) * 2.0f) / (float)kNumParts);
-#define RAD_IDX(I) (((float)I) * kRadStep)
-#define COS_IDX(I) cos(RAD_IDX(I))
-#define SIN_IDX(I) sin(RAD_IDX(I))
-
-#if DRAW_CIRCLE_FILLS
-static const MTLPrimitiveType kPrimitiveType = MTLPrimitiveTypeTriangle;    // REQUIRED
-static const unsigned kVertsPerPart = 3;
-static const unsigned kNumVertices = kNumParts * kVertsPerPart;     // REQUIRED
-#endif
-
-#if DRAW_CIRCLE_EDGES
-static const MTLPrimitiveType kPrimitiveType2 = MTLPrimitiveTypeTriangleStrip;   // REQUIRED
-static const unsigned kNumVertices2 = 2 + (kNumParts * 2);                       // REQUIRED
-static const float kInner = 0.9;
-static const float kOuter = 1.0;
-#endif
-
-
-#if DRAW_CIRCLE_FILLS
-static vector_float4 positions[kNumVertices];          // REQUIRED
-#endif
-
-#if DRAW_CIRCLE_EDGES
-static vector_float4 positions2[kNumVertices2];          // REQUIRED
-#endif
-
-
-
 - (void)_loadAssets
 {
-    NSError *error = NULL;
+    NSError * error = NULL;
 
     // Describe stuff common to all pipeline states
     MTLRenderPipelineDescriptor *pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+    pipelineStateDescriptor.label = @"FSTUFF_Pipeline";
     pipelineStateDescriptor.sampleCount = _view.sampleCount;
-    pipelineStateDescriptor.fragmentFunction = [_defaultLibrary newFunctionWithName:@"fragment_main"];;
+    pipelineStateDescriptor.fragmentFunction = [_defaultLibrary newFunctionWithName:@"fragment_main"];
+    pipelineStateDescriptor.vertexFunction = [_defaultLibrary newFunctionWithName:@"FSTUFF_VertexShader"];
     pipelineStateDescriptor.colorAttachments[0].pixelFormat = _view.colorPixelFormat;
-
     pipelineStateDescriptor.colorAttachments[0].blendingEnabled = YES;
     pipelineStateDescriptor.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
     pipelineStateDescriptor.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
@@ -186,115 +300,56 @@ static vector_float4 positions2[kNumVertices2];          // REQUIRED
     pipelineStateDescriptor.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
     pipelineStateDescriptor.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
     pipelineStateDescriptor.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
-
-#if DRAW_CIRCLE_FILLS
-    // Pipeline State
-    pipelineStateDescriptor.label = @"CircleFills";
-    pipelineStateDescriptor.vertexFunction = [_defaultLibrary newFunctionWithName:@"vertex_circle_fill"];;
     _pipelineState = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
-    if (!_pipelineState) {
+    if ( ! _pipelineState) {
         NSLog(@"Failed to created pipeline state, error %@", error);
     }
 
-    // Positions:
-    for (unsigned i = 0; i < kNumParts; ++i) {
-        VEC4_SET(positions[(i * kVertsPerPart) + 0],                 0,                 0, 0, 1); //i, (i*kVertsPerPart)+0);
-        VEC4_SET(positions[(i * kVertsPerPart) + 1], cos(RAD_IDX( i )), sin(RAD_IDX( i )), 0, 1); //i, (i*kVertsPerPart)+1);
-        VEC4_SET(positions[(i * kVertsPerPart) + 2], cos(RAD_IDX(i+1)), sin(RAD_IDX(i+1)), 0, 1); //i, (i*kVertsPerPart)+2);
-    }
-#endif  // DRAW_CIRCLE_FILLS
-
-
-#if DRAW_CIRCLE_EDGES
-    // Pipeline State
-    pipelineStateDescriptor.label = @"CircleEdges";
-    pipelineStateDescriptor.vertexFunction = [_defaultLibrary newFunctionWithName:@"vertex_circle_edge"];;
-    _pipelineState2 = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
-    if (!_pipelineState2) {
-        NSLog(@"Failed to created pipeline state, error %@", error);
-    }
-
-    // Positions:
-    for (unsigned i = 0; i <= kNumParts; ++i) {
-        VEC4_SET(positions2[(i * 2) + 0], COS_IDX(i)*kInner, SIN_IDX(i)*kInner, 0, 1);
-        VEC4_SET(positions2[(i * 2) + 1], COS_IDX(i)*kOuter, SIN_IDX(i)*kOuter, 0, 1);
-    }
-#endif  // DRAW_CIRCLE_EDGES
-
-
-    // Setup buffers
-    {
-#if DRAW_CIRCLE_FILLS
-        _positionBuffer = [_device newBufferWithBytes:positions
-                                               length:(kNumVertices * sizeof(vector_float4))  //sizeof(positions)
-                                              options:MTLResourceOptionCPUCacheModeDefault];
-#endif
-
-#if DRAW_CIRCLE_EDGES
-        _positionBuffer2 = [_device newBufferWithBytes:positions2
-                                                length:(kNumVertices2 * sizeof(vector_float4))  //sizeof(positions)
-                                               options:MTLResourceOptionCPUCacheModeDefault];
-#endif
-    }
-    
-//    // Allocate one region of memory for the uniform buffer
-//    _dynamicConstantBuffer = [_device newBufferWithLength:kMaxBytesPerFrame options:0];
-//    _dynamicConstantBuffer.label = @"UniformBuffer";
+    uint8_t tempBufferForInit[64 * 1024];
+    FSTUFF_SimulationInit(&_sim, tempBufferForInit, sizeof(tempBufferForInit), _device);
 
     // allocate a number of buffers in memory that matches the sempahore count so that
     // we always have one self contained memory buffer for each buffered frame.
     // In this case triple buffering is the optimal way to go so we cycle through 3 memory buffers
-    for (int i = 0; i < kMaxInflightBuffers; i++)
-    {
-        _dynamicConstantBuffer[i] = [_device newBufferWithLength:kMaxBytesPerFrame options:0];
-        _dynamicConstantBuffer[i].label = [NSString stringWithFormat:@"ConstantBuffer%i", i];
+    for (int i = 0; i < kMaxInflightBuffers; i++) {
+        _gpuShapeInstances[i] = [_device newBufferWithLength:kMaxBytesPerFrame options:0];
+        _gpuShapeInstances[i].label = [NSString stringWithFormat:@"ConstantBuffer%i", i];
     }
 }
 
 - (void)_update
 {
-/*
- Colors = {
-	blue = "#0000ff",
-	brown = "#A52A2A",
-	gray = "#808080",
-	green = "#00ff00",
-	indigo = "#4B0082",
-	light_purple = "#FF0080", -- not in html
-	orange = "#FFA500",
-	purple = "#800080",
-	red = "#ff0000",
-	turquoise = "#00ffff", -- "#40E0D0"
-	violet = "#EE82EE",
-	white = "#ffffff",
-	yellow = "#ffff00",
- }
- 
- 	self.peg_colors = {
-		Colors.red,
-		Colors.red,
-		Colors.green,
-		Colors.green,
-		Colors.blue,
-		Colors.blue,
-		Colors.yellow,
-		Colors.turquoise,
-	}
+    FSTUFF_ShapeInstance *constant_buffer = (FSTUFF_ShapeInstance *)[_gpuShapeInstances[_constantDataBufferIndex] contents];
+    FSTUFF_SimulationUpdate(&_sim, constant_buffer);
+}
 
-	self.unlit_peg_fill_alpha_min = 0.25
-	self.unlit_peg_fill_alpha_max = 0.45
-
- pb.fill_alpha = rand_in_range(self.unlit_peg_fill_alpha_min, self.unlit_peg_fill_alpha_max)
-
-*/
-
-    constants_t *constant_buffer = (constants_t *)[_dynamicConstantBuffer[_constantDataBufferIndex] contents];
-    for (int i = 0; i < kNumberOfObjects; i++) {
-        // calculate the Model view projection matrix of each box
-        constant_buffer[i].modelview_projection_matrix = matrix_from_translation(i * 0.2f, 0, 0);
-        VEC4_SETRGBAHEX(constant_buffer[i].color_edge, 0xffffff, 0xff);
-        VEC4_SETRGBAHEX(constant_buffer[i].color_fill, 0xffffff, 0x40);
+void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
+                         size_t count,
+                         id <MTLRenderCommandEncoder> gpuRenderer,
+                         id <MTLBuffer> gpuShapeInstances)
+{
+    MTLPrimitiveType gpuPrimitiveType;
+    switch (shape->primitiveType) {
+        case FSTUFF_PrimitiveTriangles:
+            gpuPrimitiveType = MTLPrimitiveTypeTriangle;
+            break;
+        case FSTUFF_PrimitiveTriangleFan:
+            gpuPrimitiveType = MTLPrimitiveTypeTriangleStrip;
+            break;
+        default:
+            NSLog(@"Unknown or unset FSTUFF_PrimitiveType in shape: %u", shape->primitiveType);
+            return;
     }
+    
+    [gpuRenderer pushDebugGroup:[NSString stringWithUTF8String:shape->debugName]];
+    [gpuRenderer setVertexBuffer:shape->gpuVertexBuffer offset:0 atIndex:0];
+    [gpuRenderer setVertexBuffer:gpuShapeInstances offset:0 atIndex:1];
+    [gpuRenderer setVertexBuffer:shape->gpuConstants offset:0 atIndex:2];
+    [gpuRenderer drawPrimitives:gpuPrimitiveType
+                    vertexStart:0
+                    vertexCount:shape->numVertices
+                  instanceCount:count];
+    [gpuRenderer popDebugGroup];
 }
 
 - (void)_render
@@ -305,7 +360,7 @@ static vector_float4 positions2[kNumVertices2];          // REQUIRED
 
     // Create a new command buffer for each renderpass to the current drawable
     id <MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
-    commandBuffer.label = @"MyCommand";
+    commandBuffer.label = @"FSTUFF_CommandBuffer";
 
     // Call the view's completion handler which is required by the view since it will signal its semaphore and set up the next buffer
     __block dispatch_semaphore_t block_sema = _inflight_semaphore;
@@ -319,38 +374,15 @@ static vector_float4 positions2[kNumVertices2];          // REQUIRED
     if(renderPassDescriptor != nil) // If we have a valid drawable, begin the commands to render into it
     {
         // Create a render command encoder so we can render into something
-        id <MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-        renderEncoder.label = @"MyRenderEncoder";
-        
-        // Set context state
+        id <MTLRenderCommandEncoder> gpuRenderer = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+        gpuRenderer.label = @"FSTUFF_RenderEncoder";
+        [gpuRenderer setRenderPipelineState:_pipelineState];
 
-#if DRAW_CIRCLE_FILLS
-        [renderEncoder pushDebugGroup:@"CircleFills"];
-        [renderEncoder setRenderPipelineState:_pipelineState];
-        [renderEncoder setVertexBuffer:_positionBuffer offset:0 atIndex:0 ];
-        [renderEncoder setVertexBuffer:_dynamicConstantBuffer[_constantDataBufferIndex] offset:0 atIndex:1 ];
-        [renderEncoder drawPrimitives:kPrimitiveType
-                          vertexStart:0
-                          vertexCount:kNumVertices //kNumParts * kVertsPerPart  //(sizeof(positions)/sizeof(positions[0]))
-                        instanceCount:kNumberOfObjects];
-        [renderEncoder popDebugGroup];
-#endif
-
-#if DRAW_CIRCLE_EDGES
-        [renderEncoder pushDebugGroup:@"CircleEdges"];
-        [renderEncoder setRenderPipelineState:_pipelineState2];
-        [renderEncoder setVertexBuffer:_positionBuffer2 offset:0 atIndex:0 ];
-        [renderEncoder setVertexBuffer:_dynamicConstantBuffer[_constantDataBufferIndex] offset:0 atIndex:1 ];
-        [renderEncoder drawPrimitives:kPrimitiveType2
-                          vertexStart:0
-                          vertexCount:kNumVertices2 //kNumParts * kVertsPerPart  //(sizeof(positions)/sizeof(positions[0]))
-                        instanceCount:kNumberOfObjects];
-        [renderEncoder popDebugGroup];
-#endif
-
+        // Draw shapes
+        FSTUFF_SimulationRender(&_sim, gpuRenderer, _gpuShapeInstances[_constantDataBufferIndex]);
         
         // We're done encoding commands
-        [renderEncoder endEncoding];
+        [gpuRenderer endEncoding];
         
         // Schedule a present once the framebuffer is complete using the current drawable
         [commandBuffer presentDrawable:_view.currentDrawable];
@@ -377,7 +409,6 @@ static vector_float4 positions2[kNumVertices2];          // REQUIRED
     [self _reshape];
 }
 
-
 // Called whenever the view needs to render
 - (void)drawInMTKView:(nonnull MTKView *)view
 {
@@ -385,6 +416,8 @@ static vector_float4 positions2[kNumVertices2];          // REQUIRED
         [self _render];
     }
 }
+
+@end
 
 #pragma mark Utilities
 
@@ -439,5 +472,3 @@ static matrix_float4x4 matrix_from_rotation(float radians, float x, float y, flo
     };
     return m;
 }
-
-@end
