@@ -179,6 +179,14 @@ static vector_float4 positions2[kNumVertices2];          // REQUIRED
     pipelineStateDescriptor.fragmentFunction = [_defaultLibrary newFunctionWithName:@"fragment_main"];;
     pipelineStateDescriptor.colorAttachments[0].pixelFormat = _view.colorPixelFormat;
 
+    pipelineStateDescriptor.colorAttachments[0].blendingEnabled = YES;
+    pipelineStateDescriptor.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
+    pipelineStateDescriptor.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
+    pipelineStateDescriptor.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+    pipelineStateDescriptor.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
+    pipelineStateDescriptor.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+    pipelineStateDescriptor.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+
 #if DRAW_CIRCLE_FILLS
     // Pipeline State
     pipelineStateDescriptor.label = @"CircleFills";
@@ -245,12 +253,47 @@ static vector_float4 positions2[kNumVertices2];          // REQUIRED
 
 - (void)_update
 {
+/*
+ Colors = {
+	blue = "#0000ff",
+	brown = "#A52A2A",
+	gray = "#808080",
+	green = "#00ff00",
+	indigo = "#4B0082",
+	light_purple = "#FF0080", -- not in html
+	orange = "#FFA500",
+	purple = "#800080",
+	red = "#ff0000",
+	turquoise = "#00ffff", -- "#40E0D0"
+	violet = "#EE82EE",
+	white = "#ffffff",
+	yellow = "#ffff00",
+ }
+ 
+ 	self.peg_colors = {
+		Colors.red,
+		Colors.red,
+		Colors.green,
+		Colors.green,
+		Colors.blue,
+		Colors.blue,
+		Colors.yellow,
+		Colors.turquoise,
+	}
+
+	self.unlit_peg_fill_alpha_min = 0.25
+	self.unlit_peg_fill_alpha_max = 0.45
+
+ pb.fill_alpha = rand_in_range(self.unlit_peg_fill_alpha_min, self.unlit_peg_fill_alpha_max)
+
+*/
+
     constants_t *constant_buffer = (constants_t *)[_dynamicConstantBuffer[_constantDataBufferIndex] contents];
     for (int i = 0; i < kNumberOfObjects; i++) {
         // calculate the Model view projection matrix of each box
         constant_buffer[i].modelview_projection_matrix = matrix_from_translation(i * 0.2f, 0, 0);
-        VEC4_SETRGBAHEX(constant_buffer[i].color_edge, 0xFFFFFF, 0xff);
-        VEC4_SETRGBAHEX(constant_buffer[i].color_fill, 0xB19807, 0xff);
+        VEC4_SETRGBAHEX(constant_buffer[i].color_edge, 0xffffff, 0xff);
+        VEC4_SETRGBAHEX(constant_buffer[i].color_fill, 0xffffff, 0x40);
     }
 }
 
