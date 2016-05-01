@@ -20,7 +20,8 @@
 typedef struct
 {
     matrix_float4x4 modelview_projection_matrix;
-    vector_float4 color;
+    vector_float4 color_edge;
+    vector_float4 color_fill;
 } constants_t;
 
 #endif /* SharedStructures_h */

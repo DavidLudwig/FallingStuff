@@ -18,7 +18,7 @@ static const NSUInteger kMaxInflightBuffers = 3;
 // Max API memory buffer size.
 static const size_t kMaxBytesPerFrame = 1024*1024;
 
-static const NSUInteger kNumberOfObjects = 1;
+static const NSUInteger kNumberOfObjects = 2;
 
 
 // Uncomment/choose only *ONE* of these
@@ -42,7 +42,6 @@ static const NSUInteger kNumberOfObjects = 1;
     id <MTLDevice> _device;
     id <MTLCommandQueue> _commandQueue;
     id <MTLLibrary> _defaultLibrary;
-    id <MTLRenderPipelineState> _pipelineState;
     
     // uniforms
     matrix_float4x4 _projectionMatrix;
@@ -51,16 +50,16 @@ static const NSUInteger kNumberOfObjects = 1;
 
     id <MTLBuffer> _dynamicConstantBuffer[kMaxInflightBuffers];
     uint8_t _constantDataBufferIndex;
-    
-    // buffers
+
+    //
 #if DRAW_CIRCLE_FILLS
     id<MTLBuffer> _positionBuffer;
-    id<MTLBuffer> _colorBuffer;
+    id <MTLRenderPipelineState> _pipelineState;
 #endif
 
 #if DRAW_CIRCLE_EDGES
     id<MTLBuffer> _positionBuffer2;
-    id<MTLBuffer> _colorBuffer2;
+    id <MTLRenderPipelineState> _pipelineState2;
 #endif
 }
 
@@ -128,13 +127,16 @@ static const NSUInteger kNumberOfObjects = 1;
     (V)[3] = (D);
 
 #define VEC4_SETRGBX(V, R, G, B, X) \
-    VEC4_SET((V), ((float)(R))/255.0, ((float)(G))/255.0, ((float)(B))/255.0, ((float)(B))/255.0)
+    VEC4_SET((V), ((float)(R))/255.0, ((float)(G))/255.0, ((float)(B))/255.0, ((float)(X))/255.0)
 
 #define VEC4_SETRGB(V, R, G, B) \
     VEC4_SETRGBX(V, R, G, B, 0xff)
 
 #define VEC4_SETRGBHEX(V, C) \
     VEC4_SETRGB(V, ((((uint32_t)(C)) >> 16) & 0xFF), ((((uint32_t)(C)) >> 8) & 0xFF), ((C) & 0xFF))
+
+#define VEC4_SETRGBAHEX(V, C, A) \
+    VEC4_SETRGBX(V, ((((uint32_t)(C)) >> 16) & 0xFF), ((((uint32_t)(C)) >> 8) & 0xFF), ((C) & 0xFF), (A))
 
 
 static const unsigned kNumParts = 128;                  // REQUIRED
@@ -159,84 +161,56 @@ static const float kOuter = 1.0;
 
 #if DRAW_CIRCLE_FILLS
 static vector_float4 positions[kNumVertices];          // REQUIRED
-static vector_float4 colors[kNumVertices];             // REQUIRED
 #endif
 
 #if DRAW_CIRCLE_EDGES
 static vector_float4 positions2[kNumVertices2];          // REQUIRED
-static vector_float4 colors2[kNumVertices2];             // REQUIRED
 #endif
 
 
 
 - (void)_loadAssets
 {
+    NSError *error = NULL;
+
+    // Describe stuff common to all pipeline states
+    MTLRenderPipelineDescriptor *pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+    pipelineStateDescriptor.sampleCount = _view.sampleCount;
+    pipelineStateDescriptor.fragmentFunction = [_defaultLibrary newFunctionWithName:@"fragment_main"];;
+    pipelineStateDescriptor.colorAttachments[0].pixelFormat = _view.colorPixelFormat;
+
 #if DRAW_CIRCLE_FILLS
+    // Pipeline State
+    pipelineStateDescriptor.label = @"CircleFills";
+    pipelineStateDescriptor.vertexFunction = [_defaultLibrary newFunctionWithName:@"vertex_circle_fill"];;
+    _pipelineState = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
+    if (!_pipelineState) {
+        NSLog(@"Failed to created pipeline state, error %@", error);
+    }
+
     // Positions:
     for (unsigned i = 0; i < kNumParts; ++i) {
         VEC4_SET(positions[(i * kVertsPerPart) + 0],                 0,                 0, 0, 1); //i, (i*kVertsPerPart)+0);
         VEC4_SET(positions[(i * kVertsPerPart) + 1], cos(RAD_IDX( i )), sin(RAD_IDX( i )), 0, 1); //i, (i*kVertsPerPart)+1);
         VEC4_SET(positions[(i * kVertsPerPart) + 2], cos(RAD_IDX(i+1)), sin(RAD_IDX(i+1)), 0, 1); //i, (i*kVertsPerPart)+2);
     }
-    
-    // Colors:
-    for (unsigned i = 0; i < kNumParts; ++i) {
-        vector_float4 c = {1, 1, 1, 1};
-        switch (i % 4) {
-            case 0:
-                VEC4_SET(c, 1, 0, 0, 1);
-                break;
-            case 1:
-                VEC4_SET(c, 0, 1, 0, 1);
-                break;
-            case 2:
-                VEC4_SET(c, 0, 0, 1, 1);
-                break;
-            case 3:
-                VEC4_SET(c, 1, 1, 0, 1);
-                break;
-        }
-        for (unsigned j = 0; j < kVertsPerPart; ++j) {
-            colors[(i * kVertsPerPart) + j] = c;
-        }
-    }
 #endif  // DRAW_CIRCLE_FILLS
 
 
 #if DRAW_CIRCLE_EDGES
+    // Pipeline State
+    pipelineStateDescriptor.label = @"CircleEdges";
+    pipelineStateDescriptor.vertexFunction = [_defaultLibrary newFunctionWithName:@"vertex_circle_edge"];;
+    _pipelineState2 = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
+    if (!_pipelineState2) {
+        NSLog(@"Failed to created pipeline state, error %@", error);
+    }
+
     // Positions:
     for (unsigned i = 0; i <= kNumParts; ++i) {
         VEC4_SET(positions2[(i * 2) + 0], COS_IDX(i)*kInner, SIN_IDX(i)*kInner, 0, 1);
         VEC4_SET(positions2[(i * 2) + 1], COS_IDX(i)*kOuter, SIN_IDX(i)*kOuter, 0, 1);
     }
-    
-    // Colors:
-#if 0
-    for (unsigned i = 0; i < kNumVertices; ++i) {
-        VEC4_SETRGBHEX(colors2[i], 0xFBFFC2);
-    }
-#else
-    for (unsigned i = 0; i < kNumParts; ++i) {
-        vector_float4 c = {1, 1, 1, 1};
-        switch (i % 4) {
-            case 0:
-                VEC4_SET(c, 1, 0, 0, 1);
-                break;
-            case 1:
-                VEC4_SET(c, 0, 1, 0, 1);
-                break;
-            case 2:
-                VEC4_SET(c, 0, 0, 1, 1);
-                break;
-            case 3:
-                VEC4_SET(c, 1, 1, 0, 1);
-                break;
-        }
-        for (unsigned j = 0; j < 2; ++j) {
-            colors2[(i * 2) + j] = c;
-        }
-    }
-#endif
 #endif  // DRAW_CIRCLE_EDGES
 
 
@@ -246,18 +220,12 @@ static vector_float4 colors2[kNumVertices2];             // REQUIRED
         _positionBuffer = [_device newBufferWithBytes:positions
                                                length:(kNumVertices * sizeof(vector_float4))  //sizeof(positions)
                                               options:MTLResourceOptionCPUCacheModeDefault];
-        _colorBuffer = [_device newBufferWithBytes:colors
-                                            length:(kNumVertices * sizeof(vector_float4))  //sizeof(colors)
-                                           options:MTLResourceOptionCPUCacheModeDefault];
 #endif
 
 #if DRAW_CIRCLE_EDGES
         _positionBuffer2 = [_device newBufferWithBytes:positions2
                                                 length:(kNumVertices2 * sizeof(vector_float4))  //sizeof(positions)
                                                options:MTLResourceOptionCPUCacheModeDefault];
-        _colorBuffer2 = [_device newBufferWithBytes:colors2
-                                             length:(kNumVertices2 * sizeof(vector_float4))  //sizeof(colors)
-                                            options:MTLResourceOptionCPUCacheModeDefault];
 #endif
     }
     
@@ -272,43 +240,17 @@ static vector_float4 colors2[kNumVertices2];             // REQUIRED
     {
         _dynamicConstantBuffer[i] = [_device newBufferWithLength:kMaxBytesPerFrame options:0];
         _dynamicConstantBuffer[i].label = [NSString stringWithFormat:@"ConstantBuffer%i", i];
-        
-        // write initial color values for both cubes (at each offset).
-        // Note, these will get animated during update
-//        constants_t *constant_buffer = (constants_t *)[_dynamicConstantBuffer[i] contents];
-//        for (int j = 0; j < kNumberOfObjects; j++)
-//        {
-//            if (j%2==0) {
-//                constant_buffer[j].multiplier = 1;
-//                constant_buffer[j].ambient_color = kBoxAmbientColors[0];
-//                constant_buffer[j].diffuse_color = kBoxDiffuseColors[0];
-//            }
-//            else {
-//                constant_buffer[j].multiplier = -1;
-//                constant_buffer[j].ambient_color = kBoxAmbientColors[1];
-//                constant_buffer[j].diffuse_color = kBoxDiffuseColors[1];
-//            }
-//        }
     }
-    
-    // Load the fragment program into the library
-    id <MTLFunction> fragmentProgram = [_defaultLibrary newFunctionWithName:@"fragment_main"]; //lighting_fragment"];
-    
-    // Load the vertex program into the library
-    id <MTLFunction> vertexProgram = [_defaultLibrary newFunctionWithName:@"vertex_main"]; //lighting_vertex"];
-    
-    // Create a reusable pipeline state
-    MTLRenderPipelineDescriptor *pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
-    pipelineStateDescriptor.label = @"MyPipeline";
-    pipelineStateDescriptor.sampleCount = _view.sampleCount;
-    pipelineStateDescriptor.vertexFunction = vertexProgram;
-    pipelineStateDescriptor.fragmentFunction = fragmentProgram;
-    pipelineStateDescriptor.colorAttachments[0].pixelFormat = _view.colorPixelFormat;
-    
-    NSError *error = NULL;
-    _pipelineState = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&error];
-    if (!_pipelineState) {
-        NSLog(@"Failed to created pipeline state, error %@", error);
+}
+
+- (void)_update
+{
+    constants_t *constant_buffer = (constants_t *)[_dynamicConstantBuffer[_constantDataBufferIndex] contents];
+    for (int i = 0; i < kNumberOfObjects; i++) {
+        // calculate the Model view projection matrix of each box
+        constant_buffer[i].modelview_projection_matrix = matrix_from_translation(i * 0.2f, 0, 0);
+        VEC4_SETRGBAHEX(constant_buffer[i].color_edge, 0xFFFFFF, 0xff);
+        VEC4_SETRGBAHEX(constant_buffer[i].color_fill, 0xB19807, 0xff);
     }
 }
 
@@ -338,13 +280,12 @@ static vector_float4 colors2[kNumVertices2];             // REQUIRED
         renderEncoder.label = @"MyRenderEncoder";
         
         // Set context state
-        [renderEncoder setRenderPipelineState:_pipelineState];
 
 #if DRAW_CIRCLE_FILLS
         [renderEncoder pushDebugGroup:@"CircleFills"];
+        [renderEncoder setRenderPipelineState:_pipelineState];
         [renderEncoder setVertexBuffer:_positionBuffer offset:0 atIndex:0 ];
-        [renderEncoder setVertexBuffer:_colorBuffer offset:0 atIndex:1 ];
-        [renderEncoder setVertexBuffer:_dynamicConstantBuffer[_constantDataBufferIndex] offset:0 atIndex:2 ];
+        [renderEncoder setVertexBuffer:_dynamicConstantBuffer[_constantDataBufferIndex] offset:0 atIndex:1 ];
         [renderEncoder drawPrimitives:kPrimitiveType
                           vertexStart:0
                           vertexCount:kNumVertices //kNumParts * kVertsPerPart  //(sizeof(positions)/sizeof(positions[0]))
@@ -354,9 +295,9 @@ static vector_float4 colors2[kNumVertices2];             // REQUIRED
 
 #if DRAW_CIRCLE_EDGES
         [renderEncoder pushDebugGroup:@"CircleEdges"];
+        [renderEncoder setRenderPipelineState:_pipelineState2];
         [renderEncoder setVertexBuffer:_positionBuffer2 offset:0 atIndex:0 ];
-        [renderEncoder setVertexBuffer:_colorBuffer2 offset:0 atIndex:1 ];
-        [renderEncoder setVertexBuffer:_dynamicConstantBuffer[_constantDataBufferIndex] offset:0 atIndex:2 ];
+        [renderEncoder setVertexBuffer:_dynamicConstantBuffer[_constantDataBufferIndex] offset:0 atIndex:1 ];
         [renderEncoder drawPrimitives:kPrimitiveType2
                           vertexStart:0
                           vertexCount:kNumVertices2 //kNumParts * kVertsPerPart  //(sizeof(positions)/sizeof(positions[0]))
@@ -385,16 +326,6 @@ static vector_float4 colors2[kNumVertices2];             // REQUIRED
 //    float aspect = fabs(self.view.bounds.size.width / self.view.bounds.size.height);
 //    _projectionMatrix = matrix_from_perspective_fov_aspectLH(65.0f * (M_PI / 180.0f), aspect, 0.1f, 100.0f);
 //    _viewMatrix = matrix_identity_float4x4;
-}
-
-- (void)_update
-{
-    constants_t *constant_buffer = (constants_t *)[_dynamicConstantBuffer[_constantDataBufferIndex] contents];
-    for (int i = 0; i < kNumberOfObjects; i++) {
-        // calculate the Model view projection matrix of each box
-        constant_buffer[i].modelview_projection_matrix = matrix_from_translation(i * 0.2f, 0, 0);
-        VEC4_SETRGBHEX(constant_buffer[i].color, 0xB19807);
-    }
 }
 
 // Called whenever view changes orientation or layout is changed
