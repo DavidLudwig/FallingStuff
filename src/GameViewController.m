@@ -124,7 +124,6 @@ static const NSUInteger kNumberOfObjects = 1;
 //    {0, 0, 1, 1},
 //};
 
-static const MTLPrimitiveType kPrimitiveType = MTLPrimitiveTypeTriangle;
 
 //static const vector_float4 positions[] =
 //{
@@ -174,25 +173,80 @@ static const MTLPrimitiveType kPrimitiveType = MTLPrimitiveTypeTriangle;
     VEC4_SETRGB(V, ((((uint32_t)(C)) >> 16) & 0xFF), ((((uint32_t)(C)) >> 8) & 0xFF), ((C) & 0xFF))
 
 
-static const unsigned kNumParts = 512;
-static const unsigned kVertsPerPart = 3;
+// Uncomment/choose only *ONE* of these
+//#define DRAW_CIRCLE_FILLED 1
+#define DRAW_CIRCLE_EDGED  1
+
+static const unsigned kNumParts = 128;                  // REQUIRED
 const float kRadStep = ((((float)M_PI) * 2.0f) / (float)kNumParts);
 #define RAD_IDX(I) (((float)I) * kRadStep)
+#define COS_IDX(I) cos(RAD_IDX(I))
+#define SIN_IDX(I) sin(RAD_IDX(I))
 
-static vector_float4 positions[kNumParts * kVertsPerPart];
-static vector_float4 colors[kNumParts * kVertsPerPart];
+#if DRAW_CIRCLE_FILLED
+static const MTLPrimitiveType kPrimitiveType = MTLPrimitiveTypeTriangle;    // REQUIRED
+static const unsigned kVertsPerPart = 3;
+static const unsigned kNumVertices = kNumParts * kVertsPerPart;     // REQUIRED
+#endif
+
+#if DRAW_CIRCLE_EDGED
+static const MTLPrimitiveType kPrimitiveType = MTLPrimitiveTypeTriangleStrip;   // REQUIRED
+static const unsigned kNumVertices = 2 + (kNumParts * 2);                       // REQUIRED
+static const float kInner = 0.9;
+static const float kOuter = 1.0;
+#endif
+
+static vector_float4 positions[kNumVertices];          // REQUIRED
+static vector_float4 colors[kNumVertices];             // REQUIRED
+
 
 - (void)_loadAssets
 {
-//    positions   = malloc(kVertsPerPart * kNumParts * sizeof(vector_float4));
+#if DRAW_CIRCLE_EDGED
+    // Positions:
+    for (unsigned i = 0; i <= kNumParts; ++i) {
+        VEC4_SET(positions[(i * 2) + 0], COS_IDX(i)*kInner, SIN_IDX(i)*kInner, 0, 1);
+        VEC4_SET(positions[(i * 2) + 1], COS_IDX(i)*kOuter, SIN_IDX(i)*kOuter, 0, 1);
+    }
     
+    // Colors:
+#if 0
+    for (unsigned i = 0; i < kNumVertices; ++i) {
+        VEC4_SETRGBHEX(colors[i], 0xFBFFC2);
+    }
+#else
+    for (unsigned i = 0; i < kNumParts; ++i) {
+        vector_float4 c = {1, 1, 1, 1};
+        switch (i % 4) {
+            case 0:
+                VEC4_SET(c, 1, 0, 0, 1);
+                break;
+            case 1:
+                VEC4_SET(c, 0, 1, 0, 1);
+                break;
+            case 2:
+                VEC4_SET(c, 0, 0, 1, 1);
+                break;
+            case 3:
+                VEC4_SET(c, 1, 1, 0, 1);
+                break;
+        }
+        for (unsigned j = 0; j < 2; ++j) {
+            colors[(i * 2) + j] = c;
+        }
+    }
+#endif
+#endif  // DRAW_CIRCLE_EDGED
+
+#if DRAW_CIRCLE_FILLED
+    // Positions:
     for (unsigned i = 0; i < kNumParts; ++i) {
         VEC4_SET(positions[(i * kVertsPerPart) + 0],                 0,                 0, 0, 1); //i, (i*kVertsPerPart)+0);
         VEC4_SET(positions[(i * kVertsPerPart) + 1], cos(RAD_IDX( i )), sin(RAD_IDX( i )), 0, 1); //i, (i*kVertsPerPart)+1);
         VEC4_SET(positions[(i * kVertsPerPart) + 2], cos(RAD_IDX(i+1)), sin(RAD_IDX(i+1)), 0, 1); //i, (i*kVertsPerPart)+2);
     }
-    
-//    colors      = malloc(kVertsPerPart * kNumParts * sizeof(vector_float4));
+
+    // Colors:
     for (unsigned i = 0; i < kNumParts; ++i) {
         vector_float4 c = {1, 1, 1, 1};
         switch (i % 4) {
@@ -213,15 +267,16 @@ static vector_float4 colors[kNumParts * kVertsPerPart];
             colors[(i * kVertsPerPart) + j] = c;
         }
     }
+#endif  // DRAW_CIRCLE_FILLED
 
 
     // Setup buffers
     {
         positionBuffer = [_device newBufferWithBytes:positions
-                                              length:(kVertsPerPart * kNumParts * sizeof(vector_float4))  //sizeof(positions)
+                                              length:(kNumVertices * sizeof(vector_float4))  //sizeof(positions)
                                              options:MTLResourceOptionCPUCacheModeDefault];
         colorBuffer = [_device newBufferWithBytes:colors
-                                           length:(kVertsPerPart * kNumParts * sizeof(vector_float4))  //sizeof(colors)
+                                           length:(kNumVertices * sizeof(vector_float4))  //sizeof(colors)
                                           options:MTLResourceOptionCPUCacheModeDefault];
     }
     
@@ -309,7 +364,7 @@ static vector_float4 colors[kNumParts * kVertsPerPart];
         [renderEncoder setVertexBuffer:_dynamicConstantBuffer[_constantDataBufferIndex] offset:0 atIndex:2 ];
         [renderEncoder drawPrimitives:kPrimitiveType
                           vertexStart:0
-                          vertexCount:(kNumParts * kVertsPerPart) //kNumParts * kVertsPerPart  //(sizeof(positions)/sizeof(positions[0]))
+                          vertexCount:kNumVertices //kNumParts * kVertsPerPart  //(sizeof(positions)/sizeof(positions[0]))
                         instanceCount:kNumberOfObjects];
         [renderEncoder popDebugGroup];
         
