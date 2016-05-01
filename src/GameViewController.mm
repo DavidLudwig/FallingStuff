@@ -112,7 +112,7 @@ void FSTUFF_ShapeInit(FSTUFF_ShapeTemplate * shape, void * buffer, size_t bufSiz
                                               length:sizeof(shape->colorRGBA)
                                              options:MTLResourceOptionCPUCacheModeDefault];
 
-    shape->gpuConstants.label = [[NSString alloc] initWithFormat:@"%s.gpuConstants", shape->debugName];
+    shape->gpuConstants.label = [[NSString alloc] initWithFormat:@"FSTUFF,%s,shape.gpuConstants", shape->debugName];
     
 }
 
@@ -138,13 +138,13 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
 
 void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSize, id<MTLDevice> gpuDevice)
 {
-    sim->circleFilled.debugName = "CircleFills";
+    sim->circleFilled.debugName = "FSTUFF_CircleFills";
     sim->circleFilled.shapeType = FSTUFF_ShapeCircleFilled;
     sim->circleFilled.circle.numParts = kNumCircleParts;
     sim->circleFilled.colorRGBA = FSTUFF_Color(0xffffff, 0x40);
     FSTUFF_ShapeInit(&(sim->circleFilled), buffer, bufSize, gpuDevice);
     
-    sim->circleEdged.debugName = "CircleEdges";
+    sim->circleEdged.debugName = "FSTUFF_CircleEdges";
     sim->circleEdged.shapeType = FSTUFF_ShapeCircleEdged;
     sim->circleEdged.circle.numParts = kNumCircleParts;
     sim->circleEdged.colorRGBA = FSTUFF_Color(0xffffff, 0xff);
@@ -290,7 +290,7 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
     MTLRenderPipelineDescriptor *pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
     pipelineStateDescriptor.label = @"FSTUFF_Pipeline";
     pipelineStateDescriptor.sampleCount = _view.sampleCount;
-    pipelineStateDescriptor.fragmentFunction = [_defaultLibrary newFunctionWithName:@"fragment_main"];
+    pipelineStateDescriptor.fragmentFunction = [_defaultLibrary newFunctionWithName:@"FSTUFF_FragmentShader"];
     pipelineStateDescriptor.vertexFunction = [_defaultLibrary newFunctionWithName:@"FSTUFF_VertexShader"];
     pipelineStateDescriptor.colorAttachments[0].pixelFormat = _view.colorPixelFormat;
     pipelineStateDescriptor.colorAttachments[0].blendingEnabled = YES;
@@ -313,7 +313,7 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
     // In this case triple buffering is the optimal way to go so we cycle through 3 memory buffers
     for (int i = 0; i < kMaxInflightBuffers; i++) {
         _gpuShapeInstances[i] = [_device newBufferWithLength:kMaxBytesPerFrame options:0];
-        _gpuShapeInstances[i].label = [NSString stringWithFormat:@"ConstantBuffer%i", i];
+        _gpuShapeInstances[i].label = [NSString stringWithFormat:@"FSTUFF_ConstantBuffer%i", i];
     }
 }
 

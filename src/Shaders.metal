@@ -43,7 +43,7 @@ vertex FSTUFF_Vertex FSTUFF_VertexShader(constant float4 * position [[buffer(0)]
 //}
 
 
-fragment float4 fragment_main(FSTUFF_Vertex vert [[stage_in]])
+fragment float4 FSTUFF_FragmentShader(FSTUFF_Vertex vert [[stage_in]])
 {
     return vert.color;
 }
