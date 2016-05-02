@@ -116,16 +116,21 @@ constexpr vector_float4 FSTUFF_Color(uint32_t rgb, uint8_t a)
     };
 }
 
-struct FSTUFF_Simulation {
-    FSTUFF_ShapeTemplate circleFilled;
-    FSTUFF_ShapeTemplate circleEdged;
-};
-
 void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
                          size_t count,
                          id<MTLRenderCommandEncoder> gpuRenderer,
                          id<MTLBuffer> gpuShapeInstances,
                          vector_float4 color);
+
+
+#pragma mark - Simulation
+
+struct FSTUFF_Simulation {
+    FSTUFF_ShapeTemplate circleFilled;
+    FSTUFF_ShapeTemplate circleEdged;
+    matrix_float4x4 projectionMatrix;
+    vector_float2 viewSizeMM;
+};
 
 void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSize, id<MTLDevice> gpuDevice)
 {
@@ -138,6 +143,15 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     sim->circleEdged.shapeType = FSTUFF_ShapeCircleEdged;
     sim->circleEdged.circle.numParts = kNumCircleParts;
     FSTUFF_ShapeInit(&(sim->circleEdged), buffer, bufSize, gpuDevice);
+}
+
+void FSTUFF_SimulationViewChanged(FSTUFF_Simulation * sim, float widthMM, float heightMM)
+{
+    sim->viewSizeMM = {widthMM, heightMM};
+    
+    matrix_float4x4 t = matrix_from_translation(-1, -1, 0);
+    matrix_float4x4 s = matrix_from_scaling(2.0f / widthMM, 2.0f / heightMM, 1); //100.0f / w, 100.0f / h, 1.0f);
+    sim->projectionMatrix = matrix_multiply(t, s);
 }
 
 void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_ShapeInstance * shapeInstances)
@@ -177,7 +191,15 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_ShapeInstance * sha
 */
 
     for (int i = 0; i < kNumberOfObjects; i++) {
-        shapeInstances[i].modelview_projection_matrix = matrix_from_translation(i * 0.2f, 0, 0);
+        shapeInstances[i].modelview_projection_matrix = \
+            matrix_multiply(
+                sim->projectionMatrix,
+                matrix_from_translation(
+                    (sim->viewSizeMM[0] / 2.0f) + (10.0f * (float)i),
+                    (sim->viewSizeMM[1] / 2.0f),
+                    0
+                )
+            );
     }
 }
 
@@ -190,6 +212,8 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
 }
 
 
+
+#pragma mark - Renderer
 
 @interface GameViewController()
 @property (nonatomic, strong) MTKView *theView;
@@ -389,9 +413,23 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
 - (void)_reshape
 {
 //    // When reshape is called, update the view and projection matricies since this means the view orientation or size changed
-//    float aspect = fabs(self.view.bounds.size.width / self.view.bounds.size.height);
-//    _projectionMatrix = matrix_from_perspective_fov_aspectLH(65.0f * (M_PI / 180.0f), aspect, 0.1f, 100.0f);
-//    _viewMatrix = matrix_identity_float4x4;
+
+    NSScreen * screen = self.view.window.screen;
+    NSNumber * displayID = [[screen deviceDescription] objectForKey:@"NSScreenNumber"];
+    CGDirectDisplayID cgDisplayID = (CGDirectDisplayID) [displayID intValue];
+    const CGSize scrSizeMM = CGDisplayScreenSize(cgDisplayID);
+    const CGSize ptsToMM = CGSizeMake(scrSizeMM.width / screen.frame.size.width,
+                                      scrSizeMM.height / screen.frame.size.height);
+    const CGSize viewSizeMM = CGSizeMake(self.view.bounds.size.width * ptsToMM.width,
+                                         self.view.bounds.size.height * ptsToMM.height);
+
+//    NSLog(@"view size: {%f,%f} (pts?) --> {%f,%f} (mm?)\n",
+//          self.view.bounds.size.width,
+//          self.view.bounds.size.height,
+//          viewSizeMM.width,
+//          viewSizeMM.height);
+    
+    FSTUFF_SimulationViewChanged(&_sim, viewSizeMM.width, viewSizeMM.height);
 }
 
 // Called whenever view changes orientation or layout is changed
