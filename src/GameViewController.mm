@@ -262,22 +262,6 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
 
 - (void)_setupView
 {
-    [MTKView class];    // HACK from DavidL, 2016-04-30: make sure the MetalKit's
-                        // shared library gets loaded at runtime.  It looks like
-                        // MetalKit won't get loaded unless certain methods,
-                        // seemingly global ones (such as class methods), get.
-                        // invoked.  This is/was true with the following build
-                        // setup:
-                        //
-                        // * Xcode 7.3
-                        // * Mac OS X SDK 10.11 (included as part of Xcode 7.3)
-                        // * Build machine running OS X 10.11.4
-                        //
-                        // Failure to use the hack caused self.view to be an
-                        // NSView, which led to unrecognized selector errors
-                        // (when setting MTKView properties).
-//    NSLog(@"%@", NSStringFromClass([self.view class]));
-
     _view = (MTKView *)self.view;
     _view.delegate = self;
     _view.device = _device;
