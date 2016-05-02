@@ -41,7 +41,6 @@ enum FSTUFF_PrimitiveType : uint8_t {
 struct FSTUFF_ShapeTemplate {
     const char * debugName = "";
     int numVertices = 0;
-    vector_float4 colorRGBA = {0.0f, 0.0f, 0.0f, 0.0f};
     FSTUFF_ShapeType shapeType = FSTUFF_ShapeCircleFilled;
     union {
         uint32_t _shapeGenParamsRaw = 0;
@@ -51,7 +50,6 @@ struct FSTUFF_ShapeTemplate {
     };
     FSTUFF_PrimitiveType primitiveType = FSTUFF_PrimitiveUnknown;
     id <MTLBuffer> gpuVertexBuffer = nil;
-    id <MTLBuffer> gpuConstants = nil;
 };
 
 #define RAD_IDX(I) (((float)I) * kRadStep)
@@ -106,14 +104,6 @@ void FSTUFF_ShapeInit(FSTUFF_ShapeTemplate * shape, void * buffer, size_t bufSiz
                                                      length:(shape->numVertices * sizeof(vector_float4))
                                                     options:MTLResourceOptionCPUCacheModeDefault];
     }
-    
-    // Generate other resources
-    shape->gpuConstants = [device newBufferWithBytes:&shape->colorRGBA
-                                              length:sizeof(shape->colorRGBA)
-                                             options:MTLResourceOptionCPUCacheModeDefault];
-
-    shape->gpuConstants.label = [[NSString alloc] initWithFormat:@"FSTUFF,%s,shape.gpuConstants", shape->debugName];
-    
 }
 
 constexpr vector_float4 FSTUFF_Color(uint32_t rgb, uint8_t a)
@@ -134,20 +124,19 @@ struct FSTUFF_Simulation {
 void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
                          size_t count,
                          id<MTLRenderCommandEncoder> gpuRenderer,
-                         id<MTLBuffer> gpuShapeInstances);
+                         id<MTLBuffer> gpuShapeInstances,
+                         vector_float4 color);
 
 void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSize, id<MTLDevice> gpuDevice)
 {
     sim->circleFilled.debugName = "FSTUFF_CircleFills";
     sim->circleFilled.shapeType = FSTUFF_ShapeCircleFilled;
     sim->circleFilled.circle.numParts = kNumCircleParts;
-    sim->circleFilled.colorRGBA = FSTUFF_Color(0xffffff, 0x40);
     FSTUFF_ShapeInit(&(sim->circleFilled), buffer, bufSize, gpuDevice);
     
     sim->circleEdged.debugName = "FSTUFF_CircleEdges";
     sim->circleEdged.shapeType = FSTUFF_ShapeCircleEdged;
     sim->circleEdged.circle.numParts = kNumCircleParts;
-    sim->circleEdged.colorRGBA = FSTUFF_Color(0xffffff, 0xff);
     FSTUFF_ShapeInit(&(sim->circleEdged), buffer, bufSize, gpuDevice);
 }
 
@@ -196,8 +185,8 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
                              id <MTLRenderCommandEncoder> gpuRenderer,
                              id <MTLBuffer> gpuShapeInstances)
 {
-    FSTUFF_RenderShapes(&sim->circleFilled, kNumberOfObjects, gpuRenderer, gpuShapeInstances);
-    FSTUFF_RenderShapes(&sim->circleEdged, kNumberOfObjects, gpuRenderer, gpuShapeInstances);
+    FSTUFF_RenderShapes(&sim->circleFilled, kNumberOfObjects, gpuRenderer, gpuShapeInstances, FSTUFF_Color(0xffffff, 0x40));
+    FSTUFF_RenderShapes(&sim->circleEdged,  kNumberOfObjects, gpuRenderer, gpuShapeInstances, FSTUFF_Color(0xffffff, 0xff));
 }
 
 
@@ -326,7 +315,8 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
 void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
                          size_t count,
                          id <MTLRenderCommandEncoder> gpuRenderer,
-                         id <MTLBuffer> gpuShapeInstances)
+                         id <MTLBuffer> gpuShapeInstances,
+                         vector_float4 color)
 {
     MTLPrimitiveType gpuPrimitiveType;
     switch (shape->primitiveType) {
@@ -344,7 +334,8 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
     [gpuRenderer pushDebugGroup:[NSString stringWithUTF8String:shape->debugName]];
     [gpuRenderer setVertexBuffer:shape->gpuVertexBuffer offset:0 atIndex:0];
     [gpuRenderer setVertexBuffer:gpuShapeInstances offset:0 atIndex:1];
-    [gpuRenderer setVertexBuffer:shape->gpuConstants offset:0 atIndex:2];
+    [gpuRenderer setVertexBytes:&color length:sizeof(color) atIndex:2];
+    
     [gpuRenderer drawPrimitives:gpuPrimitiveType
                     vertexStart:0
                     vertexCount:shape->numVertices

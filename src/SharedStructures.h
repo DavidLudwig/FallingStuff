@@ -23,10 +23,5 @@ typedef struct
     vector_float4 color;
 } FSTUFF_ShapeInstance;
 
-typedef struct
-{
-    vector_float4 color;
-} FSTUFF_GPUShapeTemplate;
-
 #endif /* SharedStructures_h */
 

@@ -20,28 +20,15 @@ struct FSTUFF_Vertex
 
 vertex FSTUFF_Vertex FSTUFF_VertexShader(constant float4 * position [[buffer(0)]],
                                          constant FSTUFF_ShapeInstance * shapes [[buffer(1)]],
-                                         constant FSTUFF_GPUShapeTemplate * shapeConstants [[buffer(2)]],
+                                         constant vector_float4 * color [[buffer(2)]],
                                          uint vertexId [[vertex_id]],
                                          uint shapeId [[instance_id]])
 {
     FSTUFF_Vertex vert;
     vert.position = shapes[shapeId].modelview_projection_matrix * position[vertexId];
-    vert.color = shapeConstants->color;
+    vert.color = *color;
     return vert;
 }
-
-//vertex FSTUFF_Vertex vertex_circle_edge(constant float4 * position [[buffer(0)]],
-//                                   constant FSTUFF_ShapeInstance * constants [[buffer(1)]],
-//                                   constant FSTUFF_GPUShapeTemplate * shapeConstants [[buffer(2)]],
-//                                   uint vid [[vertex_id]],
-//                                   uint iid [[instance_id]])
-//{
-//    FSTUFF_Vertex vert;
-//    vert.position = constants[iid].modelview_projection_matrix * position[vid];
-//    vert.color = shapeConstants->color;
-//    return vert;
-//}
-
 
 fragment float4 FSTUFF_FragmentShader(FSTUFF_Vertex vert [[stage_in]])
 {
