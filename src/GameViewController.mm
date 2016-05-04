@@ -34,6 +34,7 @@ enum FSTUFF_ShapeType : uint8_t {
 
 enum FSTUFF_PrimitiveType : uint8_t {
     FSTUFF_PrimitiveUnknown = 0,
+    FSTUFF_PrimitiveLineStrip,
     FSTUFF_PrimitiveTriangles,
     FSTUFF_PrimitiveTriangleFan,
 };
@@ -69,8 +70,8 @@ void FSTUFF_MakeCircleFilledTriangles(vector_float4 * vertices, int maxVertices,
     }
 }
 
-void FSTUFF_MakeCircleEdgedTriangleStrip(vector_float4 * vertices, int maxVertices, int * numVertices, int numPartsToGenerate,
-                                         float innerRadius, float outerRadius)
+void FSTUFF_MakeCircleTriangleStrip(vector_float4 * vertices, int maxVertices, int * numVertices, int numPartsToGenerate,
+                                    float innerRadius, float outerRadius)
 {
     // TODO: check the size of the vertex buffer!
     const float kRadianStep = ((((float)M_PI) * 2.0f) / (float)numPartsToGenerate);
@@ -81,6 +82,18 @@ void FSTUFF_MakeCircleEdgedTriangleStrip(vector_float4 * vertices, int maxVertic
     }
 }
 
+void FSTUFF_MakeCircleLineStrip(vector_float4 * vertices, int maxVertices, int * numVertices, int numPartsToGenerate,
+                                float radius)
+{
+    // TODO: check the size of the vertex buffer!
+    const float kRadianStep = ((((float)M_PI) * 2.0f) / (float)numPartsToGenerate);
+    *numVertices = (numPartsToGenerate + 1);
+    for (unsigned i = 0; i <= numPartsToGenerate; ++i) {
+        vertices[i] = {COS_IDX(i)*radius, SIN_IDX(i)*radius, 0, 1};
+    }
+}
+
+
 void FSTUFF_ShapeInit(FSTUFF_ShapeTemplate * shape, void * buffer, size_t bufSize, id <MTLDevice> device)
 {
     // Generate vertices in CPU-accessible memory
@@ -89,10 +102,16 @@ void FSTUFF_ShapeInit(FSTUFF_ShapeTemplate * shape, void * buffer, size_t bufSiz
         const int maxElements = (int)(bufSize / sizeof(vector_float4));
         switch (shape->shapeType) {
             case FSTUFF_ShapeCircleEdged: {
+#if 0
                 shape->primitiveType = FSTUFF_PrimitiveTriangleFan;
-                FSTUFF_MakeCircleEdgedTriangleStrip(vertices, maxElements, &shape->numVertices, shape->circle.numParts,
-                                                    0.9,    // inner radius
-                                                    1.0);   // outer radius
+                FSTUFF_MakeCircleTriangleStrip(vertices, maxElements, &shape->numVertices, shape->circle.numParts,
+                                               0.9,     // inner radius
+                                               1.0);    // outer radius
+#else
+                shape->primitiveType = FSTUFF_PrimitiveLineStrip;
+                FSTUFF_MakeCircleLineStrip(vertices, maxElements, &shape->numVertices, shape->circle.numParts,
+                                           1.0);        // radius
+#endif
             } break;
                 
             case FSTUFF_ShapeCircleFilled: {
@@ -331,6 +350,9 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
 {
     MTLPrimitiveType gpuPrimitiveType;
     switch (shape->primitiveType) {
+        case FSTUFF_PrimitiveLineStrip:
+            gpuPrimitiveType = MTLPrimitiveTypeLineStrip;
+            break;
         case FSTUFF_PrimitiveTriangles:
             gpuPrimitiveType = MTLPrimitiveTypeTriangle;
             break;
@@ -338,7 +360,7 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
             gpuPrimitiveType = MTLPrimitiveTypeTriangleStrip;
             break;
         default:
-            NSLog(@"Unknown or unset FSTUFF_PrimitiveType in shape: %u", shape->primitiveType);
+            NSLog(@"Unknown or unmapped FSTUFF_PrimitiveType in shape: %u", shape->primitiveType);
             return;
     }
     
