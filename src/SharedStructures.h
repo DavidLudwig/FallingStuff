@@ -17,11 +17,16 @@
 //    matrix_float4x4 normal_matrix;
 //} uniforms_t;
 
+typedef struct __attribute__((__aligned__(256)))
+{
+    matrix_float4x4 projection_matrix;
+} FSTUFF_SimulationGPUInfo;
+
 typedef struct
 {
-    matrix_float4x4 modelview_projection_matrix;
+    matrix_float4x4 model_matrix;
     vector_float4 color;
-} FSTUFF_ShapeInstance;
+} FSTUFF_ShapeGPUInfo;
 
 #endif /* SharedStructures_h */
 

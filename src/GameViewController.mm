@@ -119,7 +119,7 @@ constexpr vector_float4 FSTUFF_Color(uint32_t rgb, uint8_t a)
 void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
                          size_t count,
                          id<MTLRenderCommandEncoder> gpuRenderer,
-                         id<MTLBuffer> gpuShapeInstances,
+                         id<MTLBuffer> gpuAppData,
                          vector_float4 color);
 
 
@@ -154,7 +154,7 @@ void FSTUFF_SimulationViewChanged(FSTUFF_Simulation * sim, float widthMM, float 
     sim->projectionMatrix = matrix_multiply(t, s);
 }
 
-void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_ShapeInstance * shapeInstances)
+void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_SimulationGPUInfo * gpuGlobals, FSTUFF_ShapeGPUInfo * gpuShapes)
 {
 /*
  Colors = {
@@ -189,26 +189,26 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_ShapeInstance * sha
 
  pb.fill_alpha = rand_in_range(self.unlit_peg_fill_alpha_min, self.unlit_peg_fill_alpha_max)
 */
-
+    
+    gpuGlobals->projection_matrix = sim->projectionMatrix;
     for (int i = 0; i < kNumberOfObjects; i++) {
-        shapeInstances[i].modelview_projection_matrix = \
-            matrix_multiply(
-                sim->projectionMatrix,
-                matrix_from_translation(
-                    (sim->viewSizeMM[0] / 2.0f) + (10.0f * (float)i),
-                    (sim->viewSizeMM[1] / 2.0f),
-                    0
-                )
-            );
+        gpuShapes[i].model_matrix = matrix_multiply(
+            matrix_from_translation(
+                (sim->viewSizeMM[0] / 2.0f) + (10.0f * (float)i),
+                (sim->viewSizeMM[1] / 2.0f),
+                0
+            ),
+            matrix_from_scaling(10.0f, 10.0f, 1.0f)
+        );
     }
 }
 
 void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
                              id <MTLRenderCommandEncoder> gpuRenderer,
-                             id <MTLBuffer> gpuShapeInstances)
+                             id <MTLBuffer> gpuAppData)
 {
-    FSTUFF_RenderShapes(&sim->circleFilled, kNumberOfObjects, gpuRenderer, gpuShapeInstances, FSTUFF_Color(0xffffff, 0x40));
-    FSTUFF_RenderShapes(&sim->circleEdged,  kNumberOfObjects, gpuRenderer, gpuShapeInstances, FSTUFF_Color(0xffffff, 0xff));
+    FSTUFF_RenderShapes(&sim->circleFilled, kNumberOfObjects, gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0x40));
+    FSTUFF_RenderShapes(&sim->circleEdged,  kNumberOfObjects, gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0xff));
 }
 
 
@@ -236,7 +236,7 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
     
     // game
     FSTUFF_Simulation _sim;
-    id <MTLBuffer> _gpuShapeInstances[kMaxInflightBuffers];
+    id <MTLBuffer> _gpuConstants[kMaxInflightBuffers];
 }
 
 - (void)viewDidLoad
@@ -309,21 +309,23 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
     // we always have one self contained memory buffer for each buffered frame.
     // In this case triple buffering is the optimal way to go so we cycle through 3 memory buffers
     for (int i = 0; i < kMaxInflightBuffers; i++) {
-        _gpuShapeInstances[i] = [_device newBufferWithLength:kMaxBytesPerFrame options:0];
-        _gpuShapeInstances[i].label = [NSString stringWithFormat:@"FSTUFF_ConstantBuffer%i", i];
+        _gpuConstants[i] = [_device newBufferWithLength:kMaxBytesPerFrame options:0];
+        _gpuConstants[i].label = [NSString stringWithFormat:@"FSTUFF_ConstantBuffer%i", i];
     }
 }
 
 - (void)_update
 {
-    FSTUFF_ShapeInstance *constant_buffer = (FSTUFF_ShapeInstance *)[_gpuShapeInstances[_constantDataBufferIndex] contents];
-    FSTUFF_SimulationUpdate(&_sim, constant_buffer);
+    const uint8_t * constants = (uint8_t *) [_gpuConstants[_constantDataBufferIndex] contents];
+    FSTUFF_SimulationGPUInfo * gpuGlobals = (FSTUFF_SimulationGPUInfo *) constants;
+    FSTUFF_ShapeGPUInfo * gpuShapes = (FSTUFF_ShapeGPUInfo *) (constants + sizeof(FSTUFF_SimulationGPUInfo));
+    FSTUFF_SimulationUpdate(&_sim, gpuGlobals, gpuShapes);
 }
 
 void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
                          size_t count,
                          id <MTLRenderCommandEncoder> gpuRenderer,
-                         id <MTLBuffer> gpuShapeInstances,
+                         id <MTLBuffer> gpuAppData,
                          vector_float4 color)
 {
     MTLPrimitiveType gpuPrimitiveType;
@@ -340,9 +342,10 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
     }
     
     [gpuRenderer pushDebugGroup:[NSString stringWithUTF8String:shape->debugName]];
-    [gpuRenderer setVertexBuffer:shape->gpuVertexBuffer offset:0 atIndex:0];
-    [gpuRenderer setVertexBuffer:gpuShapeInstances offset:0 atIndex:1];
-    [gpuRenderer setVertexBytes:&color length:sizeof(color) atIndex:2];
+    [gpuRenderer setVertexBuffer:shape->gpuVertexBuffer offset:0 atIndex:0];    // 'position'
+    [gpuRenderer setVertexBuffer:gpuAppData offset:0 atIndex:1];                // 'sim'
+    [gpuRenderer setVertexBuffer:gpuAppData offset:sizeof(FSTUFF_SimulationGPUInfo) atIndex:2]; // 'shapes'
+    [gpuRenderer setVertexBytes:&color length:sizeof(color) atIndex:3];         // 'color'
     
     [gpuRenderer drawPrimitives:gpuPrimitiveType
                     vertexStart:0
@@ -378,7 +381,7 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
         [gpuRenderer setRenderPipelineState:_pipelineState];
 
         // Draw shapes
-        FSTUFF_SimulationRender(&_sim, gpuRenderer, _gpuShapeInstances[_constantDataBufferIndex]);
+        FSTUFF_SimulationRender(&_sim, gpuRenderer, _gpuConstants[_constantDataBufferIndex]);
         
         // We're done encoding commands
         [gpuRenderer endEncoding];
