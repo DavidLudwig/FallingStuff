@@ -52,7 +52,7 @@ struct FSTUFF_ShapeTemplate {
     id <MTLBuffer> gpuVertexBuffer = nil;
 };
 
-#define RAD_IDX(I) (((float)I) * kRadStep)
+#define RAD_IDX(I) (((float)I) * kRadianStep)
 #define COS_IDX(I) ((float)cos(RAD_IDX(I)))
 #define SIN_IDX(I) ((float)sin(RAD_IDX(I)))
 
@@ -60,7 +60,7 @@ void FSTUFF_MakeCircleFilledTriangles(vector_float4 * vertices, int maxVertices,
 {
     // TODO: check the size of the vertex buffer!
     static const int kVertsPerPart = 3;
-    const float kRadStep = ((((float)M_PI) * 2.0f) / (float)numPartsToGenerate);
+    const float kRadianStep = ((((float)M_PI) * 2.0f) / (float)numPartsToGenerate);
     *numVertices = numPartsToGenerate * kVertsPerPart;
     for (unsigned i = 0; i < numPartsToGenerate; ++i) {
         vertices[(i * kVertsPerPart) + 0] = {           0,            0, 0, 1};
@@ -69,16 +69,15 @@ void FSTUFF_MakeCircleFilledTriangles(vector_float4 * vertices, int maxVertices,
     }
 }
 
-void FSTUFF_MakeCircleEdgedTriangleStrip(vector_float4 * vertices, int maxVertices, int * numVertices, int numPartsToGenerate)
+void FSTUFF_MakeCircleEdgedTriangleStrip(vector_float4 * vertices, int maxVertices, int * numVertices, int numPartsToGenerate,
+                                         float innerRadius, float outerRadius)
 {
     // TODO: check the size of the vertex buffer!
-    static const float kInner = 0.9;
-    static const float kOuter = 1.0;
-    const float kRadStep = ((((float)M_PI) * 2.0f) / (float)numPartsToGenerate);
+    const float kRadianStep = ((((float)M_PI) * 2.0f) / (float)numPartsToGenerate);
     *numVertices = 2 + (numPartsToGenerate * 2);
     for (unsigned i = 0; i <= numPartsToGenerate; ++i) {
-        vertices[(i * 2) + 0] = {COS_IDX(i)*kInner, SIN_IDX(i)*kInner, 0, 1};
-        vertices[(i * 2) + 1] = {COS_IDX(i)*kOuter, SIN_IDX(i)*kOuter, 0, 1};
+        vertices[(i * 2) + 0] = {COS_IDX(i)*innerRadius, SIN_IDX(i)*innerRadius, 0, 1};
+        vertices[(i * 2) + 1] = {COS_IDX(i)*outerRadius, SIN_IDX(i)*outerRadius, 0, 1};
     }
 }
 
@@ -91,7 +90,9 @@ void FSTUFF_ShapeInit(FSTUFF_ShapeTemplate * shape, void * buffer, size_t bufSiz
         switch (shape->shapeType) {
             case FSTUFF_ShapeCircleEdged: {
                 shape->primitiveType = FSTUFF_PrimitiveTriangleFan;
-                FSTUFF_MakeCircleEdgedTriangleStrip(vertices, maxElements, &shape->numVertices, shape->circle.numParts);
+                FSTUFF_MakeCircleEdgedTriangleStrip(vertices, maxElements, &shape->numVertices, shape->circle.numParts,
+                                                    0.9,    // inner radius
+                                                    1.0);   // outer radius
             } break;
                 
             case FSTUFF_ShapeCircleFilled: {
