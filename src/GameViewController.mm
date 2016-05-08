@@ -12,6 +12,13 @@
 #import <MetalKit/MetalKit.h>
 #import "SharedStructures.h"
 
+extern "C" {
+//#include <chipmunk/chipmunk_structs.h>
+#include <chipmunk/chipmunk_private.h>  // #include'd solely for allowing static cp* structs (cpSpace, cpBody, etc.)
+}
+
+#include <chipmunk/chipmunk.h>
+
 static matrix_float4x4 matrix_from_translation(float x, float y, float z);
 static matrix_float4x4 matrix_from_scaling(float x, float y, float z);
 static matrix_float4x4 matrix_from_rotation(float radians, float x, float y, float z);
@@ -24,7 +31,6 @@ static const NSUInteger kMaxInflightBuffers = 3;
 // Max API memory buffer size.
 static const size_t kMaxBytesPerFrame = 1024 * 1024; //64; //sizeof(vector_float4) * 3; //*1024;
 
-static const NSUInteger kNumberOfObjects = 2;
 static const unsigned kNumCircleParts = 128;
 
 enum FSTUFF_ShapeType : uint8_t {
@@ -150,19 +156,89 @@ struct FSTUFF_Simulation {
     FSTUFF_ShapeTemplate circleEdged;
     matrix_float4x4 projectionMatrix;
     vector_float2 viewSizeMM;
+
+    // HACK: C++ won't allow us to create a 'cpSpace' directly, due to constructor issues,
+    //   so we'll allocate one ourselves.
+    //
+    //   To note, Chipmunk Physics' cpAlloc() function just calls calloc() anyways,
+    //   and according to its docs, using custom allocation, as is done here, is ok.
+    //   Further, zero-ing out the memory is not required (again, according to the docs).
+    uint8_t _physicsSpaceStorage[sizeof(cpSpace)];
+    cpSpace * physicsSpace = (cpSpace *) &_physicsSpaceStorage;
+    
+    union {
+        cpShape asShape;
+        cpCircleShape asCircle;
+    } shapes[4096];
+    cpBody bodies[4096];
+    size_t numShapes = 0;
+    size_t numBodies = 0;
 };
+
+static const cpFloat kWorldScale = 1.0;
+static const size_t kNumSpaceSteps = 10;
+
+#define SPACE           (sim->physicsSpace)
+#define BODY(IDX)       (&sim->bodies[(IDX)])
+#define SHAPE(IDX)      ((&(sim->shapes[(IDX)].asShape)))
+#define CIRCLE(IDX)     ((&(sim->shapes[(IDX)].asCircle)))
+#define BODY_ALLOC()    (BODY(sim->numBodies++))
+#define CIRCLE_ALLOC()  (CIRCLE(sim->numShapes++))
 
 void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSize, id<MTLDevice> gpuDevice)
 {
+    //
+    // GPU init
+    //
     sim->circleFilled.debugName = "FSTUFF_CircleFills";
     sim->circleFilled.shapeType = FSTUFF_ShapeCircleFilled;
     sim->circleFilled.circle.numParts = kNumCircleParts;
     FSTUFF_ShapeInit(&(sim->circleFilled), buffer, bufSize, gpuDevice);
-    
+
     sim->circleEdged.debugName = "FSTUFF_CircleEdges";
     sim->circleEdged.shapeType = FSTUFF_ShapeCircleEdged;
     sim->circleEdged.circle.numParts = kNumCircleParts;
     FSTUFF_ShapeInit(&(sim->circleEdged), buffer, bufSize, gpuDevice);
+    
+    //
+    // Physics-world init
+    //
+
+    memset(&sim->_physicsSpaceStorage, 0, sizeof(sim->_physicsSpaceStorage));
+    cpSpaceInit(sim->physicsSpace);
+    cpSpaceSetIterations(sim->physicsSpace, 100);
+    cpSpaceSetGravity(sim->physicsSpace, cpv(0, -98 * kWorldScale));
+    // TODO: try resizing cpSpace hashes
+    
+    cpBody * body;
+    cpShape * shape;
+    
+    body = cpBodyInit(BODY_ALLOC(), 0, 0);
+    cpSpaceAddBody(SPACE, body);
+    cpBodySetPosition(body, cpv(40 * kWorldScale, 80 * kWorldScale));
+    shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 4 * kWorldScale, cpvzero);
+    cpSpaceAddShape(sim->physicsSpace, shape);
+    cpShapeSetDensity(shape, 10);
+    cpShapeSetElasticity(shape, 0.8);
+
+    body = cpBodyInit(BODY_ALLOC(), 0, 0);
+    cpBodySetType(body, CP_BODY_TYPE_STATIC);
+    cpSpaceAddBody(SPACE, body);
+    cpBodySetPosition(body, cpv(35 * kWorldScale, 20 * kWorldScale));
+    shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 10 * kWorldScale, cpvzero);
+    cpSpaceAddShape(SPACE, shape);
+    cpShapeSetElasticity(shape, 0.8);
+}
+
+void FSTUFF_SimulationShutdown(FSTUFF_Simulation * sim)
+{
+    for (size_t i = 0; i < sim->numShapes; ++i) {
+        cpShapeDestroy(SHAPE(i));
+    }
+    for (size_t i = 0; i < sim->numBodies; ++i) {
+        cpBodyDestroy(BODY(i));
+    }
+    cpSpaceDestroy(sim->physicsSpace);
 }
 
 void FSTUFF_SimulationViewChanged(FSTUFF_Simulation * sim, float widthMM, float heightMM)
@@ -176,6 +252,22 @@ void FSTUFF_SimulationViewChanged(FSTUFF_Simulation * sim, float widthMM, float 
 
 void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_SimulationGPUInfo * gpuGlobals, FSTUFF_ShapeGPUInfo * gpuShapes)
 {
+    gpuGlobals->projection_matrix = matrix_multiply(sim->projectionMatrix, matrix_from_scaling(1.0/kWorldScale, 1.0/kWorldScale, 1));
+
+    for (size_t i = 0; i < kNumSpaceSteps; ++i) {
+        cpSpaceStep(SPACE, (1.0/60.0f)/((cpFloat)kNumSpaceSteps));
+    }
+    
+    for (size_t i = 0; i < sim->numShapes; ++i) {
+        cpFloat shapeRadius = cpCircleShapeGetRadius(SHAPE(i));
+        cpBody * b = cpShapeGetBody(SHAPE(i));
+        cpVect bodyCenter = cpBodyGetPosition(b);
+        gpuShapes[i].model_matrix = matrix_multiply(
+            matrix_from_translation(bodyCenter.x, bodyCenter.y, 0),
+            matrix_from_scaling(shapeRadius, shapeRadius, 1)
+        );
+    }
+    
 /*
  Colors = {
 	blue = "#0000ff",
@@ -209,26 +301,14 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_SimulationGPUInfo *
 
  pb.fill_alpha = rand_in_range(self.unlit_peg_fill_alpha_min, self.unlit_peg_fill_alpha_max)
 */
-    
-    gpuGlobals->projection_matrix = sim->projectionMatrix;
-    for (int i = 0; i < kNumberOfObjects; i++) {
-        gpuShapes[i].model_matrix = matrix_multiply(
-            matrix_from_translation(
-                (sim->viewSizeMM[0] / 2.0f) + (10.0f * (float)i),
-                (sim->viewSizeMM[1] / 2.0f),
-                0
-            ),
-            matrix_from_scaling(10.0f, 10.0f, 1.0f)
-        );
-    }
 }
 
 void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
                              id <MTLRenderCommandEncoder> gpuRenderer,
                              id <MTLBuffer> gpuAppData)
 {
-    FSTUFF_RenderShapes(&sim->circleFilled, kNumberOfObjects, gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0x40));
-    FSTUFF_RenderShapes(&sim->circleEdged,  kNumberOfObjects, gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0xff));
+    FSTUFF_RenderShapes(&sim->circleFilled, sim->numShapes, gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0x40));
+    FSTUFF_RenderShapes(&sim->circleEdged,  sim->numShapes, gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0xff));
 }
 
 
