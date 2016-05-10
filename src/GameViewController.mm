@@ -187,7 +187,7 @@ struct FSTUFF_Simulation {
 };
 
 static const cpFloat kWorldScale = 1.0;
-static const size_t kNumSpaceSteps = 10;
+static const size_t kNumSubSteps = 10;
 const cpFloat kStepTimeS = 1./60.;          // step time, in seconds
 
 
@@ -276,9 +276,9 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_SimulationGPUInfo *
     }
     
     // Update physics
-    const cpFloat kSubstepTimeS = kStepTimeS / ((cpFloat)kNumSpaceSteps);
+    const cpFloat kSubstepTimeS = kStepTimeS / ((cpFloat)kNumSubSteps);
     while ((sim->lastUpdateUTCTimeS + kStepTimeS) <= nowS) {
-        for (size_t i = 0; i < kNumSpaceSteps; ++i) {
+        for (size_t i = 0; i < kNumSubSteps; ++i) {
             sim->lastUpdateUTCTimeS += kSubstepTimeS;
             cpSpaceStep(SPACE, kSubstepTimeS);
         }
