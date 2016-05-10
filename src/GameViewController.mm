@@ -11,6 +11,7 @@
 #import <simd/simd.h>
 #import <MetalKit/MetalKit.h>
 #import "SharedStructures.h"
+#include <sys/time.h>   // for gettimeofday()
 
 extern "C" {
 //#include <chipmunk/chipmunk_structs.h>
@@ -152,11 +153,22 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
 #pragma mark - Simulation
 
 struct FSTUFF_Simulation {
+    //
+    // Geometry + GPU
+    //
     FSTUFF_ShapeTemplate circleFilled;
     FSTUFF_ShapeTemplate circleEdged;
     matrix_float4x4 projectionMatrix;
     vector_float2 viewSizeMM;
 
+    //
+    // Timing
+    //
+    cpFloat lastUpdateUTCTimeS = 0.0;     // set on FSTUFF_Update; UTC time in seconds
+    
+    //
+    // Physics
+    //
     // HACK: C++ won't allow us to create a 'cpSpace' directly, due to constructor issues,
     //   so we'll allocate one ourselves.
     //
@@ -165,7 +177,6 @@ struct FSTUFF_Simulation {
     //   Further, zero-ing out the memory is not required (again, according to the docs).
     uint8_t _physicsSpaceStorage[sizeof(cpSpace)];
     cpSpace * physicsSpace = (cpSpace *) &_physicsSpaceStorage;
-    
     union {
         cpShape asShape;
         cpCircleShape asCircle;
@@ -177,6 +188,8 @@ struct FSTUFF_Simulation {
 
 static const cpFloat kWorldScale = 1.0;
 static const size_t kNumSpaceSteps = 10;
+const cpFloat kStepTimeS = 1./60.;          // step time, in seconds
+
 
 #define SPACE           (sim->physicsSpace)
 #define BODY(IDX)       (&sim->bodies[(IDX)])
@@ -203,7 +216,6 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     //
     // Physics-world init
     //
-
     memset(&sim->_physicsSpaceStorage, 0, sizeof(sim->_physicsSpaceStorage));
     cpSpaceInit(sim->physicsSpace);
     cpSpaceSetIterations(sim->physicsSpace, 100);
@@ -252,12 +264,28 @@ void FSTUFF_SimulationViewChanged(FSTUFF_Simulation * sim, float widthMM, float 
 
 void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_SimulationGPUInfo * gpuGlobals, FSTUFF_ShapeGPUInfo * gpuShapes)
 {
-    gpuGlobals->projection_matrix = matrix_multiply(sim->projectionMatrix, matrix_from_scaling(1.0/kWorldScale, 1.0/kWorldScale, 1));
-
-    for (size_t i = 0; i < kNumSpaceSteps; ++i) {
-        cpSpaceStep(SPACE, (1.0/60.0f)/((cpFloat)kNumSpaceSteps));
+    // Compute current time
+    cpFloat nowS;           // current time, in seconds since UNIX epoch
+    struct timeval nowSys;  // used to get current time from OS
+    gettimeofday(&nowSys, NULL);
+    nowS = (cpFloat)nowSys.tv_sec + ((cpFloat)nowSys.tv_usec / 1000000.);
+    
+    // Initialize simulation time vars, on first tick
+    if (sim->lastUpdateUTCTimeS == 0.) {
+        sim->lastUpdateUTCTimeS = nowS;
     }
     
+    // Update physics
+    const cpFloat kSubstepTimeS = kStepTimeS / ((cpFloat)kNumSpaceSteps);
+    while ((sim->lastUpdateUTCTimeS + kStepTimeS) <= nowS) {
+        for (size_t i = 0; i < kNumSpaceSteps; ++i) {
+            sim->lastUpdateUTCTimeS += kSubstepTimeS;
+            cpSpaceStep(SPACE, kSubstepTimeS);
+        }
+    }
+
+    // Copy simulation/game data to GPU-accessible buffers
+    gpuGlobals->projection_matrix = matrix_multiply(sim->projectionMatrix, matrix_from_scaling(1.0/kWorldScale, 1.0/kWorldScale, 1));
     for (size_t i = 0; i < sim->numShapes; ++i) {
         cpFloat shapeRadius = cpCircleShapeGetRadius(SHAPE(i));
         cpBody * b = cpShapeGetBody(SHAPE(i));
