@@ -219,13 +219,13 @@ struct FSTUFF_Simulation {
     cpSpace * physicsSpace = (cpSpace *) &_physicsSpaceStorage;
 
     size_t numCircles = 0;
-    cpCircleShape circles[2048];
+    cpCircleShape circles[kMaxCircles];
 
     size_t numBoxes;
-    cpSegmentShape boxes[2048];
+    cpSegmentShape boxes[kMaxBoxes];
 
     size_t numBodies = 0;
-    cpBody bodies[4096];
+    cpBody bodies[kMaxShapes];
 };
 
 static const size_t kNumSubSteps = 10;
@@ -393,7 +393,7 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
         m = matrix_multiply(m, matrix_from_rotation(bodyAngle, 0., 0., 1.));
         m = matrix_multiply(m, matrix_from_translation(((b.x-a.x)/2.f)+a.x, ((b.y-a.y)/2.f)+a.y, 0.));
         m = matrix_multiply(m, matrix_from_scaling(cpvlength(b-a), radius*2., 1.));
-        gpuData->segments[i].model_matrix = m;
+        gpuData->boxes[i].model_matrix = m;
     }
 
     
@@ -580,7 +580,7 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
             shapesOffsetInGpuData = offsetof(FSTUFF_GPUData, circles);
             break;
         case FSTUFF_ShapeBox:
-            shapesOffsetInGpuData = offsetof(FSTUFF_GPUData, segments);
+            shapesOffsetInGpuData = offsetof(FSTUFF_GPUData, boxes);
             break;
         default:
             NSLog(@"Unknown or unmapped FSTUFF_ShapeType in shape: %u", shape->type);

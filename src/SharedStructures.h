@@ -12,7 +12,8 @@
 #include <simd/simd.h>
 
 #define kMaxCircles 2048
-#define kMaxSegments 2048
+#define kMaxBoxes 2048
+#define kMaxShapes (kMaxCircles + kMaxBoxes)
 
 typedef struct __attribute__((__aligned__(256)))
 {
@@ -29,10 +30,7 @@ typedef struct
 {
     FSTUFF_SimulationGPUGlobals globals;
     FSTUFF_ShapeGPUInfo circles[kMaxCircles];
-    FSTUFF_ShapeGPUInfo segments[kMaxSegments];
+    FSTUFF_ShapeGPUInfo boxes[kMaxBoxes];
 } FSTUFF_GPUData;
 
-
-
 #endif /* SharedStructures_h */
-
