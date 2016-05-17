@@ -452,10 +452,10 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
                              id <MTLRenderCommandEncoder> gpuRenderer,
                              id <MTLBuffer> gpuAppData)
 {
-    FSTUFF_RenderShapes(&sim->circleFilled, sim->numCircles,    gpuRenderer, gpuAppData, 0.25f); //FSTUFF_Color(0xffffff, 0x40));
-    FSTUFF_RenderShapes(&sim->circleEdged,  sim->numCircles,    gpuRenderer, gpuAppData, 1.00f); //FSTUFF_Color(0xffffff, 0xff));
-    FSTUFF_RenderShapes(&sim->boxFilled,    sim->numBoxes,      gpuRenderer, gpuAppData, 0.25f); //FSTUFF_Color(0xffffff, 0x40));
-    FSTUFF_RenderShapes(&sim->boxEdged,     sim->numBoxes,      gpuRenderer, gpuAppData, 1.00f); //FSTUFF_Color(0xffffff, 0xff));
+    FSTUFF_RenderShapes(&sim->circleFilled, sim->numCircles,    gpuRenderer, gpuAppData, 0.35f);
+    FSTUFF_RenderShapes(&sim->circleEdged,  sim->numCircles,    gpuRenderer, gpuAppData, 1.0f);
+    FSTUFF_RenderShapes(&sim->boxFilled,    sim->numBoxes,      gpuRenderer, gpuAppData, 0.35f);
+    FSTUFF_RenderShapes(&sim->boxEdged,     sim->numBoxes,      gpuRenderer, gpuAppData, 1.0f);
 }
 
 
