@@ -35,8 +35,13 @@ static const size_t kMaxBytesPerFrame = 1024 * 1024; //64; //sizeof(vector_float
 static const unsigned kNumCircleParts = 128;
 
 enum FSTUFF_ShapeType : uint8_t {
-    FSTUFF_ShapeCircleFilled = 0,
-    FSTUFF_ShapeCircleEdged,
+    FSTUFF_ShapeCircle = 0,
+    FSTUFF_ShapeBox,
+};
+
+enum FSTUFF_ShapeAppearance : uint8_t {
+    FSTUFF_ShapeAppearanceFilled = 0,
+    FSTUFF_ShapeAppearanceEdged,
 };
 
 enum FSTUFF_PrimitiveType : uint8_t {
@@ -49,7 +54,8 @@ enum FSTUFF_PrimitiveType : uint8_t {
 struct FSTUFF_ShapeTemplate {
     const char * debugName = "";
     int numVertices = 0;
-    FSTUFF_ShapeType shapeType = FSTUFF_ShapeCircleFilled;
+    FSTUFF_ShapeType type = FSTUFF_ShapeCircle;
+    FSTUFF_ShapeAppearance appearance = FSTUFF_ShapeAppearanceFilled;
     union {
         uint32_t _shapeGenParamsRaw = 0;
         struct {
@@ -104,32 +110,63 @@ void FSTUFF_MakeCircleLineStrip(vector_float4 * vertices, int maxVertices, int *
 void FSTUFF_ShapeInit(FSTUFF_ShapeTemplate * shape, void * buffer, size_t bufSize, id <MTLDevice> device)
 {
     // Generate vertices in CPU-accessible memory
-    {
-        vector_float4 * vertices = (vector_float4 *) buffer;
-        const int maxElements = (int)(bufSize / sizeof(vector_float4));
-        switch (shape->shapeType) {
-            case FSTUFF_ShapeCircleEdged: {
+    vector_float4 * vertices = (vector_float4 *) buffer;
+    const int maxElements = (int)(bufSize / sizeof(vector_float4));
+    bool didSet = false;
+    
+    //
+    // Circles
+    //
+    if (shape->type == FSTUFF_ShapeCircle) {
+        if (shape->appearance == FSTUFF_ShapeAppearanceEdged) {
+            didSet = true;
 #if 0
-                shape->primitiveType = FSTUFF_PrimitiveTriangleFan;
-                FSTUFF_MakeCircleTriangleStrip(vertices, maxElements, &shape->numVertices, shape->circle.numParts,
-                                               0.9,     // inner radius
-                                               1.0);    // outer radius
+            shape->primitiveType = FSTUFF_PrimitiveTriangleFan;
+            FSTUFF_MakeCircleTriangleStrip(vertices, maxElements, &shape->numVertices, shape->circle.numParts,
+                                           0.9,     // inner radius
+                                           1.0);    // outer radius
 #else
-                shape->primitiveType = FSTUFF_PrimitiveLineStrip;
-                FSTUFF_MakeCircleLineStrip(vertices, maxElements, &shape->numVertices, shape->circle.numParts,
-                                           1.0);        // radius
+            shape->primitiveType = FSTUFF_PrimitiveLineStrip;
+            FSTUFF_MakeCircleLineStrip(vertices, maxElements, &shape->numVertices, shape->circle.numParts,
+                                       1.0);        // radius
 #endif
-            } break;
-                
-            case FSTUFF_ShapeCircleFilled: {
-                shape->primitiveType = FSTUFF_PrimitiveTriangles;
-                FSTUFF_MakeCircleFilledTriangles(vertices, maxElements, &shape->numVertices, shape->circle.numParts);
-            } break;
+        } else if (shape->appearance == FSTUFF_ShapeAppearanceFilled) {
+            didSet = true;
+            shape->primitiveType = FSTUFF_PrimitiveTriangles;
+            FSTUFF_MakeCircleFilledTriangles(vertices, maxElements, &shape->numVertices, shape->circle.numParts);
         }
+    }
+    
+    //
+    // Boxes
+    //
+    else if (shape->type == FSTUFF_ShapeBox) {
+        if (shape->appearance == FSTUFF_ShapeAppearanceEdged) {
+            didSet = true;
+            shape->primitiveType = FSTUFF_PrimitiveLineStrip;
+            shape->numVertices = 5;
+            vertices[0] = {-.5f,  .5f,  0, 1};
+            vertices[1] = { .5f,  .5f,  0, 1};
+            vertices[2] = { .5f, -.5f,  0, 1};
+            vertices[3] = {-.5f, -.5f,  0, 1};
+            vertices[4] = {-.5f,  .5f,  0, 1};
+        } else if (shape->appearance == FSTUFF_ShapeAppearanceFilled) {
+            didSet = true;
+            shape->primitiveType = FSTUFF_PrimitiveTriangleFan;
+            shape->numVertices = 4;
+            vertices[0] = {-.5f, -.5f, 0, 1};
+            vertices[1] = {-.5f,  .5f, 0, 1};
+            vertices[2] = { .5f, -.5f, 0, 1};
+            vertices[3] = { .5f,  .5f, 0, 1};
+        }
+    }
 
+    if (didSet) {
         shape->gpuVertexBuffer = [device newBufferWithBytes:vertices
                                                      length:(shape->numVertices * sizeof(vector_float4))
                                                     options:MTLResourceOptionCPUCacheModeDefault];
+    } else {
+        shape->gpuVertexBuffer = nil;
     }
 }
 
@@ -158,8 +195,11 @@ struct FSTUFF_Simulation {
     //
     FSTUFF_ShapeTemplate circleFilled;
     FSTUFF_ShapeTemplate circleEdged;
+    FSTUFF_ShapeTemplate boxFilled;
+    FSTUFF_ShapeTemplate boxEdged;
     matrix_float4x4 projectionMatrix;
-    vector_float2 viewSizeMM;
+    //vector_float2 viewSizeMM;
+    cpVect viewSizeMM;
 
     //
     // Timing
@@ -177,41 +217,58 @@ struct FSTUFF_Simulation {
     //   Further, zero-ing out the memory is not required (again, according to the docs).
     uint8_t _physicsSpaceStorage[sizeof(cpSpace)];
     cpSpace * physicsSpace = (cpSpace *) &_physicsSpaceStorage;
-    union {
-        cpShape asShape;
-        cpCircleShape asCircle;
-    } shapes[4096];
-    cpBody bodies[4096];
-    size_t numShapes = 0;
+
+    size_t numCircles = 0;
+    cpCircleShape circles[2048];
+
+    size_t numBoxes;
+    cpSegmentShape boxes[2048];
+
     size_t numBodies = 0;
+    cpBody bodies[4096];
 };
 
-static const cpFloat kWorldScale = 1.0;
 static const size_t kNumSubSteps = 10;
 const cpFloat kStepTimeS = 1./60.;          // step time, in seconds
 
 
 #define SPACE           (sim->physicsSpace)
+
 #define BODY(IDX)       (&sim->bodies[(IDX)])
-#define SHAPE(IDX)      ((&(sim->shapes[(IDX)].asShape)))
-#define CIRCLE(IDX)     ((&(sim->shapes[(IDX)].asCircle)))
+#define CIRCLE(IDX)     (&(sim->circles[(IDX)]))
+#define BOX(IDX)        (&(sim->boxes[(IDX)]))
+
 #define BODY_ALLOC()    (BODY(sim->numBodies++))
-#define CIRCLE_ALLOC()  (CIRCLE(sim->numShapes++))
+#define CIRCLE_ALLOC()  (CIRCLE(sim->numCircles++))
+#define BOX_ALLOC()     (BOX(sim->numBoxes++))
+
 
 void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSize, id<MTLDevice> gpuDevice)
 {
     //
     // GPU init
     //
-    sim->circleFilled.debugName = "FSTUFF_CircleFills";
-    sim->circleFilled.shapeType = FSTUFF_ShapeCircleFilled;
+    sim->circleFilled.debugName = "FSTUFF_CircleFilled";
+    sim->circleFilled.type = FSTUFF_ShapeCircle;
+    sim->circleFilled.appearance = FSTUFF_ShapeAppearanceFilled;
     sim->circleFilled.circle.numParts = kNumCircleParts;
     FSTUFF_ShapeInit(&(sim->circleFilled), buffer, bufSize, gpuDevice);
 
-    sim->circleEdged.debugName = "FSTUFF_CircleEdges";
-    sim->circleEdged.shapeType = FSTUFF_ShapeCircleEdged;
+    sim->circleEdged.debugName = "FSTUFF_CircleEdged";
+    sim->circleEdged.type = FSTUFF_ShapeCircle;
+    sim->circleEdged.appearance = FSTUFF_ShapeAppearanceEdged;
     sim->circleEdged.circle.numParts = kNumCircleParts;
     FSTUFF_ShapeInit(&(sim->circleEdged), buffer, bufSize, gpuDevice);
+
+    sim->boxFilled.debugName = "FSTUFF_BoxEdged";
+    sim->boxFilled.type = FSTUFF_ShapeBox;
+    sim->boxFilled.appearance = FSTUFF_ShapeAppearanceFilled;
+    FSTUFF_ShapeInit(&(sim->boxFilled), buffer, bufSize, gpuDevice);
+    
+    sim->boxEdged.debugName = "FSTUFF_BoxEdged";
+    sim->boxEdged.type = FSTUFF_ShapeBox;
+    sim->boxEdged.appearance = FSTUFF_ShapeAppearanceEdged;
+    FSTUFF_ShapeInit(&(sim->boxEdged), buffer, bufSize, gpuDevice);
     
     //
     // Physics-world init
@@ -219,7 +276,7 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     memset(&sim->_physicsSpaceStorage, 0, sizeof(sim->_physicsSpaceStorage));
     cpSpaceInit(sim->physicsSpace);
     cpSpaceSetIterations(sim->physicsSpace, 100);
-    cpSpaceSetGravity(sim->physicsSpace, cpv(0, -98 * kWorldScale));
+    cpSpaceSetGravity(sim->physicsSpace, cpv(0, -98));
     // TODO: try resizing cpSpace hashes
     
     cpBody * body;
@@ -227,8 +284,8 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     
     body = cpBodyInit(BODY_ALLOC(), 0, 0);
     cpSpaceAddBody(SPACE, body);
-    cpBodySetPosition(body, cpv(40 * kWorldScale, 80 * kWorldScale));
-    shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 4 * kWorldScale, cpvzero);
+    cpBodySetPosition(body, cpv(40, 80));
+    shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 4, cpvzero);
     cpSpaceAddShape(sim->physicsSpace, shape);
     cpShapeSetDensity(shape, 10);
     cpShapeSetElasticity(shape, 0.8);
@@ -236,16 +293,42 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     body = cpBodyInit(BODY_ALLOC(), 0, 0);
     cpBodySetType(body, CP_BODY_TYPE_STATIC);
     cpSpaceAddBody(SPACE, body);
-    cpBodySetPosition(body, cpv(35 * kWorldScale, 20 * kWorldScale));
-    shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 10 * kWorldScale, cpvzero);
+    cpBodySetPosition(body, cpv(35, 20));
+    shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 10, cpvzero);
+    cpSpaceAddShape(SPACE, shape);
+    cpShapeSetElasticity(shape, 0.8);
+
+//    body = cpBodyInit(BODY_ALLOC(), 0, 0);
+//    cpBodySetType(body, CP_BODY_TYPE_STATIC);
+//    cpSpaceAddBody(SPACE, body);
+//    cpBodySetPosition(body, cpv(35, 20));
+//    //shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 10, cpvzero);
+//    static const cpFloat wallThickness = 10.0;
+//    static const cpFloat wallLeft = -wallThickness / 2.;
+//    //static const cpFloat wallTop = -sim->viewSizeMM.y;
+//    static const cpFloat wallBottom = sim->viewSizeMM.y + (wallThickness / 2.);
+//    static const cpFloat wallRight = sim->viewSizeMM.x + (wallThickness / 2.);
+//    shape = (cpShape*)cpSegmentShapeInit(SEGMENT_ALLOC(), body, cpv(wallLeft,wallBottom), cpv(wallRight,wallBottom), wallThickness);
+//    cpSpaceAddShape(SPACE, shape);
+//    cpShapeSetElasticity(shape, 0.8);
+
+    body = cpBodyInit(BODY_ALLOC(), 0, 0);
+    cpBodySetType(body, CP_BODY_TYPE_STATIC);
+    cpSpaceAddBody(SPACE, body);
+    cpBodySetPosition(body, cpv(30, 5.));
+    cpBodySetAngle(body, M_PI / 6.);
+    shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(0.,0.), cpv(100.,0.), 5.);
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
 }
 
 void FSTUFF_SimulationShutdown(FSTUFF_Simulation * sim)
 {
-    for (size_t i = 0; i < sim->numShapes; ++i) {
-        cpShapeDestroy(SHAPE(i));
+    for (size_t i = 0; i < sim->numCircles; ++i) {
+        cpShapeDestroy((cpShape*)CIRCLE(i));
+    }
+    for (size_t i = 0; i < sim->numBoxes; ++i) {
+        cpShapeDestroy((cpShape*)BOX(i));
     }
     for (size_t i = 0; i < sim->numBodies; ++i) {
         cpBodyDestroy(BODY(i));
@@ -258,11 +341,11 @@ void FSTUFF_SimulationViewChanged(FSTUFF_Simulation * sim, float widthMM, float 
     sim->viewSizeMM = {widthMM, heightMM};
     
     matrix_float4x4 t = matrix_from_translation(-1, -1, 0);
-    matrix_float4x4 s = matrix_from_scaling(2.0f / widthMM, 2.0f / heightMM, 1); //100.0f / w, 100.0f / h, 1.0f);
+    matrix_float4x4 s = matrix_from_scaling(2.0f / widthMM, 2.0f / heightMM, 1);
     sim->projectionMatrix = matrix_multiply(t, s);
 }
 
-void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_SimulationGPUInfo * gpuGlobals, FSTUFF_ShapeGPUInfo * gpuShapes)
+void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
 {
     // Compute current time
     cpFloat nowS;           // current time, in seconds since UNIX epoch
@@ -285,16 +368,34 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_SimulationGPUInfo *
     }
 
     // Copy simulation/game data to GPU-accessible buffers
-    gpuGlobals->projection_matrix = matrix_multiply(sim->projectionMatrix, matrix_from_scaling(1.0/kWorldScale, 1.0/kWorldScale, 1));
-    for (size_t i = 0; i < sim->numShapes; ++i) {
-        cpFloat shapeRadius = cpCircleShapeGetRadius(SHAPE(i));
-        cpBody * b = cpShapeGetBody(SHAPE(i));
-        cpVect bodyCenter = cpBodyGetPosition(b);
-        gpuShapes[i].model_matrix = matrix_multiply(
+    gpuData->globals.projection_matrix = sim->projectionMatrix;
+    
+    for (size_t i = 0; i < sim->numCircles; ++i) {
+        cpFloat shapeRadius = cpCircleShapeGetRadius((cpShape*)CIRCLE(i));
+        cpBody * body = cpShapeGetBody((cpShape*)CIRCLE(i));
+        cpVect bodyCenter = cpBodyGetPosition(body);
+        gpuData->circles[i].model_matrix = matrix_multiply(
             matrix_from_translation(bodyCenter.x, bodyCenter.y, 0),
             matrix_from_scaling(shapeRadius, shapeRadius, 1)
         );
     }
+
+    sim->numBoxes = 1;
+    for (size_t i = 0; i < sim->numBoxes; ++i) {
+        cpVect a = cpSegmentShapeGetA((cpShape*)BOX(i));
+        cpVect b = cpSegmentShapeGetB((cpShape*)BOX(i));
+        cpFloat radius = cpSegmentShapeGetRadius((cpShape*)BOX(i));
+        cpBody * body = cpShapeGetBody((cpShape*)BOX(i));
+        cpVect bodyCenter = cpBodyGetPosition(body);
+        cpFloat bodyAngle = cpBodyGetAngle(body);
+        matrix_float4x4 m = matrix_identity_float4x4;
+        m = matrix_multiply(m, matrix_from_translation(bodyCenter.x, bodyCenter.y, 0.));
+        m = matrix_multiply(m, matrix_from_rotation(bodyAngle, 0., 0., 1.));
+        m = matrix_multiply(m, matrix_from_translation(((b.x-a.x)/2.f)+a.x, ((b.y-a.y)/2.f)+a.y, 0.));
+        m = matrix_multiply(m, matrix_from_scaling(cpvlength(b-a), radius*2., 1.));
+        gpuData->segments[i].model_matrix = m;
+    }
+
     
 /*
  Colors = {
@@ -335,8 +436,10 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
                              id <MTLRenderCommandEncoder> gpuRenderer,
                              id <MTLBuffer> gpuAppData)
 {
-    FSTUFF_RenderShapes(&sim->circleFilled, sim->numShapes, gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0x40));
-    FSTUFF_RenderShapes(&sim->circleEdged,  sim->numShapes, gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0xff));
+    FSTUFF_RenderShapes(&sim->circleFilled, sim->numCircles,    gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0x40));
+    FSTUFF_RenderShapes(&sim->circleEdged,  sim->numCircles,    gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0xff));
+    FSTUFF_RenderShapes(&sim->boxFilled,    sim->numBoxes,      gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0x40));
+    FSTUFF_RenderShapes(&sim->boxEdged,     sim->numBoxes,      gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0xff));
 }
 
 
@@ -445,15 +548,14 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
 - (void)_update
 {
     const uint8_t * constants = (uint8_t *) [_gpuConstants[_constantDataBufferIndex] contents];
-    FSTUFF_SimulationGPUInfo * gpuGlobals = (FSTUFF_SimulationGPUInfo *) constants;
-    FSTUFF_ShapeGPUInfo * gpuShapes = (FSTUFF_ShapeGPUInfo *) (constants + sizeof(FSTUFF_SimulationGPUInfo));
-    FSTUFF_SimulationUpdate(&_sim, gpuGlobals, gpuShapes);
+    FSTUFF_GPUData * gpuData = (FSTUFF_GPUData *) constants;
+    FSTUFF_SimulationUpdate(&_sim, gpuData);
 }
 
 void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
                          size_t count,
                          id <MTLRenderCommandEncoder> gpuRenderer,
-                         id <MTLBuffer> gpuAppData,
+                         id <MTLBuffer> gpuData,    // laid out as a 'FSTUFF_GPUData' struct
                          vector_float4 color)
 {
     MTLPrimitiveType gpuPrimitiveType;
@@ -471,12 +573,25 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
             NSLog(@"Unknown or unmapped FSTUFF_PrimitiveType in shape: %u", shape->primitiveType);
             return;
     }
+
+    NSUInteger shapesOffsetInGpuData;
+    switch (shape->type) {
+        case FSTUFF_ShapeCircle:
+            shapesOffsetInGpuData = offsetof(FSTUFF_GPUData, circles);
+            break;
+        case FSTUFF_ShapeBox:
+            shapesOffsetInGpuData = offsetof(FSTUFF_GPUData, segments);
+            break;
+        default:
+            NSLog(@"Unknown or unmapped FSTUFF_ShapeType in shape: %u", shape->type);
+            return;
+    }
     
     [gpuRenderer pushDebugGroup:[NSString stringWithUTF8String:shape->debugName]];
-    [gpuRenderer setVertexBuffer:shape->gpuVertexBuffer offset:0 atIndex:0];    // 'position'
-    [gpuRenderer setVertexBuffer:gpuAppData offset:0 atIndex:1];                // 'sim'
-    [gpuRenderer setVertexBuffer:gpuAppData offset:sizeof(FSTUFF_SimulationGPUInfo) atIndex:2]; // 'shapes'
-    [gpuRenderer setVertexBytes:&color length:sizeof(color) atIndex:3];         // 'color'
+    [gpuRenderer setVertexBuffer:shape->gpuVertexBuffer offset:0 atIndex:0];                    // 'position[<vertex id>]'
+    [gpuRenderer setVertexBuffer:gpuData offset:offsetof(FSTUFF_GPUData, globals) atIndex:1];   // 'gpuGlobals'
+    [gpuRenderer setVertexBuffer:gpuData offset:shapesOffsetInGpuData atIndex:2];               // 'gpuShapes[<instance id>]'
+    [gpuRenderer setVertexBytes:&color length:sizeof(color) atIndex:3];                         // 'color'
     
     [gpuRenderer drawPrimitives:gpuPrimitiveType
                     vertexStart:0

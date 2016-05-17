@@ -11,22 +11,28 @@
 
 #include <simd/simd.h>
 
-//typedef struct __attribute__((__aligned__(256)))
-//{
-//    matrix_float4x4 modelview_projection_matrix;
-//    matrix_float4x4 normal_matrix;
-//} uniforms_t;
+#define kMaxCircles 2048
+#define kMaxSegments 2048
 
 typedef struct __attribute__((__aligned__(256)))
 {
     matrix_float4x4 projection_matrix;
-} FSTUFF_SimulationGPUInfo;
+} FSTUFF_SimulationGPUGlobals;
 
 typedef struct
 {
     matrix_float4x4 model_matrix;
     vector_float4 color;
 } FSTUFF_ShapeGPUInfo;
+
+typedef struct
+{
+    FSTUFF_SimulationGPUGlobals globals;
+    FSTUFF_ShapeGPUInfo circles[kMaxCircles];
+    FSTUFF_ShapeGPUInfo segments[kMaxSegments];
+} FSTUFF_GPUData;
+
+
 
 #endif /* SharedStructures_h */
 
