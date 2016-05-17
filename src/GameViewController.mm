@@ -348,29 +348,6 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x000000, 0x00);
 }
 
-void FSTUFF_SimulationShutdown(FSTUFF_Simulation * sim)
-{
-    for (size_t i = 0; i < sim->numCircles; ++i) {
-        cpShapeDestroy((cpShape*)CIRCLE(i));
-    }
-    for (size_t i = 0; i < sim->numBoxes; ++i) {
-        cpShapeDestroy((cpShape*)BOX(i));
-    }
-    for (size_t i = 0; i < sim->numBodies; ++i) {
-        cpBodyDestroy(BODY(i));
-    }
-    cpSpaceDestroy(sim->physicsSpace);
-}
-
-void FSTUFF_SimulationViewChanged(FSTUFF_Simulation * sim, float widthMM, float heightMM)
-{
-    sim->viewSizeMM = {widthMM, heightMM};
-    
-    matrix_float4x4 t = matrix_from_translation(-1, -1, 0);
-    matrix_float4x4 s = matrix_from_scaling(2.0f / widthMM, 2.0f / heightMM, 1);
-    sim->projectionMatrix = matrix_multiply(t, s);
-}
-
 void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
 {
     // Compute current time
@@ -470,6 +447,30 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
     FSTUFF_RenderShapes(&sim->boxFilled,    sim->numBoxes,      gpuRenderer, gpuAppData, 0.35f);
     FSTUFF_RenderShapes(&sim->boxEdged,     sim->numBoxes,      gpuRenderer, gpuAppData, 1.0f);
 }
+
+void FSTUFF_SimulationViewChanged(FSTUFF_Simulation * sim, float widthMM, float heightMM)
+{
+    sim->viewSizeMM = {widthMM, heightMM};
+    
+    matrix_float4x4 t = matrix_from_translation(-1, -1, 0);
+    matrix_float4x4 s = matrix_from_scaling(2.0f / widthMM, 2.0f / heightMM, 1);
+    sim->projectionMatrix = matrix_multiply(t, s);
+}
+
+void FSTUFF_SimulationShutdown(FSTUFF_Simulation * sim)
+{
+    for (size_t i = 0; i < sim->numCircles; ++i) {
+        cpShapeDestroy((cpShape*)CIRCLE(i));
+    }
+    for (size_t i = 0; i < sim->numBoxes; ++i) {
+        cpShapeDestroy((cpShape*)BOX(i));
+    }
+    for (size_t i = 0; i < sim->numBodies; ++i) {
+        cpBodyDestroy(BODY(i));
+    }
+    cpSpaceDestroy(sim->physicsSpace);
+}
+
 
 
 #pragma mark - Renderer
