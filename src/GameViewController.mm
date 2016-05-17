@@ -310,30 +310,42 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
     sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(0x00ff00);
-
+    
 //    body = cpBodyInit(BODY_ALLOC(), 0, 0);
 //    cpBodySetType(body, CP_BODY_TYPE_STATIC);
 //    cpSpaceAddBody(SPACE, body);
-//    cpBodySetPosition(body, cpv(35, 20));
-//    //shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 10, cpvzero);
-//    static const cpFloat wallThickness = 10.0;
-//    static const cpFloat wallLeft = -wallThickness / 2.;
-//    //static const cpFloat wallTop = -sim->viewSizeMM.y;
-//    static const cpFloat wallBottom = sim->viewSizeMM.y + (wallThickness / 2.);
-//    static const cpFloat wallRight = sim->viewSizeMM.x + (wallThickness / 2.);
-//    shape = (cpShape*)cpSegmentShapeInit(SEGMENT_ALLOC(), body, cpv(wallLeft,wallBottom), cpv(wallRight,wallBottom), wallThickness);
+//    cpBodySetPosition(body, cpv(30, 5.));
+//    cpBodySetAngle(body, M_PI / 6.);
+//    shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(0.,0.), cpv(100.,0.), 5.);
 //    cpSpaceAddShape(SPACE, shape);
 //    cpShapeSetElasticity(shape, 0.8);
+//    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x0000ff);
 
     body = cpBodyInit(BODY_ALLOC(), 0, 0);
     cpBodySetType(body, CP_BODY_TYPE_STATIC);
     cpSpaceAddBody(SPACE, body);
-    cpBodySetPosition(body, cpv(30, 5.));
-    cpBodySetAngle(body, M_PI / 6.);
-    shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(0.,0.), cpv(100.,0.), 5.);
+    cpBodySetPosition(body, cpv(0, 0));
+    static const cpFloat wallThickness = 5.0;
+    static const cpFloat wallLeft   = -wallThickness / 2.;
+    static const cpFloat wallRight  = sim->viewSizeMM.x + (wallThickness / 2.);
+    static const cpFloat wallBottom = -wallThickness / 2.;
+    static const cpFloat wallTop    = sim->viewSizeMM.y;
+    
+    // Bottom
+    shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(wallLeft,wallBottom), cpv(wallRight,wallBottom), wallThickness/2.);
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
-    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x0000ff);
+    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x000000, 0x00);
+    // Left
+    shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(wallLeft,wallBottom), cpv(wallLeft,wallTop), wallThickness/2.);
+    cpSpaceAddShape(SPACE, shape);
+    cpShapeSetElasticity(shape, 0.8);
+    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x000000, 0x00);
+    // Right
+    shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(wallRight,wallBottom), cpv(wallRight,wallTop), wallThickness/2.);
+    cpSpaceAddShape(SPACE, shape);
+    cpShapeSetElasticity(shape, 0.8);
+    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x000000, 0x00);
 }
 
 void FSTUFF_SimulationShutdown(FSTUFF_Simulation * sim)
@@ -395,10 +407,10 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
         gpuData->circles[i].color = sim->circleColors[i];
     }
 
-    sim->numBoxes = 1;
     for (size_t i = 0; i < sim->numBoxes; ++i) {
         cpVect a = cpSegmentShapeGetA((cpShape*)BOX(i));
         cpVect b = cpSegmentShapeGetB((cpShape*)BOX(i));
+        cpVect center = cpvlerp(a, b, 0.5);
         cpFloat radius = cpSegmentShapeGetRadius((cpShape*)BOX(i));
         cpBody * body = cpShapeGetBody((cpShape*)BOX(i));
         cpVect bodyCenter = cpBodyGetPosition(body);
@@ -406,8 +418,9 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
         matrix_float4x4 m = matrix_identity_float4x4;
         m = matrix_multiply(m, matrix_from_translation(bodyCenter.x, bodyCenter.y, 0.));
         m = matrix_multiply(m, matrix_from_rotation(bodyAngle, 0., 0., 1.));
-        m = matrix_multiply(m, matrix_from_translation(((b.x-a.x)/2.f)+a.x, ((b.y-a.y)/2.f)+a.y, 0.));
-        m = matrix_multiply(m, matrix_from_scaling(cpvlength(b-a), radius*2., 1.));
+        m = matrix_multiply(m, matrix_from_translation(center.x, center.y, 0.));
+        m = matrix_multiply(m, matrix_from_rotation(cpvtoangle(b-a), 0., 0., 1.));
+        m = matrix_multiply(m, matrix_from_scaling(cpvlength(b-a), radius*2., 1.));    // TODO: check to see if this is correct
         gpuData->boxes[i].model_matrix = m;
         gpuData->boxes[i].color = sim->boxColors[i];
     }
@@ -459,7 +472,6 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
 }
 
 
-
 #pragma mark - Renderer
 
 @interface GameViewController()
@@ -497,8 +509,8 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
     if(_device)
     {
         [self _setupView];
-        [self _loadAssets];
         [self _reshape];
+        [self _loadAssets];
     }
     else // Fallback to a blank NSView, an application could also fallback to OpenGL here.
     {

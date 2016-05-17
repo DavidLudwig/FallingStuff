@@ -31,7 +31,7 @@ vertex FSTUFF_Vertex FSTUFF_VertexShader(constant float4 * position [[buffer(0)]
         gpuShapes[shapeId].color[0],
         gpuShapes[shapeId].color[1],
         gpuShapes[shapeId].color[2],
-        *alpha,
+        gpuShapes[shapeId].color[3] * (*alpha),
     };
     return vert;
 }
