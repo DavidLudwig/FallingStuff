@@ -180,11 +180,17 @@ constexpr vector_float4 FSTUFF_Color(uint32_t rgb, uint8_t a)
     };
 }
 
+constexpr vector_float4 FSTUFF_Color(uint32_t rgb)
+{
+    return FSTUFF_Color(rgb, 0xff);
+}
+
+
 void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
                          size_t count,
                          id<MTLRenderCommandEncoder> gpuRenderer,
                          id<MTLBuffer> gpuAppData,
-                         vector_float4 color);
+                         float alpha);
 
 
 #pragma mark - Simulation
@@ -220,9 +226,11 @@ struct FSTUFF_Simulation {
 
     size_t numCircles = 0;
     cpCircleShape circles[kMaxCircles];
+    vector_float4 circleColors[kMaxCircles];
 
     size_t numBoxes;
     cpSegmentShape boxes[kMaxBoxes];
+    vector_float4 boxColors[kMaxBoxes];
 
     size_t numBodies = 0;
     cpBody bodies[kMaxShapes];
@@ -241,6 +249,9 @@ const cpFloat kStepTimeS = 1./60.;          // step time, in seconds
 #define BODY_ALLOC()    (BODY(sim->numBodies++))
 #define CIRCLE_ALLOC()  (CIRCLE(sim->numCircles++))
 #define BOX_ALLOC()     (BOX(sim->numBoxes++))
+
+#define CIRCLE_IDX(VAL) ((((uintptr_t)(VAL)) - ((uintptr_t)(&sim->circles[0]))) / sizeof(sim->circles[0]))
+#define BOX_IDX(VAL)    ((((uintptr_t)(VAL)) - ((uintptr_t)(&sim->boxes[0]))) / sizeof(sim->boxes[0]))
 
 
 void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSize, id<MTLDevice> gpuDevice)
@@ -289,6 +300,7 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     cpSpaceAddShape(sim->physicsSpace, shape);
     cpShapeSetDensity(shape, 10);
     cpShapeSetElasticity(shape, 0.8);
+    sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(0xff0000);
 
     body = cpBodyInit(BODY_ALLOC(), 0, 0);
     cpBodySetType(body, CP_BODY_TYPE_STATIC);
@@ -297,6 +309,7 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 10, cpvzero);
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
+    sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(0x00ff00);
 
 //    body = cpBodyInit(BODY_ALLOC(), 0, 0);
 //    cpBodySetType(body, CP_BODY_TYPE_STATIC);
@@ -320,6 +333,7 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(0.,0.), cpv(100.,0.), 5.);
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
+    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x0000ff);
 }
 
 void FSTUFF_SimulationShutdown(FSTUFF_Simulation * sim)
@@ -378,6 +392,7 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
             matrix_from_translation(bodyCenter.x, bodyCenter.y, 0),
             matrix_from_scaling(shapeRadius, shapeRadius, 1)
         );
+        gpuData->circles[i].color = sim->circleColors[i];
     }
 
     sim->numBoxes = 1;
@@ -394,9 +409,10 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
         m = matrix_multiply(m, matrix_from_translation(((b.x-a.x)/2.f)+a.x, ((b.y-a.y)/2.f)+a.y, 0.));
         m = matrix_multiply(m, matrix_from_scaling(cpvlength(b-a), radius*2., 1.));
         gpuData->boxes[i].model_matrix = m;
+        gpuData->boxes[i].color = sim->boxColors[i];
     }
 
-    
+
 /*
  Colors = {
 	blue = "#0000ff",
@@ -436,10 +452,10 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
                              id <MTLRenderCommandEncoder> gpuRenderer,
                              id <MTLBuffer> gpuAppData)
 {
-    FSTUFF_RenderShapes(&sim->circleFilled, sim->numCircles,    gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0x40));
-    FSTUFF_RenderShapes(&sim->circleEdged,  sim->numCircles,    gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0xff));
-    FSTUFF_RenderShapes(&sim->boxFilled,    sim->numBoxes,      gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0x40));
-    FSTUFF_RenderShapes(&sim->boxEdged,     sim->numBoxes,      gpuRenderer, gpuAppData, FSTUFF_Color(0xffffff, 0xff));
+    FSTUFF_RenderShapes(&sim->circleFilled, sim->numCircles,    gpuRenderer, gpuAppData, 0.25f); //FSTUFF_Color(0xffffff, 0x40));
+    FSTUFF_RenderShapes(&sim->circleEdged,  sim->numCircles,    gpuRenderer, gpuAppData, 1.00f); //FSTUFF_Color(0xffffff, 0xff));
+    FSTUFF_RenderShapes(&sim->boxFilled,    sim->numBoxes,      gpuRenderer, gpuAppData, 0.25f); //FSTUFF_Color(0xffffff, 0x40));
+    FSTUFF_RenderShapes(&sim->boxEdged,     sim->numBoxes,      gpuRenderer, gpuAppData, 1.00f); //FSTUFF_Color(0xffffff, 0xff));
 }
 
 
@@ -556,7 +572,7 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
                          size_t count,
                          id <MTLRenderCommandEncoder> gpuRenderer,
                          id <MTLBuffer> gpuData,    // laid out as a 'FSTUFF_GPUData' struct
-                         vector_float4 color)
+                         float alpha)
 {
     MTLPrimitiveType gpuPrimitiveType;
     switch (shape->primitiveType) {
@@ -591,7 +607,7 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
     [gpuRenderer setVertexBuffer:shape->gpuVertexBuffer offset:0 atIndex:0];                    // 'position[<vertex id>]'
     [gpuRenderer setVertexBuffer:gpuData offset:offsetof(FSTUFF_GPUData, globals) atIndex:1];   // 'gpuGlobals'
     [gpuRenderer setVertexBuffer:gpuData offset:shapesOffsetInGpuData atIndex:2];               // 'gpuShapes[<instance id>]'
-    [gpuRenderer setVertexBytes:&color length:sizeof(color) atIndex:3];                         // 'color'
+    [gpuRenderer setVertexBytes:&alpha length:sizeof(alpha) atIndex:3];                         // 'alpha'
     
     [gpuRenderer drawPrimitives:gpuPrimitiveType
                     vertexStart:0

@@ -21,13 +21,18 @@ struct FSTUFF_Vertex
 vertex FSTUFF_Vertex FSTUFF_VertexShader(constant float4 * position [[buffer(0)]],
                                          constant FSTUFF_SimulationGPUGlobals * gpuGlobals [[buffer(1)]],
                                          constant FSTUFF_ShapeGPUInfo * gpuShapes [[buffer(2)]],
-                                         constant vector_float4 * color [[buffer(3)]],
+                                         constant float * alpha [[buffer(3)]],
                                          uint vertexId [[vertex_id]],
                                          uint shapeId [[instance_id]])
 {
     FSTUFF_Vertex vert;
     vert.position = (gpuGlobals->projection_matrix * gpuShapes[shapeId].model_matrix) * position[vertexId];
-    vert.color = *color;
+    vert.color = {
+        gpuShapes[shapeId].color[0],
+        gpuShapes[shapeId].color[1],
+        gpuShapes[shapeId].color[2],
+        *alpha,
+    };
     return vert;
 }
 
