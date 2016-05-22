@@ -32,7 +32,7 @@ static const NSUInteger kMaxInflightBuffers = 3;
 // Max API memory buffer size.
 static const size_t kMaxBytesPerFrame = 1024 * 1024; //64; //sizeof(vector_float4) * 3; //*1024;
 
-static const unsigned kNumCircleParts = 128;
+static const unsigned kNumCircleParts = 32;
 
 enum FSTUFF_ShapeType : uint8_t {
     FSTUFF_ShapeCircle = 0,
@@ -312,7 +312,7 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     sim->circleDots.circle.numParts = kNumCircleParts;
     sim->circleDots.primitiveType = FSTUFF_PrimitiveTriangles;
     {
-        const int numCirclePartsForDot = 16;
+        const int numCirclePartsForDot = 6;
         const float dotRadius = 0.05f;  // size of dot: 0 to 1; 0 is no-size, 1 is as big as containing-circle
         const float dotDistance = 0.8f; // from 0 to 1
         int tmpVertexCount;
