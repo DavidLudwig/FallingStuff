@@ -70,17 +70,55 @@ struct FSTUFF_ShapeTemplate {
 #define COS_IDX(I) ((float)cos(RAD_IDX(I)))
 #define SIN_IDX(I) ((float)sin(RAD_IDX(I)))
 
-void FSTUFF_MakeCircleFilledTriangles(vector_float4 * vertices, int maxVertices, int * numVertices, int numPartsToGenerate)
+void FSTUFF_MakeCircleFilledTriangles(vector_float4 * vertices,
+                                      int maxVertices,
+                                      int * numVertices,
+                                      int numPartsToGenerate,
+                                      float radius,
+                                      float offsetX,
+                                      float offsetY)
 {
-    // TODO: check the size of the vertex buffer!
-    static const int kVertsPerPart = 3;
-    const float kRadianStep = ((((float)M_PI) * 2.0f) / (float)numPartsToGenerate);
-    *numVertices = numPartsToGenerate * kVertsPerPart;
-    for (unsigned i = 0; i < numPartsToGenerate; ++i) {
-        vertices[(i * kVertsPerPart) + 0] = {           0,            0, 0, 1};
-        vertices[(i * kVertsPerPart) + 1] = {COS_IDX( i ), SIN_IDX( i ), 0, 1};
-        vertices[(i * kVertsPerPart) + 2] = {COS_IDX(i+1), SIN_IDX(i+1), 0, 1};
+//    // TODO: check the size of the vertex buffer!
+//    static const int kVertsPerPart = 3;
+//    const float kRadianStep = ((((float)M_PI) * 2.0f) / (float)numPartsToGenerate);
+//    *numVertices = numPartsToGenerate * kVertsPerPart;
+//    for (unsigned i = 0; i < numPartsToGenerate; ++i) {
+//        vertices[(i * kVertsPerPart) + 0] = {           0,            0, 0, 1};
+//        vertices[(i * kVertsPerPart) + 1] = {COS_IDX( i ), SIN_IDX( i ), 0, 1};
+//        vertices[(i * kVertsPerPart) + 2] = {COS_IDX(i+1), SIN_IDX(i+1), 0, 1};
+//    }
+
+//    numPartsToGenerate = 8;
+
+    const vector_float4 * verticesOrig = vertices;
+    const int n = numPartsToGenerate / 2;
+    float rad = 0.;
+    const float radStep = M_PI/(float)n;
+
+    // start
+    *vertices++ = { (1.f*radius) + offsetX,                 ( 0.f*radius) + offsetY,                  0,  1};
+    *vertices++ = { (cosf(rad + radStep)*radius) + offsetX, (-sinf(rad + radStep)*radius) + offsetY,  0,  1};
+    *vertices++ = { (cosf(rad + radStep)*radius) + offsetX, ( sinf(rad + radStep)*radius) + offsetY,  0,  1};
+    rad += radStep;
+    
+    // mid
+    for (int i = 1; i <= (n-2); ++i) {
+        *vertices++ = { (cosf(rad)*radius) + offsetX,         ( sinf(rad)*radius) + offsetY,            0,  1};
+        *vertices++ = { (cosf(rad)*radius) + offsetX,         (-sinf(rad)*radius) + offsetY,            0,  1};
+        *vertices++ = { (cosf(rad+radStep)*radius) + offsetX, (-sinf(rad+radStep)*radius) + offsetY,    0,  1};
+        *vertices++ = { (cosf(rad+radStep)*radius) + offsetX, (-sinf(rad+radStep)*radius) + offsetY,    0,  1};
+        *vertices++ = { (cosf(rad+radStep)*radius) + offsetX, ( sinf(rad+radStep)*radius) + offsetY,    0,  1};
+        *vertices++ = { (cosf(rad)*radius) + offsetX,         ( sinf(rad)*radius) + offsetY,            0,  1};
+
+        rad += radStep;
     }
+    
+    // end
+    *vertices++ = { (cosf(rad)*radius) + offsetX,           ( sinf(rad)*radius) + offsetY,            0,  1};
+    *vertices++ = { (cosf(rad)*radius) + offsetX,           (-sinf(rad)*radius) + offsetY,            0,  1};
+    *vertices++ = { (-1.f*radius) + offsetX,                ( 0.f*radius) + offsetY,                  0,  1};
+
+    *numVertices = (int) (((intptr_t)vertices - (intptr_t)verticesOrig) / sizeof(vertices[0]));
 }
 
 void FSTUFF_MakeCircleTriangleStrip(vector_float4 * vertices, int maxVertices, int * numVertices, int numPartsToGenerate,
@@ -133,7 +171,7 @@ void FSTUFF_ShapeInit(FSTUFF_ShapeTemplate * shape, void * buffer, size_t bufSiz
         } else if (shape->appearance == FSTUFF_ShapeAppearanceFilled) {
             didSet = true;
             shape->primitiveType = FSTUFF_PrimitiveTriangles;
-            FSTUFF_MakeCircleFilledTriangles(vertices, maxElements, &shape->numVertices, shape->circle.numParts);
+            FSTUFF_MakeCircleFilledTriangles(vertices, maxElements, &shape->numVertices, shape->circle.numParts, 1.f, 0.f, 0.f);
         }
     }
     
@@ -187,6 +225,7 @@ constexpr vector_float4 FSTUFF_Color(uint32_t rgb)
 
 
 void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
+                         size_t offset,
                          size_t count,
                          id<MTLRenderCommandEncoder> gpuRenderer,
                          id<MTLBuffer> gpuAppData,
@@ -200,6 +239,7 @@ struct FSTUFF_Simulation {
     // Geometry + GPU
     //
     FSTUFF_ShapeTemplate circleFilled;
+    FSTUFF_ShapeTemplate circleDots;
     FSTUFF_ShapeTemplate circleEdged;
     FSTUFF_ShapeTemplate boxFilled;
     FSTUFF_ShapeTemplate boxEdged;
@@ -224,7 +264,8 @@ struct FSTUFF_Simulation {
     uint8_t _physicsSpaceStorage[sizeof(cpSpace)];
     cpSpace * physicsSpace = (cpSpace *) &_physicsSpaceStorage;
 
-    size_t numCircles = 0;
+    size_t numPegs = 0;     // all pegs must be consecutive, starting at circles[0]
+    size_t numCircles = 0;  // pegs + circlular-marbles (with pegs first, then marbles)
     cpCircleShape circles[kMaxCircles];
     vector_float4 circleColors[kMaxCircles];
 
@@ -265,6 +306,35 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     sim->circleFilled.circle.numParts = kNumCircleParts;
     FSTUFF_ShapeInit(&(sim->circleFilled), buffer, bufSize, gpuDevice);
 
+    sim->circleDots.debugName = "FSTUFF_CircleDots";
+    sim->circleDots.type = FSTUFF_ShapeCircle;
+    sim->circleDots.appearance = FSTUFF_ShapeAppearanceFilled;
+    sim->circleDots.circle.numParts = kNumCircleParts;
+    sim->circleDots.primitiveType = FSTUFF_PrimitiveTriangles;
+    {
+        const int numCirclePartsForDot = 16;
+        const float dotRadius = 0.05f;  // size of dot: 0 to 1; 0 is no-size, 1 is as big as containing-circle
+        const float dotDistance = 0.8f; // from 0 to 1
+        int tmpVertexCount;
+        sim->circleDots.numVertices = 0;
+        for (int i = 0, n = 6; i < n; ++i) {
+            const float rad = float(i) * ((M_PI * 2.f) / float(n));
+            FSTUFF_MakeCircleFilledTriangles(
+                (vector_float4 *)buffer + sim->circleDots.numVertices,
+                0,
+                &tmpVertexCount,
+                numCirclePartsForDot,
+                dotRadius,
+                cosf(rad) * dotDistance,
+                sinf(rad) * dotDistance
+            );
+            sim->circleDots.numVertices += tmpVertexCount;
+        }
+        sim->circleDots.gpuVertexBuffer = [gpuDevice newBufferWithBytes:buffer
+                                                                 length:(sim->circleDots.numVertices * sizeof(vector_float4))
+                                                                options:MTLResourceOptionCPUCacheModeDefault];
+    }
+
     sim->circleEdged.debugName = "FSTUFF_CircleEdged";
     sim->circleEdged.type = FSTUFF_ShapeCircle;
     sim->circleEdged.appearance = FSTUFF_ShapeAppearanceEdged;
@@ -289,37 +359,40 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     cpSpaceSetIterations(sim->physicsSpace, 100);
     cpSpaceSetGravity(sim->physicsSpace, cpv(0, -98));
     // TODO: try resizing cpSpace hashes
-    
+
     cpBody * body;
     cpShape * shape;
     
-    body = cpBodyInit(BODY_ALLOC(), 0, 0);
-    cpSpaceAddBody(SPACE, body);
-    cpBodySetPosition(body, cpv(40, 80));
-    shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 4, cpvzero);
-    cpSpaceAddShape(sim->physicsSpace, shape);
-    cpShapeSetDensity(shape, 10);
-    cpShapeSetElasticity(shape, 0.8);
-    sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(0xff0000);
+
+    //
+    // Pegs
+    //
 
     body = cpBodyInit(BODY_ALLOC(), 0, 0);
     cpBodySetType(body, CP_BODY_TYPE_STATIC);
     cpSpaceAddBody(SPACE, body);
     cpBodySetPosition(body, cpv(35, 20));
     shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 10, cpvzero);
+    ++sim->numPegs;
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
+    cpShapeSetFriction(shape, 1);
     sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(0x00ff00);
     
-//    body = cpBodyInit(BODY_ALLOC(), 0, 0);
-//    cpBodySetType(body, CP_BODY_TYPE_STATIC);
-//    cpSpaceAddBody(SPACE, body);
-//    cpBodySetPosition(body, cpv(30, 5.));
-//    cpBodySetAngle(body, M_PI / 6.);
-//    shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(0.,0.), cpv(100.,0.), 5.);
-//    cpSpaceAddShape(SPACE, shape);
-//    cpShapeSetElasticity(shape, 0.8);
-//    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x0000ff);
+    body = cpBodyInit(BODY_ALLOC(), 0, 0);
+    cpBodySetType(body, CP_BODY_TYPE_STATIC);
+    cpSpaceAddBody(SPACE, body);
+    cpBodySetPosition(body, cpv(30, 5.));
+    cpBodySetAngle(body, M_PI / 6.);
+    shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(0.,0.), cpv(100.,0.), 5.);
+    cpSpaceAddShape(SPACE, shape);
+    cpShapeSetElasticity(shape, 0.8);
+    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x0000ff);
+
+    
+    //
+    // Walls
+    //
 
     body = cpBodyInit(BODY_ALLOC(), 0, 0);
     cpBodySetType(body, CP_BODY_TYPE_STATIC);
@@ -335,17 +408,50 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(wallLeft,wallBottom), cpv(wallRight,wallBottom), wallThickness/2.);
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
+    cpShapeSetFriction(shape, 1);
     sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x000000, 0x00);
     // Left
     shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(wallLeft,wallBottom), cpv(wallLeft,wallTop), wallThickness/2.);
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
+    cpShapeSetFriction(shape, 1);
     sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x000000, 0x00);
     // Right
     shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(wallRight,wallBottom), cpv(wallRight,wallTop), wallThickness/2.);
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
+    cpShapeSetFriction(shape, 1);
     sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x000000, 0x00);
+    
+    
+    //
+    // Marbles
+    //
+
+    body = cpBodyInit(BODY_ALLOC(), 0, 0);
+    cpSpaceAddBody(SPACE, body);
+    cpBodySetPosition(body, cpv(40, 90));
+    shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 4, cpvzero);
+//    shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(-5,0), cpv(5,0), 4);
+    cpSpaceAddShape(sim->physicsSpace, shape);
+    cpShapeSetDensity(shape, 10);
+    cpShapeSetElasticity(shape, 0.8);
+    cpShapeSetFriction(shape, 1);
+    sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(0xff0000);
+//    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0xff0000);
+
+    body = cpBodyInit(BODY_ALLOC(), 0, 0);
+    cpSpaceAddBody(SPACE, body);
+    cpBodySetPosition(body, cpv(80, 120));
+    shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 4, cpvzero);
+//    shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(-5,0), cpv(5,0), 4);
+    cpSpaceAddShape(sim->physicsSpace, shape);
+    cpShapeSetDensity(shape, 10);
+    cpShapeSetElasticity(shape, 0.8);
+    cpShapeSetFriction(shape, 1);
+    sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(0xff0000);
+//    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0xff0000);
+
 }
 
 void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
@@ -377,10 +483,12 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
         cpFloat shapeRadius = cpCircleShapeGetRadius((cpShape*)CIRCLE(i));
         cpBody * body = cpShapeGetBody((cpShape*)CIRCLE(i));
         cpVect bodyCenter = cpBodyGetPosition(body);
-        gpuData->circles[i].model_matrix = matrix_multiply(
-            matrix_from_translation(bodyCenter.x, bodyCenter.y, 0),
-            matrix_from_scaling(shapeRadius, shapeRadius, 1)
-        );
+        cpFloat bodyAngle = cpBodyGetAngle(body);
+        matrix_float4x4 m = matrix_identity_float4x4;
+        m = matrix_multiply(m, matrix_from_translation(bodyCenter.x, bodyCenter.y, 0.));
+        m = matrix_multiply(m, matrix_from_rotation(bodyAngle, 0., 0., 1.));
+        m = matrix_multiply(m, matrix_from_scaling(shapeRadius, shapeRadius, 1));
+        gpuData->circles[i].model_matrix = m;
         gpuData->circles[i].color = sim->circleColors[i];
     }
 
@@ -442,10 +550,11 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
                              id <MTLRenderCommandEncoder> gpuRenderer,
                              id <MTLBuffer> gpuAppData)
 {
-    FSTUFF_RenderShapes(&sim->circleFilled, sim->numCircles,    gpuRenderer, gpuAppData, 0.35f);
-    FSTUFF_RenderShapes(&sim->circleEdged,  sim->numCircles,    gpuRenderer, gpuAppData, 1.0f);
-    FSTUFF_RenderShapes(&sim->boxFilled,    sim->numBoxes,      gpuRenderer, gpuAppData, 0.35f);
-    FSTUFF_RenderShapes(&sim->boxEdged,     sim->numBoxes,      gpuRenderer, gpuAppData, 1.0f);
+    FSTUFF_RenderShapes(&sim->circleFilled, 0,              sim->numCircles,                 gpuRenderer, gpuAppData, 0.35f);
+    FSTUFF_RenderShapes(&sim->circleDots,   sim->numPegs,   sim->numCircles - sim->numPegs,  gpuRenderer, gpuAppData, 1.0f);
+    FSTUFF_RenderShapes(&sim->circleEdged,  0,              sim->numCircles,                 gpuRenderer, gpuAppData, 1.0f);
+    FSTUFF_RenderShapes(&sim->boxFilled,    0,              sim->numBoxes,                   gpuRenderer, gpuAppData, 0.35f);
+    FSTUFF_RenderShapes(&sim->boxEdged,     0,              sim->numBoxes,                   gpuRenderer, gpuAppData, 1.0f);
 }
 
 void FSTUFF_SimulationViewChanged(FSTUFF_Simulation * sim, float widthMM, float heightMM)
@@ -582,6 +691,7 @@ void FSTUFF_SimulationShutdown(FSTUFF_Simulation * sim)
 }
 
 void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
+                         size_t baseInstance,
                          size_t count,
                          id <MTLRenderCommandEncoder> gpuRenderer,
                          id <MTLBuffer> gpuData,    // laid out as a 'FSTUFF_GPUData' struct
@@ -625,7 +735,8 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
     [gpuRenderer drawPrimitives:gpuPrimitiveType
                     vertexStart:0
                     vertexCount:shape->numVertices
-                  instanceCount:count];
+                  instanceCount:count
+                   baseInstance:baseInstance];
     [gpuRenderer popDebugGroup];
 }
 
