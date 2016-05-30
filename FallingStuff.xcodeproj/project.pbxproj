@@ -114,16 +114,16 @@
 
 /* Begin PBXFileReference section */
 		75036FBC1CD540F10017DC04 /* FallingStuff_OSX.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FallingStuff_OSX.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		75036FBF1CD540F10017DC04 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = mac/AppDelegate.h; sourceTree = "<group>"; };
-		75036FC01CD540F10017DC04 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = mac/AppDelegate.m; sourceTree = "<group>"; };
-		75036FC31CD540F10017DC04 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = main.m; path = mac/main.m; sourceTree = "<group>"; };
+		75036FBF1CD540F10017DC04 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		75036FC01CD540F10017DC04 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		75036FC31CD540F10017DC04 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		75036FC51CD540F10017DC04 /* GameViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GameViewController.h; sourceTree = "<group>"; };
 		75036FC61CD540F10017DC04 /* GameViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = GameViewController.mm; sourceTree = "<group>"; };
 		75036FC81CD540F10017DC04 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 		75036FCA1CD540F10017DC04 /* SharedStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SharedStructures.h; sourceTree = "<group>"; };
-		75036FCB1CD540F10017DC04 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = mac/Assets.xcassets; sourceTree = "<group>"; };
-		75036FCE1CD540F10017DC04 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = mac/Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
-		75036FD01CD540F10017DC04 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = mac/Info.plist; sourceTree = "<group>"; };
+		75036FCB1CD540F10017DC04 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		75036FCE1CD540F10017DC04 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		75036FD01CD540F10017DC04 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		755855F61CDFC96F00FC8EA4 /* chipmunk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = chipmunk.c; path = external/Chipmunk2D/src/chipmunk.c; sourceTree = "<group>"; };
 		755855F71CDFC96F00FC8EA4 /* cpArbiter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cpArbiter.c; path = external/Chipmunk2D/src/cpArbiter.c; sourceTree = "<group>"; };
 		755855F81CDFC96F00FC8EA4 /* cpArray.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cpArray.c; path = external/Chipmunk2D/src/cpArray.c; sourceTree = "<group>"; };
@@ -268,7 +268,7 @@
 				75036FC31CD540F10017DC04 /* main.m */,
 				75036FCD1CD540F10017DC04 /* MainMenu.xib */,
 			);
-			name = mac;
+			path = mac;
 			sourceTree = "<group>";
 		};
 		755855B41CDFC71800FC8EA4 /* Chipmunk2D */ = {
