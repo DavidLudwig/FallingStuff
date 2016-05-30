@@ -268,54 +268,66 @@ struct FSTUFF_Simulation {
     cpFloat lastUpdateUTCTimeS = 0.0;     // set on FSTUFF_Update; UTC time in seconds
     
     //
-    // Random Number Generation
-    //
-    std::random_device rng;
-    
-    //
     // Physics
     //
-    // HACK: C++ won't allow us to create a 'cpSpace' directly, due to constructor issues,
-    //   so we'll allocate one ourselves.
+    // All members here will get their memory zero'ed out on world-init.
     //
-    //   To note, Chipmunk Physics' cpAlloc() function just calls calloc() anyways,
-    //   and according to its docs, using custom allocation, as is done here, is ok.
-    //   Further, zero-ing out the memory is not required (again, according to the docs).
-    uint8_t _physicsSpaceStorage[sizeof(cpSpace)];
-    cpSpace * physicsSpace = (cpSpace *) &_physicsSpaceStorage;
-
-    size_t numPegs = 0;     // all pegs must be consecutive, starting at circles[0]
-    size_t numCircles = 0;  // pegs + circlular-marbles (with pegs first, then marbles)
-    cpCircleShape circles[kMaxCircles];
-    vector_float4 circleColors[kMaxCircles];
-
-    size_t numBoxes;
-    cpSegmentShape boxes[kMaxBoxes];
-    vector_float4 boxColors[kMaxBoxes];
-
-    size_t numBodies = 0;
-    cpBody bodies[kMaxShapes];
+    struct World {
+        // HACK: C++ won't allow us to create a 'cpSpace' directly, due to constructor issues,
+        //   so we'll allocate one ourselves.
+        //
+        //   To note, Chipmunk Physics' cpAlloc() function just calls calloc() anyways,
+        //   and according to its docs, using custom allocation, as is done here, is ok.
+        //
+        uint8_t _physicsSpaceStorage[sizeof(cpSpace)];
+        cpSpace * physicsSpace;
+        
+        size_t numPegs;     // all pegs must be consecutive, starting at circles[0]
+        size_t numCircles;  // pegs + circlular-marbles (with pegs first, then marbles)
+        cpCircleShape circles[kMaxCircles];
+        vector_float4 circleColors[kMaxCircles];
+        
+        size_t numBoxes;
+        cpSegmentShape boxes[kMaxBoxes];
+        vector_float4 boxColors[kMaxBoxes];
+        
+        size_t numBodies;
+        cpBody bodies[kMaxShapes];
+    } world;
 };
 
 static const size_t kNumSubSteps = 10;
 const cpFloat kStepTimeS = 1./60.;          // step time, in seconds
 
+enum FSTUFF_EventType : uint8_t {
+    FSTUFF_EventKeyDown = 1,
+};
 
-#define SPACE           (sim->physicsSpace)
-
-#define BODY(IDX)       (&sim->bodies[(IDX)])
-#define CIRCLE(IDX)     (&(sim->circles[(IDX)]))
-#define BOX(IDX)        (&(sim->boxes[(IDX)]))
-
-#define BODY_ALLOC()    (BODY(sim->numBodies++))
-#define CIRCLE_ALLOC()  (CIRCLE(sim->numCircles++))
-#define BOX_ALLOC()     (BOX(sim->numBoxes++))
-
-#define CIRCLE_IDX(VAL) ((((uintptr_t)(VAL)) - ((uintptr_t)(&sim->circles[0]))) / sizeof(sim->circles[0]))
-#define BOX_IDX(VAL)    ((((uintptr_t)(VAL)) - ((uintptr_t)(&sim->boxes[0]))) / sizeof(sim->boxes[0]))
+struct FSTUFF_Event {
+    FSTUFF_EventType type;
+    union {
+        struct {
+            const char * utf8;
+        } key;
+    };
+};
 
 
-void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSize, id<MTLDevice> gpuDevice)
+#define SPACE           (sim->world.physicsSpace)
+
+#define BODY(IDX)       (&sim->world.bodies[(IDX)])
+#define CIRCLE(IDX)     (&(sim->world.circles[(IDX)]))
+#define BOX(IDX)        (&(sim->world.boxes[(IDX)]))
+
+#define BODY_ALLOC()    (BODY(sim->world.numBodies++))
+#define CIRCLE_ALLOC()  (CIRCLE(sim->world.numCircles++))
+#define BOX_ALLOC()     (BOX(sim->world.numBoxes++))
+
+#define CIRCLE_IDX(VAL) ((((uintptr_t)(VAL)) - ((uintptr_t)(&sim->world.circles[0]))) / sizeof(sim->world.circles[0]))
+#define BOX_IDX(VAL)    ((((uintptr_t)(VAL)) - ((uintptr_t)(&sim->world.boxes[0]))) / sizeof(sim->world.boxes[0]))
+
+
+void FSTUFF_SimulationInitGPU(FSTUFF_Simulation * sim, void * buffer, size_t bufSize, id<MTLDevice> gpuDevice)
 {
     //
     // GPU init
@@ -370,14 +382,18 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     sim->boxEdged.type = FSTUFF_ShapeBox;
     sim->boxEdged.appearance = FSTUFF_ShapeAppearanceEdged;
     FSTUFF_ShapeInit(&(sim->boxEdged), buffer, bufSize, gpuDevice);
-    
+}
+
+void FSTUFF_SimulationInitWorld(FSTUFF_Simulation * sim)
+{
     //
     // Physics-world init
     //
-    memset(&sim->_physicsSpaceStorage, 0, sizeof(sim->_physicsSpaceStorage));
-    cpSpaceInit(sim->physicsSpace);
-    cpSpaceSetIterations(sim->physicsSpace, 100);
-    cpSpaceSetGravity(sim->physicsSpace, cpv(0, -98));
+    memset(&sim->world, 0, sizeof(FSTUFF_Simulation::World));
+    sim->world.physicsSpace = (cpSpace *) &(sim->world._physicsSpaceStorage);
+    cpSpaceInit(sim->world.physicsSpace);
+    cpSpaceSetIterations(sim->world.physicsSpace, 100);
+    cpSpaceSetGravity(sim->world.physicsSpace, cpv(0, -98));
     // TODO: try resizing cpSpace hashes
 
     cpBody * body;
@@ -403,19 +419,19 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
-    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x000000, 0x00);
+    sim->world.boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x000000, 0x00);
     // Left
     shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(wallLeft,wallBottom), cpv(wallLeft,wallTop), wallThickness/2.);
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
-    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x000000, 0x00);
+    sim->world.boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x000000, 0x00);
     // Right
     shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(wallRight,wallBottom), cpv(wallRight,wallTop), wallThickness/2.);
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
-    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x000000, 0x00);
+    sim->world.boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x000000, 0x00);
 
 
     //
@@ -453,11 +469,11 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
                 cpSpaceAddBody(SPACE, body);
                 cpBodySetPosition(body, cpv(cx, cy));
                 shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, radius, cpvzero);
-                ++sim->numPegs;
+                ++sim->world.numPegs;
                 cpSpaceAddShape(SPACE, shape);
                 cpShapeSetElasticity(shape, 0.8);
                 cpShapeSetFriction(shape, 1);
-                sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(pegColors[pegColorIndex]);
+                sim->world.circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(pegColors[pegColorIndex]);
             } break;
             
             case 1:
@@ -477,7 +493,7 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
                 shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(-w/2.,0.), cpv(w/2.,0.), h/2.);
                 cpSpaceAddShape(SPACE, shape);
                 cpShapeSetElasticity(shape, 0.8);
-                sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(pegColors[pegColorIndex]);
+                sim->world.boxColors[BOX_IDX(shape)] = FSTUFF_Color(pegColors[pegColorIndex]);
             } break;
         }
     }
@@ -491,22 +507,43 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     cpSpaceAddBody(SPACE, body);
     cpBodySetPosition(body, cpv(40, sim->viewSizeMM.y * 1.2));
     shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 4, cpvzero);
-    cpSpaceAddShape(sim->physicsSpace, shape);
+    cpSpaceAddShape(sim->world.physicsSpace, shape);
     cpShapeSetDensity(shape, 10);
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
-    sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(White);
+    sim->world.circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(White);
 
     body = cpBodyInit(BODY_ALLOC(), 0, 0);
     cpSpaceAddBody(SPACE, body);
     cpBodySetPosition(body, cpv(80, sim->viewSizeMM.y * 1.1));
     shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 4, cpvzero);
-    cpSpaceAddShape(sim->physicsSpace, shape);
+    cpSpaceAddShape(sim->world.physicsSpace, shape);
     cpShapeSetDensity(shape, 10);
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
-    sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(White);
+    sim->world.circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(White);
+}
 
+void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSize, id<MTLDevice> gpuDevice)
+{
+    FSTUFF_SimulationInitGPU(sim, buffer, bufSize, gpuDevice);
+    FSTUFF_SimulationInitWorld(sim);
+}
+
+void FSTUFF_SimulationShutdownWorld(FSTUFF_Simulation * sim);
+
+void FSTUFF_SimulationEvent(FSTUFF_Simulation * sim, FSTUFF_Event * event)
+{
+    switch (event->type) {
+        case FSTUFF_EventKeyDown: {
+            switch (std::toupper(event->key.utf8[0])) {
+                case 'R': {
+                    FSTUFF_SimulationShutdownWorld(sim);
+                    FSTUFF_SimulationInitWorld(sim);
+                } break;
+            }
+        } break;
+    }
 }
 
 void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
@@ -534,7 +571,7 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
     // Copy simulation/game data to GPU-accessible buffers
     gpuData->globals.projection_matrix = sim->projectionMatrix;
     
-    for (size_t i = 0; i < sim->numCircles; ++i) {
+    for (size_t i = 0; i < sim->world.numCircles; ++i) {
         cpFloat shapeRadius = cpCircleShapeGetRadius((cpShape*)CIRCLE(i));
         cpBody * body = cpShapeGetBody((cpShape*)CIRCLE(i));
         cpVect bodyCenter = cpBodyGetPosition(body);
@@ -544,10 +581,10 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
         m = matrix_multiply(m, matrix_from_rotation(bodyAngle, 0., 0., 1.));
         m = matrix_multiply(m, matrix_from_scaling(shapeRadius, shapeRadius, 1));
         gpuData->circles[i].model_matrix = m;
-        gpuData->circles[i].color = sim->circleColors[i];
+        gpuData->circles[i].color = sim->world.circleColors[i];
     }
 
-    for (size_t i = 0; i < sim->numBoxes; ++i) {
+    for (size_t i = 0; i < sim->world.numBoxes; ++i) {
         cpVect a = cpSegmentShapeGetA((cpShape*)BOX(i));
         cpVect b = cpSegmentShapeGetB((cpShape*)BOX(i));
         cpVect center = cpvlerp(a, b, 0.5);
@@ -562,7 +599,7 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
         m = matrix_multiply(m, matrix_from_rotation(cpvtoangle(b-a), 0., 0., 1.));
         m = matrix_multiply(m, matrix_from_scaling(cpvlength(b-a), radius*2., 1.));    // TODO: check to see if this is correct
         gpuData->boxes[i].model_matrix = m;
-        gpuData->boxes[i].color = sim->boxColors[i];
+        gpuData->boxes[i].color = sim->world.boxColors[i];
     }
 
 
@@ -605,11 +642,11 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
                              id <MTLRenderCommandEncoder> gpuRenderer,
                              id <MTLBuffer> gpuAppData)
 {
-    FSTUFF_RenderShapes(&sim->circleFilled, 0,              sim->numCircles,                 gpuRenderer, gpuAppData, 0.35f);
-    FSTUFF_RenderShapes(&sim->circleDots,   sim->numPegs,   sim->numCircles - sim->numPegs,  gpuRenderer, gpuAppData, 1.0f);
-    FSTUFF_RenderShapes(&sim->circleEdged,  0,              sim->numCircles,                 gpuRenderer, gpuAppData, 1.0f);
-    FSTUFF_RenderShapes(&sim->boxFilled,    0,              sim->numBoxes,                   gpuRenderer, gpuAppData, 0.35f);
-    FSTUFF_RenderShapes(&sim->boxEdged,     0,              sim->numBoxes,                   gpuRenderer, gpuAppData, 1.0f);
+    FSTUFF_RenderShapes(&sim->circleFilled, 0,                  sim->world.numCircles,                      gpuRenderer, gpuAppData, 0.35f);
+    FSTUFF_RenderShapes(&sim->circleDots,   sim->world.numPegs, sim->world.numCircles - sim->world.numPegs, gpuRenderer, gpuAppData, 1.0f);
+    FSTUFF_RenderShapes(&sim->circleEdged,  0,                  sim->world.numCircles,                      gpuRenderer, gpuAppData, 1.0f);
+    FSTUFF_RenderShapes(&sim->boxFilled,    0,                  sim->world.numBoxes,                        gpuRenderer, gpuAppData, 0.35f);
+    FSTUFF_RenderShapes(&sim->boxEdged,     0,                  sim->world.numBoxes,                        gpuRenderer, gpuAppData, 1.0f);
 }
 
 void FSTUFF_SimulationViewChanged(FSTUFF_Simulation * sim, float widthMM, float heightMM)
@@ -622,18 +659,23 @@ void FSTUFF_SimulationViewChanged(FSTUFF_Simulation * sim, float widthMM, float 
     sim->projectionMatrix = matrix_multiply(t, s);
 }
 
-void FSTUFF_SimulationShutdown(FSTUFF_Simulation * sim)
+void FSTUFF_SimulationShutdownWorld(FSTUFF_Simulation * sim)
 {
-    for (size_t i = 0; i < sim->numCircles; ++i) {
+    for (size_t i = 0; i < sim->world.numCircles; ++i) {
         cpShapeDestroy((cpShape*)CIRCLE(i));
     }
-    for (size_t i = 0; i < sim->numBoxes; ++i) {
+    for (size_t i = 0; i < sim->world.numBoxes; ++i) {
         cpShapeDestroy((cpShape*)BOX(i));
     }
-    for (size_t i = 0; i < sim->numBodies; ++i) {
+    for (size_t i = 0; i < sim->world.numBodies; ++i) {
         cpBodyDestroy(BODY(i));
     }
-    cpSpaceDestroy(sim->physicsSpace);
+    cpSpaceDestroy(sim->world.physicsSpace);
+}
+
+void FSTUFF_SimulationShutdown(FSTUFF_Simulation * sim)
+{
+    FSTUFF_SimulationShutdownWorld(sim);
 }
 
 
@@ -737,6 +779,15 @@ void FSTUFF_SimulationShutdown(FSTUFF_Simulation * sim)
         _gpuConstants[i] = [_device newBufferWithLength:kMaxBytesPerFrame options:0];
         _gpuConstants[i].label = [NSString stringWithFormat:@"FSTUFF_ConstantBuffer%i", i];
     }
+}
+
+- (void)keyDown:(NSEvent *)theEvent
+{
+    FSTUFF_Event evt;
+    memset(&evt, 0, sizeof(evt));
+    evt.type = FSTUFF_EventKeyDown;
+    evt.key.utf8 = [theEvent.characters cStringUsingEncoding:NSUTF8StringEncoding];
+    FSTUFF_SimulationEvent(&_sim, &evt);
 }
 
 - (void)_update

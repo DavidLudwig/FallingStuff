@@ -45,6 +45,7 @@
 		755856331CDFC96F00FC8EA4 /* cpSpaceStep.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856131CDFC96F00FC8EA4 /* cpSpaceStep.c */; };
 		755856341CDFC96F00FC8EA4 /* cpSpatialIndex.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856141CDFC96F00FC8EA4 /* cpSpatialIndex.c */; };
 		755856351CDFC96F00FC8EA4 /* cpSweep1D.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856151CDFC96F00FC8EA4 /* cpSweep1D.c */; };
+		7568AAF71CFCA59600262462 /* FSTUFF_MTKView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568AAF61CFCA59600262462 /* FSTUFF_MTKView.mm */; };
 		75B391401CD67637000F6E1E /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75B3913F1CD67637000F6E1E /* MetalKit.framework */; };
 /* End PBXBuildFile section */
 
@@ -124,6 +125,8 @@
 		755856551CDFC9D800FC8EA4 /* cpTransform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cpTransform.h; path = external/Chipmunk2D/include/chipmunk/cpTransform.h; sourceTree = "<group>"; };
 		755856561CDFC9D800FC8EA4 /* cpVect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cpVect.h; path = external/Chipmunk2D/include/chipmunk/cpVect.h; sourceTree = "<group>"; };
 		7568AAF41CFC9EC600262462 /* FSTUFF_Colors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FSTUFF_Colors.h; sourceTree = "<group>"; };
+		7568AAF51CFCA59600262462 /* FSTUFF_MTKView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FSTUFF_MTKView.h; sourceTree = "<group>"; };
+		7568AAF61CFCA59600262462 /* FSTUFF_MTKView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FSTUFF_MTKView.mm; sourceTree = "<group>"; };
 		75B3913F1CD67637000F6E1E /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -171,6 +174,8 @@
 				75036FCD1CD540F10017DC04 /* MainMenu.xib */,
 				75036FD01CD540F10017DC04 /* Info.plist */,
 				75036FC21CD540F10017DC04 /* Supporting Files */,
+				7568AAF51CFCA59600262462 /* FSTUFF_MTKView.h */,
+				7568AAF61CFCA59600262462 /* FSTUFF_MTKView.mm */,
 			);
 			name = "Mac App";
 			path = src;
@@ -347,6 +352,7 @@
 				7558562B1CDFC96F00FC8EA4 /* cpShape.c in Sources */,
 				75036FC91CD540F10017DC04 /* Shaders.metal in Sources */,
 				7558561C1CDFC96F00FC8EA4 /* cpConstraint.c in Sources */,
+				7568AAF71CFCA59600262462 /* FSTUFF_MTKView.mm in Sources */,
 				7558562E1CDFC96F00FC8EA4 /* cpSpace.c in Sources */,
 				755856331CDFC96F00FC8EA4 /* cpSpaceStep.c in Sources */,
 				755856281CDFC96F00FC8EA4 /* cpRatchetJoint.c in Sources */,
