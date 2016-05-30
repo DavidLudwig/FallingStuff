@@ -230,7 +230,6 @@
 				7568AAF81CFCCBCC00262462 /* external */,
 				75036FBD1CD540F10017DC04 /* build */,
 				75036FBE1CD540F10017DC04 /* src */,
-				75DE2F281CFCCD4C0052F8C1 /* iOS */,
 			);
 			sourceTree = "<group>";
 		};
@@ -251,6 +250,7 @@
 				7568AAF61CFCA59600262462 /* FSTUFF_MTKView.mm */,
 				75036FC51CD540F10017DC04 /* GameViewController.h */,
 				75036FC61CD540F10017DC04 /* GameViewController.mm */,
+				75DE2F281CFCCD4C0052F8C1 /* iOS */,
 				75036FC21CD540F10017DC04 /* mac */,
 				75036FC81CD540F10017DC04 /* Shaders.metal */,
 				75036FCA1CD540F10017DC04 /* SharedStructures.h */,
@@ -386,8 +386,7 @@
 				75DE2F3D1CFCCD4C0052F8C1 /* Info.plist */,
 				75DE2F2A1CFCCD4C0052F8C1 /* main.m */,
 			);
-			name = iOS;
-			path = FallingStuff_iOS;
+			path = iOS;
 			sourceTree = "<group>";
 		};
 		75DE2F6A1CFCCE8D0052F8C1 /* iOS */ = {
@@ -768,7 +767,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				INFOPLIST_FILE = FallingStuff_iOS/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/src/iOS/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.dludwig.FallingStuffiOS;
@@ -783,7 +782,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				INFOPLIST_FILE = FallingStuff_iOS/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/src/iOS/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.dludwig.FallingStuffiOS;
