@@ -16,6 +16,8 @@
     return YES;
 }
 
+#if ! TARGET_OS_IOS
+
 - (void) keyDown:(NSEvent *)theEvent
 {
     if ([self.delegate isKindOfClass:[GameViewController class]]) {
@@ -23,5 +25,7 @@
         [controller keyDown:theEvent];
     }
 }
+
+#endif
 
 @end

@@ -15,6 +15,10 @@
 #include <random>
 #include "FSTUFF_Colors.h"
 
+#if TARGET_OS_IOS
+#import <GBDeviceInfo/GBDeviceInfo.h>
+#endif
+
 extern "C" {
 //#include <chipmunk/chipmunk_structs.h>
 #include <chipmunk/chipmunk_private.h>  // #include'd solely for allowing static cp* structs (cpSpace, cpBody, etc.)
@@ -242,6 +246,7 @@ int FSTUFF_RandRangeI(std::mt19937 & rng, int a, int b)
 void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
                          size_t offset,
                          size_t count,
+                         id<MTLDevice> gpuDevice,
                          id<MTLRenderCommandEncoder> gpuRenderer,
                          id<MTLBuffer> gpuAppData,
                          float alpha);
@@ -639,14 +644,15 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
 }
 
 void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
+                             id <MTLDevice> gpuDevice,
                              id <MTLRenderCommandEncoder> gpuRenderer,
                              id <MTLBuffer> gpuAppData)
 {
-    FSTUFF_RenderShapes(&sim->circleFilled, 0,                  sim->world.numCircles,                      gpuRenderer, gpuAppData, 0.35f);
-    FSTUFF_RenderShapes(&sim->circleDots,   sim->world.numPegs, sim->world.numCircles - sim->world.numPegs, gpuRenderer, gpuAppData, 1.0f);
-    FSTUFF_RenderShapes(&sim->circleEdged,  0,                  sim->world.numCircles,                      gpuRenderer, gpuAppData, 1.0f);
-    FSTUFF_RenderShapes(&sim->boxFilled,    0,                  sim->world.numBoxes,                        gpuRenderer, gpuAppData, 0.35f);
-    FSTUFF_RenderShapes(&sim->boxEdged,     0,                  sim->world.numBoxes,                        gpuRenderer, gpuAppData, 1.0f);
+    FSTUFF_RenderShapes(&sim->circleFilled, 0,                  sim->world.numCircles,                      gpuDevice, gpuRenderer, gpuAppData, 0.35f);
+    FSTUFF_RenderShapes(&sim->circleDots,   sim->world.numPegs, sim->world.numCircles - sim->world.numPegs, gpuDevice, gpuRenderer, gpuAppData, 1.0f);
+    FSTUFF_RenderShapes(&sim->circleEdged,  0,                  sim->world.numCircles,                      gpuDevice, gpuRenderer, gpuAppData, 1.0f);
+    FSTUFF_RenderShapes(&sim->boxFilled,    0,                  sim->world.numBoxes,                        gpuDevice, gpuRenderer, gpuAppData, 0.35f);
+    FSTUFF_RenderShapes(&sim->boxEdged,     0,                  sim->world.numBoxes,                        gpuDevice, gpuRenderer, gpuAppData, 1.0f);
 }
 
 void FSTUFF_SimulationViewChanged(FSTUFF_Simulation * sim, float widthMM, float heightMM)
@@ -723,7 +729,9 @@ void FSTUFF_SimulationShutdown(FSTUFF_Simulation * sim)
     else // Fallback to a blank NSView, an application could also fallback to OpenGL here.
     {
         NSLog(@"Metal is not supported on this device");
+#if ! TARGET_OS_IOS
         self.view = [[NSView alloc] initWithFrame:self.view.frame];
+#endif
     }
 }
 
@@ -781,6 +789,7 @@ void FSTUFF_SimulationShutdown(FSTUFF_Simulation * sim)
     }
 }
 
+#if ! TARGET_OS_IOS
 - (void)keyDown:(NSEvent *)theEvent
 {
     FSTUFF_Event evt;
@@ -789,6 +798,7 @@ void FSTUFF_SimulationShutdown(FSTUFF_Simulation * sim)
     evt.key.utf8 = [theEvent.characters cStringUsingEncoding:NSUTF8StringEncoding];
     FSTUFF_SimulationEvent(&_sim, &evt);
 }
+#endif
 
 - (void)_update
 {
@@ -797,9 +807,12 @@ void FSTUFF_SimulationShutdown(FSTUFF_Simulation * sim)
     FSTUFF_SimulationUpdate(&_sim, gpuData);
 }
 
+//#ifndef _MTLFeatureSet_iOS_GPUFamily3_v1
+
 void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
                          size_t baseInstance,
                          size_t count,
+                         id <MTLDevice> gpuDevice,
                          id <MTLRenderCommandEncoder> gpuRenderer,
                          id <MTLBuffer> gpuData,    // laid out as a 'FSTUFF_GPUData' struct
                          float alpha)
@@ -839,11 +852,23 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
     [gpuRenderer setVertexBuffer:gpuData offset:shapesOffsetInGpuData atIndex:2];               // 'gpuShapes[<instance id>]'
     [gpuRenderer setVertexBytes:&alpha length:sizeof(alpha) atIndex:3];                         // 'alpha'
     
-    [gpuRenderer drawPrimitives:gpuPrimitiveType
-                    vertexStart:0
-                    vertexCount:shape->numVertices
-                  instanceCount:count
-                   baseInstance:baseInstance];
+#if TARGET_OS_IOS
+    const MTLFeatureSet featureSetForBaseInstance = MTLFeatureSet_iOS_GPUFamily3_v1;
+#else
+    const MTLFeatureSet featureSetForBaseInstance = MTLFeatureSet_OSX_GPUFamily1_v1;
+#endif
+    if (baseInstance == 0) {
+        [gpuRenderer drawPrimitives:gpuPrimitiveType
+                        vertexStart:0
+                        vertexCount:shape->numVertices
+                      instanceCount:count];
+    } else if ([gpuDevice supportsFeatureSet:featureSetForBaseInstance]) {
+        [gpuRenderer drawPrimitives:gpuPrimitiveType
+                        vertexStart:0
+                        vertexCount:shape->numVertices
+                      instanceCount:count
+                       baseInstance:baseInstance];
+    }
     [gpuRenderer popDebugGroup];
 }
 
@@ -874,7 +899,7 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
         [gpuRenderer setRenderPipelineState:_pipelineState];
 
         // Draw shapes
-        FSTUFF_SimulationRender(&_sim, gpuRenderer, _gpuConstants[_constantDataBufferIndex]);
+        FSTUFF_SimulationRender(&_sim, _device, gpuRenderer, _gpuConstants[_constantDataBufferIndex]);
         
         // We're done encoding commands
         [gpuRenderer endEncoding];
@@ -894,6 +919,16 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
 {
 //    // When reshape is called, update the view and projection matricies since this means the view orientation or size changed
 
+#if TARGET_OS_IOS
+    UIScreen * screen = [UIScreen mainScreen]; //self.view.window.screen;
+    const float scale = [screen scale];
+    const float ppi = [GBDeviceInfo deviceInfo].displayInfo.pixelsPerInch;
+    const float width = ([screen bounds].size.width * scale);
+    const float height = ([screen bounds].size.height * scale);
+    const CGSize viewSizeMM = CGSizeMake((width / ppi) * 25.4f,
+                                         (height / ppi) * 25.4f);
+
+#else
     NSScreen * screen = self.view.window.screen;
     NSNumber * displayID = [[screen deviceDescription] objectForKey:@"NSScreenNumber"];
     CGDirectDisplayID cgDisplayID = (CGDirectDisplayID) [displayID intValue];
@@ -902,6 +937,8 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
                                       scrSizeMM.height / screen.frame.size.height);
     const CGSize viewSizeMM = CGSizeMake(self.view.bounds.size.width * ptsToMM.width,
                                          self.view.bounds.size.height * ptsToMM.height);
+
+#endif
 
 //    NSLog(@"view size: {%f,%f} (pts?) --> {%f,%f} (mm?)\n",
 //          self.view.bounds.size.width,

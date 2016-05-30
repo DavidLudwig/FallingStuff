@@ -47,7 +47,70 @@
 		755856351CDFC96F00FC8EA4 /* cpSweep1D.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856151CDFC96F00FC8EA4 /* cpSweep1D.c */; };
 		7568AAF71CFCA59600262462 /* FSTUFF_MTKView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568AAF61CFCA59600262462 /* FSTUFF_MTKView.mm */; };
 		75B391401CD67637000F6E1E /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75B3913F1CD67637000F6E1E /* MetalKit.framework */; };
+		75DE2F2B1CFCCD4C0052F8C1 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 75DE2F2A1CFCCD4C0052F8C1 /* main.m */; };
+		75DE2F2E1CFCCD4C0052F8C1 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 75DE2F2D1CFCCD4C0052F8C1 /* AppDelegate.m */; };
+		75DE2F371CFCCD4C0052F8C1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 75DE2F351CFCCD4C0052F8C1 /* Main.storyboard */; };
+		75DE2F391CFCCD4C0052F8C1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75DE2F381CFCCD4C0052F8C1 /* Assets.xcassets */; };
+		75DE2F3C1CFCCD4C0052F8C1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 75DE2F3A1CFCCD4C0052F8C1 /* LaunchScreen.storyboard */; };
+		75DE2F431CFCCE4F0052F8C1 /* FSTUFF_Colors.h in Sources */ = {isa = PBXBuildFile; fileRef = 7568AAF41CFC9EC600262462 /* FSTUFF_Colors.h */; };
+		75DE2F441CFCCE4F0052F8C1 /* FSTUFF_MTKView.h in Sources */ = {isa = PBXBuildFile; fileRef = 7568AAF51CFCA59600262462 /* FSTUFF_MTKView.h */; };
+		75DE2F451CFCCE4F0052F8C1 /* FSTUFF_MTKView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568AAF61CFCA59600262462 /* FSTUFF_MTKView.mm */; };
+		75DE2F461CFCCE4F0052F8C1 /* GameViewController.h in Sources */ = {isa = PBXBuildFile; fileRef = 75036FC51CD540F10017DC04 /* GameViewController.h */; };
+		75DE2F471CFCCE4F0052F8C1 /* GameViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75036FC61CD540F10017DC04 /* GameViewController.mm */; };
+		75DE2F481CFCCE5C0052F8C1 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 75036FC81CD540F10017DC04 /* Shaders.metal */; };
+		75DE2F491CFCCE5C0052F8C1 /* SharedStructures.h in Sources */ = {isa = PBXBuildFile; fileRef = 75036FCA1CD540F10017DC04 /* SharedStructures.h */; };
+		75DE2F4A1CFCCE710052F8C1 /* chipmunk.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855F61CDFC96F00FC8EA4 /* chipmunk.c */; };
+		75DE2F4B1CFCCE710052F8C1 /* cpArbiter.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855F71CDFC96F00FC8EA4 /* cpArbiter.c */; };
+		75DE2F4C1CFCCE710052F8C1 /* cpArray.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855F81CDFC96F00FC8EA4 /* cpArray.c */; };
+		75DE2F4D1CFCCE710052F8C1 /* cpBBTree.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855F91CDFC96F00FC8EA4 /* cpBBTree.c */; };
+		75DE2F4E1CFCCE710052F8C1 /* cpBody.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855FA1CDFC96F00FC8EA4 /* cpBody.c */; };
+		75DE2F4F1CFCCE710052F8C1 /* cpCollision.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855FB1CDFC96F00FC8EA4 /* cpCollision.c */; };
+		75DE2F501CFCCE710052F8C1 /* cpConstraint.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855FC1CDFC96F00FC8EA4 /* cpConstraint.c */; };
+		75DE2F511CFCCE710052F8C1 /* cpDampedRotarySpring.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855FD1CDFC96F00FC8EA4 /* cpDampedRotarySpring.c */; };
+		75DE2F521CFCCE710052F8C1 /* cpDampedSpring.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855FE1CDFC96F00FC8EA4 /* cpDampedSpring.c */; };
+		75DE2F531CFCCE710052F8C1 /* cpGearJoint.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855FF1CDFC96F00FC8EA4 /* cpGearJoint.c */; };
+		75DE2F541CFCCE710052F8C1 /* cpGrooveJoint.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856001CDFC96F00FC8EA4 /* cpGrooveJoint.c */; };
+		75DE2F551CFCCE710052F8C1 /* cpHashSet.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856011CDFC96F00FC8EA4 /* cpHashSet.c */; };
+		75DE2F561CFCCE710052F8C1 /* cpHastySpace.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856021CDFC96F00FC8EA4 /* cpHastySpace.c */; };
+		75DE2F571CFCCE710052F8C1 /* cpMarch.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856031CDFC96F00FC8EA4 /* cpMarch.c */; };
+		75DE2F581CFCCE710052F8C1 /* cpPinJoint.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856041CDFC96F00FC8EA4 /* cpPinJoint.c */; };
+		75DE2F591CFCCE710052F8C1 /* cpPivotJoint.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856051CDFC96F00FC8EA4 /* cpPivotJoint.c */; };
+		75DE2F5A1CFCCE710052F8C1 /* cpPolyline.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856061CDFC96F00FC8EA4 /* cpPolyline.c */; };
+		75DE2F5B1CFCCE710052F8C1 /* cpPolyShape.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856071CDFC96F00FC8EA4 /* cpPolyShape.c */; };
+		75DE2F5C1CFCCE710052F8C1 /* cpRatchetJoint.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856081CDFC96F00FC8EA4 /* cpRatchetJoint.c */; };
+		75DE2F5D1CFCCE710052F8C1 /* cpRobust.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856091CDFC96F00FC8EA4 /* cpRobust.c */; };
+		75DE2F5E1CFCCE710052F8C1 /* cpRotaryLimitJoint.c in Sources */ = {isa = PBXBuildFile; fileRef = 7558560A1CDFC96F00FC8EA4 /* cpRotaryLimitJoint.c */; };
+		75DE2F5F1CFCCE710052F8C1 /* cpShape.c in Sources */ = {isa = PBXBuildFile; fileRef = 7558560B1CDFC96F00FC8EA4 /* cpShape.c */; };
+		75DE2F601CFCCE710052F8C1 /* cpSimpleMotor.c in Sources */ = {isa = PBXBuildFile; fileRef = 7558560C1CDFC96F00FC8EA4 /* cpSimpleMotor.c */; };
+		75DE2F611CFCCE710052F8C1 /* cpSlideJoint.c in Sources */ = {isa = PBXBuildFile; fileRef = 7558560D1CDFC96F00FC8EA4 /* cpSlideJoint.c */; };
+		75DE2F621CFCCE710052F8C1 /* cpSpace.c in Sources */ = {isa = PBXBuildFile; fileRef = 7558560E1CDFC96F00FC8EA4 /* cpSpace.c */; };
+		75DE2F631CFCCE710052F8C1 /* cpSpaceComponent.c in Sources */ = {isa = PBXBuildFile; fileRef = 7558560F1CDFC96F00FC8EA4 /* cpSpaceComponent.c */; };
+		75DE2F641CFCCE710052F8C1 /* cpSpaceDebug.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856101CDFC96F00FC8EA4 /* cpSpaceDebug.c */; };
+		75DE2F651CFCCE710052F8C1 /* cpSpaceHash.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856111CDFC96F00FC8EA4 /* cpSpaceHash.c */; };
+		75DE2F661CFCCE710052F8C1 /* cpSpaceQuery.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856121CDFC96F00FC8EA4 /* cpSpaceQuery.c */; };
+		75DE2F671CFCCE710052F8C1 /* cpSpaceStep.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856131CDFC96F00FC8EA4 /* cpSpaceStep.c */; };
+		75DE2F681CFCCE710052F8C1 /* cpSpatialIndex.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856141CDFC96F00FC8EA4 /* cpSpatialIndex.c */; };
+		75DE2F691CFCCE710052F8C1 /* cpSweep1D.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856151CDFC96F00FC8EA4 /* cpSweep1D.c */; };
+		75DE2F6B1CFCCEFD0052F8C1 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75DE2F411CFCCE3B0052F8C1 /* MetalKit.framework */; };
+		75DE2F781CFCD4590052F8C1 /* libGBDeviceInfo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 75DE2F721CFCD3D60052F8C1 /* libGBDeviceInfo.a */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		75DE2F711CFCD3D60052F8C1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 75DE2F6C1CFCD3D60052F8C1 /* GBDeviceInfo.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8A38F593162DA1C100BCF240;
+			remoteInfo = "GBDeviceInfo-iOS";
+		};
+		75DE2F731CFCD3D60052F8C1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 75DE2F6C1CFCD3D60052F8C1 /* GBDeviceInfo.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8A1B118D16F21F2E00BDDD2A;
+			remoteInfo = "GBDeviceInfo-OSX";
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		75036FBC1CD540F10017DC04 /* FallingStuff_OSX.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FallingStuff_OSX.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -128,6 +191,16 @@
 		7568AAF51CFCA59600262462 /* FSTUFF_MTKView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FSTUFF_MTKView.h; sourceTree = "<group>"; };
 		7568AAF61CFCA59600262462 /* FSTUFF_MTKView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FSTUFF_MTKView.mm; sourceTree = "<group>"; };
 		75B3913F1CD67637000F6E1E /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		75DE2F271CFCCD4C0052F8C1 /* FallingStuff_iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FallingStuff_iOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		75DE2F2A1CFCCD4C0052F8C1 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		75DE2F2C1CFCCD4C0052F8C1 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		75DE2F2D1CFCCD4C0052F8C1 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		75DE2F361CFCCD4C0052F8C1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		75DE2F381CFCCD4C0052F8C1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		75DE2F3B1CFCCD4C0052F8C1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		75DE2F3D1CFCCD4C0052F8C1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		75DE2F411CFCCE3B0052F8C1 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.3.sdk/System/Library/Frameworks/MetalKit.framework; sourceTree = DEVELOPER_DIR; };
+		75DE2F6C1CFCD3D60052F8C1 /* GBDeviceInfo.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GBDeviceInfo.xcodeproj; path = external/GBDeviceInfo/GBDeviceInfo.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -136,6 +209,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				75B391401CD67637000F6E1E /* MetalKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		75DE2F241CFCCD4C0052F8C1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				75DE2F781CFCD4590052F8C1 /* libGBDeviceInfo.a in Frameworks */,
+				75DE2F6B1CFCCEFD0052F8C1 /* MetalKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -148,12 +230,14 @@
 				7568AAF81CFCCBCC00262462 /* external */,
 				75036FBD1CD540F10017DC04 /* build */,
 				75036FBE1CD540F10017DC04 /* src */,
+				75DE2F281CFCCD4C0052F8C1 /* iOS */,
 			);
 			sourceTree = "<group>";
 		};
 		75036FBD1CD540F10017DC04 /* build */ = {
 			isa = PBXGroup;
 			children = (
+				75DE2F6A1CFCCE8D0052F8C1 /* iOS */,
 				7568AAF91CFCCC5B00262462 /* mac */,
 			);
 			name = build;
@@ -276,6 +360,7 @@
 		7568AAF81CFCCBCC00262462 /* external */ = {
 			isa = PBXGroup;
 			children = (
+				75DE2F6C1CFCD3D60052F8C1 /* GBDeviceInfo.xcodeproj */,
 				755855B41CDFC71800FC8EA4 /* Chipmunk2D */,
 			);
 			name = external;
@@ -288,6 +373,39 @@
 				75B3913F1CD67637000F6E1E /* MetalKit.framework */,
 			);
 			name = mac;
+			sourceTree = "<group>";
+		};
+		75DE2F281CFCCD4C0052F8C1 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				75DE2F2C1CFCCD4C0052F8C1 /* AppDelegate.h */,
+				75DE2F2D1CFCCD4C0052F8C1 /* AppDelegate.m */,
+				75DE2F351CFCCD4C0052F8C1 /* Main.storyboard */,
+				75DE2F381CFCCD4C0052F8C1 /* Assets.xcassets */,
+				75DE2F3A1CFCCD4C0052F8C1 /* LaunchScreen.storyboard */,
+				75DE2F3D1CFCCD4C0052F8C1 /* Info.plist */,
+				75DE2F2A1CFCCD4C0052F8C1 /* main.m */,
+			);
+			name = iOS;
+			path = FallingStuff_iOS;
+			sourceTree = "<group>";
+		};
+		75DE2F6A1CFCCE8D0052F8C1 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				75DE2F271CFCCD4C0052F8C1 /* FallingStuff_iOS.app */,
+				75DE2F411CFCCE3B0052F8C1 /* MetalKit.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		75DE2F6D1CFCD3D60052F8C1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				75DE2F721CFCD3D60052F8C1 /* libGBDeviceInfo.a */,
+				75DE2F741CFCD3D60052F8C1 /* GBDeviceInfo.framework */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -310,6 +428,23 @@
 			productReference = 75036FBC1CD540F10017DC04 /* FallingStuff_OSX.app */;
 			productType = "com.apple.product-type.application";
 		};
+		75DE2F261CFCCD4C0052F8C1 /* FallingStuff_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 75DE2F3E1CFCCD4C0052F8C1 /* Build configuration list for PBXNativeTarget "FallingStuff_iOS" */;
+			buildPhases = (
+				75DE2F231CFCCD4C0052F8C1 /* Sources */,
+				75DE2F241CFCCD4C0052F8C1 /* Frameworks */,
+				75DE2F251CFCCD4C0052F8C1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FallingStuff_iOS;
+			productName = FallingStuff_iOS;
+			productReference = 75DE2F271CFCCD4C0052F8C1 /* FallingStuff_iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -321,6 +456,9 @@
 				TargetAttributes = {
 					75036FBB1CD540F10017DC04 = {
 						CreatedOnToolsVersion = 7.3;
+					};
+					75DE2F261CFCCD4C0052F8C1 = {
+						CreatedOnToolsVersion = 7.3.1;
 					};
 				};
 			};
@@ -335,12 +473,36 @@
 			mainGroup = 75036FB31CD540F10017DC04;
 			productRefGroup = 75036FBD1CD540F10017DC04 /* build */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 75DE2F6D1CFCD3D60052F8C1 /* Products */;
+					ProjectRef = 75DE2F6C1CFCD3D60052F8C1 /* GBDeviceInfo.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				75036FBB1CD540F10017DC04 /* FallingStuff_OSX */,
+				75DE2F261CFCCD4C0052F8C1 /* FallingStuff_iOS */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		75DE2F721CFCD3D60052F8C1 /* libGBDeviceInfo.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libGBDeviceInfo.a;
+			remoteRef = 75DE2F711CFCD3D60052F8C1 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		75DE2F741CFCD3D60052F8C1 /* GBDeviceInfo.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = GBDeviceInfo.framework;
+			remoteRef = 75DE2F731CFCD3D60052F8C1 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		75036FBA1CD540F10017DC04 /* Resources */ = {
@@ -349,6 +511,16 @@
 			files = (
 				75036FCC1CD540F10017DC04 /* Assets.xcassets in Resources */,
 				75036FCF1CD540F10017DC04 /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		75DE2F251CFCCD4C0052F8C1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				75DE2F3C1CFCCD4C0052F8C1 /* LaunchScreen.storyboard in Resources */,
+				75DE2F391CFCCD4C0052F8C1 /* Assets.xcassets in Resources */,
+				75DE2F371CFCCD4C0052F8C1 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -399,6 +571,54 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		75DE2F231CFCCD4C0052F8C1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				75DE2F4A1CFCCE710052F8C1 /* chipmunk.c in Sources */,
+				75DE2F4B1CFCCE710052F8C1 /* cpArbiter.c in Sources */,
+				75DE2F4C1CFCCE710052F8C1 /* cpArray.c in Sources */,
+				75DE2F4D1CFCCE710052F8C1 /* cpBBTree.c in Sources */,
+				75DE2F4E1CFCCE710052F8C1 /* cpBody.c in Sources */,
+				75DE2F4F1CFCCE710052F8C1 /* cpCollision.c in Sources */,
+				75DE2F501CFCCE710052F8C1 /* cpConstraint.c in Sources */,
+				75DE2F511CFCCE710052F8C1 /* cpDampedRotarySpring.c in Sources */,
+				75DE2F521CFCCE710052F8C1 /* cpDampedSpring.c in Sources */,
+				75DE2F531CFCCE710052F8C1 /* cpGearJoint.c in Sources */,
+				75DE2F541CFCCE710052F8C1 /* cpGrooveJoint.c in Sources */,
+				75DE2F551CFCCE710052F8C1 /* cpHashSet.c in Sources */,
+				75DE2F561CFCCE710052F8C1 /* cpHastySpace.c in Sources */,
+				75DE2F571CFCCE710052F8C1 /* cpMarch.c in Sources */,
+				75DE2F581CFCCE710052F8C1 /* cpPinJoint.c in Sources */,
+				75DE2F591CFCCE710052F8C1 /* cpPivotJoint.c in Sources */,
+				75DE2F5A1CFCCE710052F8C1 /* cpPolyline.c in Sources */,
+				75DE2F5B1CFCCE710052F8C1 /* cpPolyShape.c in Sources */,
+				75DE2F5C1CFCCE710052F8C1 /* cpRatchetJoint.c in Sources */,
+				75DE2F5D1CFCCE710052F8C1 /* cpRobust.c in Sources */,
+				75DE2F5E1CFCCE710052F8C1 /* cpRotaryLimitJoint.c in Sources */,
+				75DE2F5F1CFCCE710052F8C1 /* cpShape.c in Sources */,
+				75DE2F601CFCCE710052F8C1 /* cpSimpleMotor.c in Sources */,
+				75DE2F611CFCCE710052F8C1 /* cpSlideJoint.c in Sources */,
+				75DE2F621CFCCE710052F8C1 /* cpSpace.c in Sources */,
+				75DE2F631CFCCE710052F8C1 /* cpSpaceComponent.c in Sources */,
+				75DE2F641CFCCE710052F8C1 /* cpSpaceDebug.c in Sources */,
+				75DE2F651CFCCE710052F8C1 /* cpSpaceHash.c in Sources */,
+				75DE2F661CFCCE710052F8C1 /* cpSpaceQuery.c in Sources */,
+				75DE2F671CFCCE710052F8C1 /* cpSpaceStep.c in Sources */,
+				75DE2F681CFCCE710052F8C1 /* cpSpatialIndex.c in Sources */,
+				75DE2F691CFCCE710052F8C1 /* cpSweep1D.c in Sources */,
+				75DE2F481CFCCE5C0052F8C1 /* Shaders.metal in Sources */,
+				75DE2F491CFCCE5C0052F8C1 /* SharedStructures.h in Sources */,
+				75DE2F431CFCCE4F0052F8C1 /* FSTUFF_Colors.h in Sources */,
+				75DE2F441CFCCE4F0052F8C1 /* FSTUFF_MTKView.h in Sources */,
+				75DE2F451CFCCE4F0052F8C1 /* FSTUFF_MTKView.mm in Sources */,
+				75DE2F461CFCCE4F0052F8C1 /* GameViewController.h in Sources */,
+				75DE2F471CFCCE4F0052F8C1 /* GameViewController.mm in Sources */,
+				75DE2F2E1CFCCD4C0052F8C1 /* AppDelegate.m in Sources */,
+				75DE2F2B1CFCCD4C0052F8C1 /* main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
@@ -408,6 +628,22 @@
 				75036FCE1CD540F10017DC04 /* Base */,
 			);
 			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+		75DE2F351CFCCD4C0052F8C1 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				75DE2F361CFCCD4C0052F8C1 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		75DE2F3A1CFCCD4C0052F8C1 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				75DE2F3B1CFCCD4C0052F8C1 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -450,7 +686,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = external/Chipmunk2D/include;
+				HEADER_SEARCH_PATHS = (
+					external/Chipmunk2D/include,
+					external/GBDeviceInfo,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -490,7 +729,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = external/Chipmunk2D/include;
+				HEADER_SEARCH_PATHS = (
+					external/Chipmunk2D/include,
+					external/GBDeviceInfo,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
@@ -504,7 +746,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/src/mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.dludwig.FallingStuff;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dludwig.FallingStuffOSX;
 				PRODUCT_NAME = FallingStuff_OSX;
 			};
 			name = Debug;
@@ -516,8 +758,39 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "$(SRCROOT)/src/mac/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.dludwig.FallingStuff;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dludwig.FallingStuffOSX;
 				PRODUCT_NAME = FallingStuff_OSX;
+			};
+			name = Release;
+		};
+		75DE2F3F1CFCCD4C0052F8C1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				INFOPLIST_FILE = FallingStuff_iOS/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.dludwig.FallingStuffiOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		75DE2F401CFCCD4C0052F8C1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				INFOPLIST_FILE = FallingStuff_iOS/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.dludwig.FallingStuffiOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
@@ -538,6 +811,15 @@
 			buildConfigurations = (
 				75036FD41CD540F10017DC04 /* Debug */,
 				75036FD51CD540F10017DC04 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		75DE2F3E1CFCCD4C0052F8C1 /* Build configuration list for PBXNativeTarget "FallingStuff_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				75DE2F3F1CFCCD4C0052F8C1 /* Debug */,
+				75DE2F401CFCCD4C0052F8C1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
