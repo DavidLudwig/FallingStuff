@@ -12,6 +12,8 @@
 #import <MetalKit/MetalKit.h>
 #import "SharedStructures.h"
 #include <sys/time.h>   // for gettimeofday()
+#include <random>
+#include "FSTUFF_Colors.h"
 
 extern "C" {
 //#include <chipmunk/chipmunk_structs.h>
@@ -32,7 +34,9 @@ static const NSUInteger kMaxInflightBuffers = 3;
 // Max API memory buffer size.
 static const size_t kMaxBytesPerFrame = 1024 * 1024; //64; //sizeof(vector_float4) * 3; //*1024;
 
-static const unsigned kNumCircleParts = 32;
+static const unsigned kNumCircleParts = 64; //32;
+
+#define FSTUFF_countof(arr) (sizeof(arr) / sizeof(arr[0]))
 
 enum FSTUFF_ShapeType : uint8_t {
     FSTUFF_ShapeCircle = 0,
@@ -223,6 +227,17 @@ constexpr vector_float4 FSTUFF_Color(uint32_t rgb)
     return FSTUFF_Color(rgb, 0xff);
 }
 
+cpFloat FSTUFF_RandRangeF(std::mt19937 & rng, cpFloat a, cpFloat b)
+{
+    std::uniform_real_distribution<cpFloat> distribution(a, b);
+    return distribution(rng);
+}
+
+int FSTUFF_RandRangeI(std::mt19937 & rng, int a, int b)
+{
+    std::uniform_int_distribution<int> distribution(a, b);
+    return distribution(rng);
+}
 
 void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
                          size_t offset,
@@ -251,6 +266,11 @@ struct FSTUFF_Simulation {
     // Timing
     //
     cpFloat lastUpdateUTCTimeS = 0.0;     // set on FSTUFF_Update; UTC time in seconds
+    
+    //
+    // Random Number Generation
+    //
+    std::random_device rng;
     
     //
     // Physics
@@ -313,8 +333,8 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     sim->circleDots.primitiveType = FSTUFF_PrimitiveTriangles;
     {
         const int numCirclePartsForDot = 6;
-        const float dotRadius = 0.05f;  // size of dot: 0 to 1; 0 is no-size, 1 is as big as containing-circle
-        const float dotDistance = 0.8f; // from 0 to 1
+        const float dotRadius = 0.08f;  // size of dot: 0 to 1; 0 is no-size, 1 is as big as containing-circle
+        const float dotDistance = 0.7f; // from 0 to 1
         int tmpVertexCount;
         sim->circleDots.numVertices = 0;
         for (int i = 0, n = 6; i < n; ++i) {
@@ -363,32 +383,6 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     cpBody * body;
     cpShape * shape;
     
-
-    //
-    // Pegs
-    //
-
-    body = cpBodyInit(BODY_ALLOC(), 0, 0);
-    cpBodySetType(body, CP_BODY_TYPE_STATIC);
-    cpSpaceAddBody(SPACE, body);
-    cpBodySetPosition(body, cpv(35, 20));
-    shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 10, cpvzero);
-    ++sim->numPegs;
-    cpSpaceAddShape(SPACE, shape);
-    cpShapeSetElasticity(shape, 0.8);
-    cpShapeSetFriction(shape, 1);
-    sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(0x00ff00);
-    
-    body = cpBodyInit(BODY_ALLOC(), 0, 0);
-    cpBodySetType(body, CP_BODY_TYPE_STATIC);
-    cpSpaceAddBody(SPACE, body);
-    cpBodySetPosition(body, cpv(30, 5.));
-    cpBodySetAngle(body, M_PI / 6.);
-    shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(0.,0.), cpv(100.,0.), 5.);
-    cpSpaceAddShape(SPACE, shape);
-    cpShapeSetElasticity(shape, 0.8);
-    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x0000ff);
-
     
     //
     // Walls
@@ -402,7 +396,7 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     static const cpFloat wallLeft   = -wallThickness / 2.;
     static const cpFloat wallRight  = sim->viewSizeMM.x + (wallThickness / 2.);
     static const cpFloat wallBottom = -wallThickness / 2.;
-    static const cpFloat wallTop    = sim->viewSizeMM.y;
+    static const cpFloat wallTop    = sim->viewSizeMM.y * 2.;   // use a high ceiling, to make sure off-screen falling things don't go over walls
     
     // Bottom
     shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(wallLeft,wallBottom), cpv(wallRight,wallBottom), wallThickness/2.);
@@ -422,6 +416,71 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
     sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0x000000, 0x00);
+
+
+    //
+    // Pegs
+    //
+    using namespace FSTUFF_Colors;
+    const int pegColors[] = {
+        Red,
+        Red,
+        Lime,
+        Lime,
+        Blue,
+        Blue,
+        Yellow,
+        Cyan,
+    };
+    const int numPegs = round((sim->viewSizeMM.x * sim->viewSizeMM.y) * 0.0005);
+    const cpFloat kPegScaleCircle = 2.5;
+    const cpFloat kPegScaleBox = 4.;
+    std::random_device rd;
+    std::mt19937 rng(rd());
+    cpFloat cx, cy, radius, w, h, angleRad;
+    int pegColorIndex;
+    for (int i = 0; i < numPegs; ++i) {
+        switch (rand() % 2) {
+            case 0:
+            {
+                cx = FSTUFF_RandRangeF(rng, 0., sim->viewSizeMM.x);
+                cy = FSTUFF_RandRangeF(rng, 0., sim->viewSizeMM.y);
+                radius = kPegScaleCircle * FSTUFF_RandRangeF(rng, 6., 10.);
+                pegColorIndex = FSTUFF_RandRangeI(rng, 0, FSTUFF_countof(pegColors)-1);
+
+                body = cpBodyInit(BODY_ALLOC(), 0, 0);
+                cpBodySetType(body, CP_BODY_TYPE_STATIC);
+                cpSpaceAddBody(SPACE, body);
+                cpBodySetPosition(body, cpv(cx, cy));
+                shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, radius, cpvzero);
+                ++sim->numPegs;
+                cpSpaceAddShape(SPACE, shape);
+                cpShapeSetElasticity(shape, 0.8);
+                cpShapeSetFriction(shape, 1);
+                sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(pegColors[pegColorIndex]);
+            } break;
+            
+            case 1:
+            {
+                cx = FSTUFF_RandRangeF(rng, 0., sim->viewSizeMM.x);
+                cy = FSTUFF_RandRangeF(rng, 0., sim->viewSizeMM.y);
+                w = kPegScaleBox * FSTUFF_RandRangeF(rng, 6., 14.);
+                h = kPegScaleBox * FSTUFF_RandRangeF(rng, 1., 2.);
+                angleRad = FSTUFF_RandRangeF(rng, 0., M_PI);
+                pegColorIndex = FSTUFF_RandRangeI(rng, 0, FSTUFF_countof(pegColors)-1);
+            
+                body = cpBodyInit(BODY_ALLOC(), 0, 0);
+                cpBodySetType(body, CP_BODY_TYPE_STATIC);
+                cpSpaceAddBody(SPACE, body);
+                cpBodySetPosition(body, cpv(cx, cy));
+                cpBodySetAngle(body, angleRad);
+                shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(-w/2.,0.), cpv(w/2.,0.), h/2.);
+                cpSpaceAddShape(SPACE, shape);
+                cpShapeSetElasticity(shape, 0.8);
+                sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(pegColors[pegColorIndex]);
+            } break;
+        }
+    }
     
     
     //
@@ -430,27 +489,23 @@ void FSTUFF_SimulationInit(FSTUFF_Simulation * sim, void * buffer, size_t bufSiz
 
     body = cpBodyInit(BODY_ALLOC(), 0, 0);
     cpSpaceAddBody(SPACE, body);
-    cpBodySetPosition(body, cpv(40, 90));
+    cpBodySetPosition(body, cpv(40, sim->viewSizeMM.y * 1.2));
     shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 4, cpvzero);
-//    shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(-5,0), cpv(5,0), 4);
     cpSpaceAddShape(sim->physicsSpace, shape);
     cpShapeSetDensity(shape, 10);
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
-    sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(0xff0000);
-//    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0xff0000);
+    sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(White);
 
     body = cpBodyInit(BODY_ALLOC(), 0, 0);
     cpSpaceAddBody(SPACE, body);
-    cpBodySetPosition(body, cpv(80, 120));
+    cpBodySetPosition(body, cpv(80, sim->viewSizeMM.y * 1.1));
     shape = (cpShape*)cpCircleShapeInit(CIRCLE_ALLOC(), body, 4, cpvzero);
-//    shape = (cpShape*)cpSegmentShapeInit(BOX_ALLOC(), body, cpv(-5,0), cpv(5,0), 4);
     cpSpaceAddShape(sim->physicsSpace, shape);
     cpShapeSetDensity(shape, 10);
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
-    sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(0xff0000);
-//    sim->boxColors[BOX_IDX(shape)] = FSTUFF_Color(0xff0000);
+    sim->circleColors[CIRCLE_IDX(shape)] = FSTUFF_Color(White);
 
 }
 
@@ -560,6 +615,7 @@ void FSTUFF_SimulationRender(FSTUFF_Simulation * sim,
 void FSTUFF_SimulationViewChanged(FSTUFF_Simulation * sim, float widthMM, float heightMM)
 {
     sim->viewSizeMM = {widthMM, heightMM};
+//    NSLog(@"view size: %f, %f", widthMM, heightMM);
     
     matrix_float4x4 t = matrix_from_translation(-1, -1, 0);
     matrix_float4x4 s = matrix_from_scaling(2.0f / widthMM, 2.0f / heightMM, 1);
