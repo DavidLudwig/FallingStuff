@@ -13,6 +13,8 @@
 		75036FC91CD540F10017DC04 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 75036FC81CD540F10017DC04 /* Shaders.metal */; };
 		75036FCC1CD540F10017DC04 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75036FCB1CD540F10017DC04 /* Assets.xcassets */; };
 		75036FCF1CD540F10017DC04 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 75036FCD1CD540F10017DC04 /* MainMenu.xib */; };
+		752B1A981CFD2C5E00BA2EE9 /* FSTUFF_Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 752B1A961CFD2C5E00BA2EE9 /* FSTUFF_Simulation.cpp */; };
+		752B1A991CFD2C5E00BA2EE9 /* FSTUFF_Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 752B1A961CFD2C5E00BA2EE9 /* FSTUFF_Simulation.cpp */; };
 		755856161CDFC96F00FC8EA4 /* chipmunk.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855F61CDFC96F00FC8EA4 /* chipmunk.c */; };
 		755856171CDFC96F00FC8EA4 /* cpArbiter.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855F71CDFC96F00FC8EA4 /* cpArbiter.c */; };
 		755856181CDFC96F00FC8EA4 /* cpArray.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855F81CDFC96F00FC8EA4 /* cpArray.c */; };
@@ -113,6 +115,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		750273751D0280DE006EF6BD /* FSTUFF_GPU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FSTUFF_GPU.h; sourceTree = "<group>"; };
 		75036FBC1CD540F10017DC04 /* FallingStuff_OSX.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FallingStuff_OSX.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		75036FBF1CD540F10017DC04 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		75036FC01CD540F10017DC04 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -124,6 +127,8 @@
 		75036FCB1CD540F10017DC04 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		75036FCE1CD540F10017DC04 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		75036FD01CD540F10017DC04 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		752B1A961CFD2C5E00BA2EE9 /* FSTUFF_Simulation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FSTUFF_Simulation.cpp; sourceTree = "<group>"; };
+		752B1A971CFD2C5E00BA2EE9 /* FSTUFF_Simulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FSTUFF_Simulation.h; sourceTree = "<group>"; };
 		755855F61CDFC96F00FC8EA4 /* chipmunk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = chipmunk.c; path = external/Chipmunk2D/src/chipmunk.c; sourceTree = "<group>"; };
 		755855F71CDFC96F00FC8EA4 /* cpArbiter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cpArbiter.c; path = external/Chipmunk2D/src/cpArbiter.c; sourceTree = "<group>"; };
 		755855F81CDFC96F00FC8EA4 /* cpArray.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cpArray.c; path = external/Chipmunk2D/src/cpArray.c; sourceTree = "<group>"; };
@@ -246,8 +251,11 @@
 			isa = PBXGroup;
 			children = (
 				7568AAF41CFC9EC600262462 /* FSTUFF_Colors.h */,
+				750273751D0280DE006EF6BD /* FSTUFF_GPU.h */,
 				7568AAF51CFCA59600262462 /* FSTUFF_MTKView.h */,
 				7568AAF61CFCA59600262462 /* FSTUFF_MTKView.mm */,
+				752B1A961CFD2C5E00BA2EE9 /* FSTUFF_Simulation.cpp */,
+				752B1A971CFD2C5E00BA2EE9 /* FSTUFF_Simulation.h */,
 				75036FC51CD540F10017DC04 /* GameViewController.h */,
 				75036FC61CD540F10017DC04 /* GameViewController.mm */,
 				75DE2F281CFCCD4C0052F8C1 /* iOS */,
@@ -534,6 +542,7 @@
 				755856311CDFC96F00FC8EA4 /* cpSpaceHash.c in Sources */,
 				7558562F1CDFC96F00FC8EA4 /* cpSpaceComponent.c in Sources */,
 				755856321CDFC96F00FC8EA4 /* cpSpaceQuery.c in Sources */,
+				752B1A981CFD2C5E00BA2EE9 /* FSTUFF_Simulation.cpp in Sources */,
 				7558562A1CDFC96F00FC8EA4 /* cpRotaryLimitJoint.c in Sources */,
 				7558562B1CDFC96F00FC8EA4 /* cpShape.c in Sources */,
 				75036FC91CD540F10017DC04 /* Shaders.metal in Sources */,
@@ -588,6 +597,7 @@
 				75DE2F551CFCCE710052F8C1 /* cpHashSet.c in Sources */,
 				75DE2F561CFCCE710052F8C1 /* cpHastySpace.c in Sources */,
 				75DE2F571CFCCE710052F8C1 /* cpMarch.c in Sources */,
+				752B1A991CFD2C5E00BA2EE9 /* FSTUFF_Simulation.cpp in Sources */,
 				75DE2F581CFCCE710052F8C1 /* cpPinJoint.c in Sources */,
 				75DE2F591CFCCE710052F8C1 /* cpPivotJoint.c in Sources */,
 				75DE2F5A1CFCCE710052F8C1 /* cpPolyline.c in Sources */,
