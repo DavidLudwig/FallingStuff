@@ -500,33 +500,6 @@ void FSTUFF_SimulationUpdate(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
 
 
 /*
- Colors = {
-	blue = "#0000ff",
-	brown = "#A52A2A",
-	gray = "#808080",
-	green = "#00ff00",
-	indigo = "#4B0082",
-	light_purple = "#FF0080", -- not in html
-	orange = "#FFA500",
-	purple = "#800080",
-	red = "#ff0000",
-	turquoise = "#00ffff", -- "#40E0D0"
-	violet = "#EE82EE",
-	white = "#ffffff",
-	yellow = "#ffff00",
- }
- 
- 	self.peg_colors = {
-		Colors.red,
-		Colors.red,
-		Colors.green,
-		Colors.green,
-		Colors.blue,
-		Colors.blue,
-		Colors.yellow,
-		Colors.turquoise,
-	}
-
 	self.unlit_peg_fill_alpha_min = 0.25
 	self.unlit_peg_fill_alpha_max = 0.45
 
