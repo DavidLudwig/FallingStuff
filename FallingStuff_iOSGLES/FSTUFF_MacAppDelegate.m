@@ -1,18 +1,18 @@
 //
 //  AppDelegate.m
-//  FallingStuff_iOS
+//  FallingStuff_iOSGLES
 //
-//  Created by David Ludwig on 5/30/16.
-//  Copyright © 2016 David Ludwig. All rights reserved.
+//  Created by David Ludwig on 6/4/16.
+//  Copyright © 2018 David Ludwig. All rights reserved.
 //
 
-#import "AppDelegate.h"
+#import "FSTUFF_MacAppDelegate.h"
 
-@interface AppDelegate ()
+@interface FSTUFF_MacAppDelegate ()
 
 @end
 
-@implementation AppDelegate
+@implementation FSTUFF_MacAppDelegate
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {

@@ -1,21 +1,15 @@
 //
-//  GameViewController.m
+//  FSTUFF_AppleMetalViewController.m
 //  MetalTest
 //
 //  Created by David Ludwig on 4/30/16.
-//  Copyright (c) 2016 David Ludwig. All rights reserved.
+//  Copyright (c) 2018 David Ludwig. All rights reserved.
 //
 
-#import "GameViewController.h"
-#import <Metal/Metal.h>
-#import <simd/simd.h>
-#import <MetalKit/MetalKit.h>
-#import "SharedStructures.h"
-#include <sys/time.h>   // for gettimeofday()
-#include <random>
-#include "FSTUFF_Colors.h"
-
-#include "FSTUFF_Simulation.h"
+#include "FSTUFF.h"
+#import "FSTUFF_AppleMetalViewController.h"
+#import "FSTUFF_AppleMetalStructs.h"
+#import "FSTUFF_AppleMetalView.h"
 
 #if TARGET_OS_IOS
 #import <GBDeviceInfo/GBDeviceInfo.h>
@@ -30,23 +24,23 @@ static const NSUInteger kMaxInflightBuffers = 3;
 static const size_t kMaxBytesPerFrame = 1024 * 1024; //64; //sizeof(vector_float4) * 3; //*1024;
 
 
-void * FSTUFF_VertexBufferNew(void * gpuDevice, void * src, size_t size)
+void * FSTUFF_NewVertexBuffer(void * gpuDevice, void * src, size_t size)
 {
     return (__bridge_retained void *)[(__bridge id <MTLDevice>)gpuDevice newBufferWithBytes:src length:size options:MTLResourceOptionCPUCacheModeDefault];
 }
 
-void FSTUFF_VertexBufferDestroy(void * _gpuVertexBuffer)
+void FSTUFF_DestroyVertexBuffer(void * _gpuVertexBuffer)
 {
     id <MTLBuffer> gpuVertexBuffer = (__bridge_transfer id <MTLBuffer>)_gpuVertexBuffer;
     gpuVertexBuffer = nil;
 }
 
 
-@interface GameViewController()
+@interface FSTUFF_AppleMetalViewController()
 @property (nonatomic, strong) MTKView *theView;
 @end
 
-@implementation GameViewController
+@implementation FSTUFF_AppleMetalViewController
 {
     // view
     MTKView *_view;
@@ -60,16 +54,41 @@ void FSTUFF_VertexBufferDestroy(void * _gpuVertexBuffer)
     id <MTLLibrary> _defaultLibrary;
     id <MTLRenderPipelineState> _pipelineState;
     uint8_t _constantDataBufferIndex;
-    
+    id <MTLBuffer> _gpuConstants[kMaxInflightBuffers];
+
     // game
     FSTUFF_Simulation _sim;
-    id <MTLBuffer> _gpuConstants[kMaxInflightBuffers];
+}
+
+- (FSTUFF_Simulation *) sim
+{
+    return &_sim;
+}
+
+- (id)init
+{
+    self = [super init];
+    FSTUFF_Log(@"GameController init, self:%@\n", self);
+    if (self) {
+    }
+    return self;
+}
+
+- (void) loadView
+{
+    self.view = [[FSTUFF_AppleMetalView alloc] init];
 }
 
 - (void)viewDidLoad
 {
+//    FSTUFF_Log("FSTUFF_AppleMetalViewController viewDidLoad, starting: frame:{%f,%f,%f,%f}\n",
+//        self.view.frame.origin.x,
+//        self.view.frame.origin.y,
+//        self.view.frame.size.width,
+//        self.view.frame.size.height
+//    );
     [super viewDidLoad];
-    
+
     _constantDataBufferIndex = 0;
     _inflight_semaphore = dispatch_semaphore_create(3);
     
@@ -77,7 +96,6 @@ void FSTUFF_VertexBufferDestroy(void * _gpuVertexBuffer)
     if(_device)
     {
         [self _setupView];
-        [self _reshape];
         [self _loadAssets];
     }
     else // Fallback to a blank NSView, an application could also fallback to OpenGL here.
@@ -105,7 +123,14 @@ void FSTUFF_VertexBufferDestroy(void * _gpuVertexBuffer)
     _commandQueue = [_device newCommandQueue];
     
     // Load all the shader files with a metal file extension in the project
-    _defaultLibrary = [_device newDefaultLibrary];
+    //
+    // Get the path to the bundle, in a manner that works with macOS's ScreenSaverEngine.app.
+    // This app stores screensavers as separate bundles.  We need to find the bundle for the
+    // screensaver that we are using.
+    NSBundle * bundle = [NSBundle bundleForClass:[self class]];
+    NSString * path = [bundle pathForResource:@"default" ofType:@"metallib"];
+    NSError * err = nil;
+    _defaultLibrary = [_device newLibraryWithFile:path error:&err];
 }
 
 - (void)_loadAssets
@@ -131,7 +156,8 @@ void FSTUFF_VertexBufferDestroy(void * _gpuVertexBuffer)
         NSLog(@"Failed to created pipeline state, error %@", error);
     }
 
-    FSTUFF_SimulationInit(&_sim, (__bridge void *)_device);
+    _sim.gpuDevice = (__bridge void *)_device;
+    _sim.nativeView = (__bridge void *)_view;
 
     // allocate a number of buffers in memory that matches the sempahore count so that
     // we always have one self contained memory buffer for each buffered frame.
@@ -145,34 +171,42 @@ void FSTUFF_VertexBufferDestroy(void * _gpuVertexBuffer)
 #if ! TARGET_OS_IOS
 - (void)keyDown:(NSEvent *)theEvent
 {
-    FSTUFF_Event evt;
-    memset(&evt, 0, sizeof(evt));
-    evt.type = FSTUFF_EventKeyDown;
-    evt.key.utf8 = [theEvent.characters cStringUsingEncoding:NSUTF8StringEncoding];
-    FSTUFF_SimulationEvent(&_sim, &evt);
+    FSTUFF_Event event = FSTUFF_NewKeyEvent(FSTUFF_EventKeyDown, [theEvent.characters cStringUsingEncoding:NSUTF8StringEncoding]);
+    FSTUFF_EventReceived(&_sim, &event);
+    if ( ! event.handled) {
+        [super keyDown:theEvent];
+    }
 }
 #endif
 
 - (void)_update
 {
+    if (_sim.state == FSTUFF_DEAD) {
+        FSTUFF_Init(&_sim);
+    }
+
     const uint8_t * constants = (uint8_t *) [_gpuConstants[_constantDataBufferIndex] contents];
     FSTUFF_GPUData * gpuData = (FSTUFF_GPUData *) constants;
-    FSTUFF_SimulationUpdate(&_sim, gpuData);
+    FSTUFF_Update(&_sim, gpuData);
 }
 
 //#ifndef _MTLFeatureSet_iOS_GPUFamily3_v1
 
-void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
+void FSTUFF_RenderShapes(FSTUFF_Renderer * renderer,
+                         FSTUFF_Shape * shape,
                          size_t baseInstance,
                          size_t count,
-                         void * _gpuDevice,
-                         void * _gpuRenderer,
-                         void * _gpuData,    // laid out as a 'FSTUFF_GPUData' struct
                          float alpha)
 {
-    id <MTLDevice> gpuDevice = (__bridge id <MTLDevice>)_gpuDevice;
-    id <MTLRenderCommandEncoder> gpuRenderer = (__bridge id <MTLRenderCommandEncoder>)_gpuRenderer;
-    id <MTLBuffer> gpuData = (__bridge id <MTLBuffer>)_gpuData;
+    // Metal can raise a program-crashing assertion, if zero amount of shapes attempts to get
+    // rendered.
+    if (count == 0) {
+        return;
+    }
+
+    id <MTLDevice> gpuDevice = (__bridge id <MTLDevice>) renderer->device;
+    id <MTLRenderCommandEncoder> gpuRenderer = (__bridge id <MTLRenderCommandEncoder>) renderer->renderer;
+    id <MTLBuffer> gpuData = (__bridge id <MTLBuffer>) renderer->appData;
 
     MTLPrimitiveType gpuPrimitiveType;
     switch (shape->primitiveType) {
@@ -203,11 +237,11 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
             return;
     }
     
-    [gpuRenderer pushDebugGroup:[NSString stringWithUTF8String:shape->debugName]];
-    [gpuRenderer setVertexBuffer:(__bridge id <MTLBuffer>)shape->gpuVertexBuffer offset:0 atIndex:0];                    // 'position[<vertex id>]'
-    [gpuRenderer setVertexBuffer:gpuData offset:offsetof(FSTUFF_GPUData, globals) atIndex:1];   // 'gpuGlobals'
-    [gpuRenderer setVertexBuffer:gpuData offset:shapesOffsetInGpuData atIndex:2];               // 'gpuShapes[<instance id>]'
-    [gpuRenderer setVertexBytes:&alpha length:sizeof(alpha) atIndex:3];                         // 'alpha'
+    [gpuRenderer pushDebugGroup:[[NSString alloc] initWithUTF8String:shape->debugName]];
+    [gpuRenderer setVertexBuffer:(__bridge id <MTLBuffer>)shape->gpuVertexBuffer offset:0 atIndex:0];   // 'position[<vertex id>]'
+    [gpuRenderer setVertexBuffer:gpuData offset:offsetof(FSTUFF_GPUData, globals) atIndex:1];           // 'gpuGlobals'
+    [gpuRenderer setVertexBuffer:gpuData offset:shapesOffsetInGpuData atIndex:2];                       // 'gpuShapes[<instance id>]'
+    [gpuRenderer setVertexBytes:&alpha length:sizeof(alpha) atIndex:3];                                 // 'alpha'
     
 #if TARGET_OS_IOS
     const MTLFeatureSet featureSetForBaseInstance = MTLFeatureSet_iOS_GPUFamily3_v1;
@@ -248,15 +282,19 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
     // Obtain a renderPassDescriptor generated from the view's drawable textures
     MTLRenderPassDescriptor* renderPassDescriptor = _view.currentRenderPassDescriptor;
 
-    if(renderPassDescriptor != nil) // If we have a valid drawable, begin the commands to render into it
-    {
+    if (renderPassDescriptor) { // If we have a valid drawable, begin the commands to render into it
         // Create a render command encoder so we can render into something
         id <MTLRenderCommandEncoder> gpuRenderer = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
         gpuRenderer.label = @"FSTUFF_RenderEncoder";
         [gpuRenderer setRenderPipelineState:_pipelineState];
 
         // Draw shapes
-        FSTUFF_SimulationRender(&_sim, (__bridge void *)_device, (__bridge void *)gpuRenderer, (__bridge void *)_gpuConstants[_constantDataBufferIndex]);
+        FSTUFF_Renderer renderer = {
+            (__bridge void *)_device,
+            (__bridge void *)gpuRenderer,
+            (__bridge void *)_gpuConstants[_constantDataBufferIndex]
+        };
+        FSTUFF_Render(&_sim, &renderer);
         
         // We're done encoding commands
         [gpuRenderer endEncoding];
@@ -274,36 +312,10 @@ void FSTUFF_RenderShapes(FSTUFF_ShapeTemplate * shape,
 
 - (void)_reshape
 {
-//    // When reshape is called, update the view and projection matricies since this means the view orientation or size changed
-
-#if TARGET_OS_IOS
-    UIScreen * screen = [UIScreen mainScreen]; //self.view.window.screen;
-    const float scale = [screen scale];
-    const float ppi = [GBDeviceInfo deviceInfo].displayInfo.pixelsPerInch;
-    const float width = ([screen bounds].size.width * scale);
-    const float height = ([screen bounds].size.height * scale);
-    const CGSize viewSizeMM = CGSizeMake((width / ppi) * 25.4f,
-                                         (height / ppi) * 25.4f);
-
-#else
-    NSScreen * screen = self.view.window.screen;
-    NSNumber * displayID = [[screen deviceDescription] objectForKey:@"NSScreenNumber"];
-    CGDirectDisplayID cgDisplayID = (CGDirectDisplayID) [displayID intValue];
-    const CGSize scrSizeMM = CGDisplayScreenSize(cgDisplayID);
-    const CGSize ptsToMM = CGSizeMake(scrSizeMM.width / screen.frame.size.width,
-                                      scrSizeMM.height / screen.frame.size.height);
-    const CGSize viewSizeMM = CGSizeMake(self.view.bounds.size.width * ptsToMM.width,
-                                         self.view.bounds.size.height * ptsToMM.height);
-
-#endif
-
-//    NSLog(@"view size: {%f,%f} (pts?) --> {%f,%f} (mm?)\n",
-//          self.view.bounds.size.width,
-//          self.view.bounds.size.height,
-//          viewSizeMM.width,
-//          viewSizeMM.height);
-    
-    FSTUFF_SimulationViewChanged(&_sim, viewSizeMM.width, viewSizeMM.height);
+    // When reshape is called, update the view and projection matricies since this means the view orientation or size changed
+    float widthMM, heightMM;
+    FSTUFF_GetViewSizeMM((__bridge void *)self.view, &widthMM, &heightMM);
+    FSTUFF_ViewChanged(&_sim, widthMM, heightMM);
 }
 
 // Called whenever view changes orientation or layout is changed

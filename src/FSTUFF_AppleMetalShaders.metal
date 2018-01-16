@@ -1,14 +1,13 @@
 //
-//  Shaders.metal
-//  MetalTest
+//  FSTUFF_AppleMetalShaders.metal
+//  FallingStuff
 //
 //  Created by David Ludwig on 4/30/16.
-//  Copyright (c) 2016 David Ludwig. All rights reserved.
+//  Copyright (c) 2018 David Ludwig. All rights reserved.
 //
 
 #include <metal_stdlib>
-#include <simd/simd.h>
-#include "SharedStructures.h"
+#include "FSTUFF_AppleMetalStructs.h"
 
 using namespace metal;
 
@@ -19,7 +18,7 @@ struct FSTUFF_Vertex
 };
 
 vertex FSTUFF_Vertex FSTUFF_VertexShader(constant float4 * position [[buffer(0)]],
-                                         constant FSTUFF_SimulationGPUGlobals * gpuGlobals [[buffer(1)]],
+                                         constant FSTUFF_GPUGlobals * gpuGlobals [[buffer(1)]],
                                          constant FSTUFF_ShapeGPUInfo * gpuShapes [[buffer(2)]],
                                          constant float * alpha [[buffer(3)]],
                                          uint vertexId [[vertex_id]],

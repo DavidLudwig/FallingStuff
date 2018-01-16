@@ -3,16 +3,16 @@
 //  MetalTest
 //
 //  Created by David Ludwig on 4/30/16.
-//  Copyright (c) 2016 David Ludwig. All rights reserved.
+//  Copyright (c) 2018 David Ludwig. All rights reserved.
 //
 
-#import "AppDelegate.h"
+#import "FSTUFF_MacAppDelegate.h"
 
-@interface AppDelegate ()
+@interface FSTUFF_MacAppDelegate ()
 
 @end
 
-@implementation AppDelegate
+@implementation FSTUFF_MacAppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     // Insert code here to initialize your application

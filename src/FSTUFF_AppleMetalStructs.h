@@ -1,15 +1,16 @@
 //
-//  SharedStructures.h
+//  FSTUFF_AppleMetalStructs.h
 //  MetalTest
 //
 //  Created by David Ludwig on 4/30/16.
-//  Copyright (c) 2016 David Ludwig. All rights reserved.
+//  Copyright (c) 2018 David Ludwig. All rights reserved.
 //
 
 #ifndef SharedStructures_h
 #define SharedStructures_h
 
 #include <simd/simd.h>
+//#include "gb_math.h"
 
 #define kMaxCircles 2048
 #define kMaxBoxes 2048
@@ -18,7 +19,7 @@
 typedef struct __attribute__((__aligned__(256)))
 {
     matrix_float4x4 projection_matrix;
-} FSTUFF_SimulationGPUGlobals;
+} FSTUFF_GPUGlobals;
 
 typedef struct
 {
@@ -28,7 +29,7 @@ typedef struct
 
 typedef struct
 {
-    FSTUFF_SimulationGPUGlobals globals;
+    FSTUFF_GPUGlobals globals;
     FSTUFF_ShapeGPUInfo circles[kMaxCircles];
     FSTUFF_ShapeGPUInfo boxes[kMaxBoxes];
 } FSTUFF_GPUData;

@@ -3,7 +3,7 @@
 //  MetalTest
 //
 //  Created by David Ludwig on 4/30/16.
-//  Copyright © 2016 David Ludwig. All rights reserved.
+//  Copyright © 2018 David Ludwig. All rights reserved.
 //
 
 #import <Cocoa/Cocoa.h>
