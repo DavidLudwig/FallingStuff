@@ -38,6 +38,11 @@ enum FSTUFF_PrimitiveType : uint8_t {
     FSTUFF_PrimitiveTriangleFan,
 };
 
+enum FSTUFF_SimulationState : uint8_t {
+    FSTUFF_DEAD = 0,
+    FSTUFF_ALIVE
+};
+
 struct FSTUFF_Shape {
     const char * debugName = "";
     int numVertices = 0;
@@ -53,9 +58,35 @@ struct FSTUFF_Shape {
     void * gpuVertexBuffer = NULL;
 };
 
-enum FSTUFF_SimulationState : uint32_t {
-    FSTUFF_DEAD = 0,
-    FSTUFF_ALIVE
+struct FSTUFF_Renderer {
+    void * device = NULL;
+    void * renderer = NULL;
+    FSTUFF_GPUData * appData = NULL;      // on Apple+Metal, this is laid out as a 'FSTUFF_GPUData' struct
+    void * nativeView = NULL;
+
+    void   DestroyVertexBuffer(void * gpuVertexBuffer);
+    void * NewVertexBuffer(void * src, size_t size);
+    void   GetViewSizeMM(float *outWidthMM, float *outHeightMM);
+    void   RenderShapes(FSTUFF_Shape * shape,
+                        size_t offset,
+                        size_t count,
+                        float alpha);
+};
+
+enum FSTUFF_EventType : uint8_t {
+    FSTUFF_EventNone = 0,
+    FSTUFF_EventKeyDown = 1,
+};
+
+struct FSTUFF_Event {
+    FSTUFF_EventType type = FSTUFF_EventNone;
+    bool handled = false;
+    union FSTUFF_EventData {
+        FSTUFF_EventData() { memset( this, 0, sizeof(FSTUFF_EventData) ); }
+        struct {
+            const char utf8[8];
+        } key;
+    } data;
 };
 
 struct FSTUFF_Simulation {
@@ -71,8 +102,7 @@ struct FSTUFF_Simulation {
     FSTUFF_Shape boxEdged;
     gbMat4 projectionMatrix;
     cpVect viewSizeMM = {0, 0};
-    void * gpuDevice = NULL;
-    void * nativeView = NULL;
+    FSTUFF_Renderer * renderer = NULL;
     
     //
     // Random Number Generation
@@ -88,19 +118,14 @@ struct FSTUFF_Simulation {
     //
     // Misc parameters
     //
-//    double addMarblesInS_Range[2] = {1.0, 2.0};
-    double addMarblesInS_Range[2] = {0.3, 1.0};
-//    double addMarblesInS_default = 0.0;
-    double addMarblesInS = addMarblesInS_Range[0];
-//    const cpVect gravity = cpv(0, -98);
-    const cpVect gravity = cpv(0, -196);
-//    const cpFloat marbleRadius = 4;
-    const cpFloat marbleRadius_Range[2] = {2, 4};
-//    const cpFloat marbleRadius = 1;
-    int32_t marblesCount = 0;
-    int32_t marblesMax = 200;
-    double resetInS_default = 15;
-    double resetInS = 0;
+            double addMarblesInS_Range[2]   = {0.3, 1.0};
+            double addMarblesInS            = addMarblesInS_Range[0];
+    const   cpVect gravity                  = cpv(0, -196);
+    const   cpFloat marbleRadius_Range[2]   = {2, 4};
+            int32_t marblesCount            = 0;
+            int32_t marblesMax              = 200;
+            double resetInS_default         = 15;
+            double resetInS                 = 0;
     
 
     //
@@ -130,41 +155,18 @@ struct FSTUFF_Simulation {
         size_t numBodies = 0;
         cpBody bodies[kMaxShapes] = {0};
     } world;
+    
+    void    AddMarble();
+    void    EventReceived(FSTUFF_Event * event);
+    void    Render();
+    void    Update();
+    void    ViewChanged(float widthMM, float heightMM);
+
 };
 
-enum FSTUFF_EventType : uint8_t {
-    FSTUFF_EventNone = 0,
-    FSTUFF_EventKeyDown = 1,
-};
-
-struct FSTUFF_Event {
-    FSTUFF_EventType type = FSTUFF_EventNone;
-    bool handled = false;
-    union FSTUFF_EventData {
-        FSTUFF_EventData() { memset( this, 0, sizeof(FSTUFF_EventData) ); }
-        struct {
-            const char utf8[8];
-        } key;
-    } data;
-};
-
-struct FSTUFF_Renderer {
-    void * device;
-    void * renderer;
-    void * appData;      // on Apple+Metal, this is laid out as a 'FSTUFF_GPUData' struct
-};
-
-void         FSTUFF_AddMarble(FSTUFF_Simulation * sim);
-void         FSTUFF_DestroyVertexBuffer(void * gpuVertexBuffer);
-void         FSTUFF_EventReceived(FSTUFF_Simulation * sim, FSTUFF_Event * event);
-void         FSTUFF_GetViewSizeMM(void *nativeView, float *outWidthMM, float *outHeightMM);
 void         FSTUFF_Init(FSTUFF_Simulation * sim);
 void         FSTUFF_Log(const char * fmt, ...) __attribute__((format(printf, 1, 2)));
 FSTUFF_Event FSTUFF_NewKeyEvent(FSTUFF_EventType keyEventType, const char * utf8Char);
-void *       FSTUFF_NewVertexBuffer(void * gpuDevice, void * src, size_t size);
-void         FSTUFF_Render(FSTUFF_Simulation * sim, FSTUFF_Renderer * renderer);
-void         FSTUFF_Update(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData);
-void         FSTUFF_ViewChanged(FSTUFF_Simulation * sim, float widthMM, float heightMM);
 
 #ifdef __OBJC__
 #import <Foundation/Foundation.h>

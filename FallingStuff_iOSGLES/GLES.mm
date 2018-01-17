@@ -59,7 +59,7 @@ typedef struct
     self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
 
     if (!self.context) {
-        NSLog(@"Failed to create ES context");
+        FSTUFF_Log(@"Failed to create ES context\n");
     }
     
     GLKView *view = (GLKView *)self.view;
@@ -137,7 +137,7 @@ GLuint LoadShader(GLenum type, GLbyte *shaderSrc)
         {
             char* infoLog = (char *) malloc(sizeof(char) * infoLen);
             glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
-            NSLog(@"Error compiling shader:\n%s\n", infoLog);
+            FSTUFF_Log(@"Error compiling shader:\n%s\n\n", infoLog);
             free(infoLog);
         }
         glDeleteShader(shader);
@@ -220,7 +220,7 @@ int Init(ESContext *esContext)
         {
             char* infoLog = (char *) malloc(sizeof(char) * infoLen);
             glGetProgramInfoLog(programObject, infoLen, NULL, infoLog);
-            NSLog(@"Error linking program:\n%s\n", infoLog);
+            FSTUFF_Log(@"Error linking program:\n%s\n\n", infoLog);
             
             free(infoLog);
         }
@@ -273,7 +273,7 @@ void * FSTUFF_NewVertexBuffer(void * gpuDevice, void * src, size_t size)
     return (void *)(uintptr_t)newBuffer;
 }
 
-void FSTUFF_DestroyVertexBuffer(void * _gpuVertexBuffer)
+void FSTUFF_DestroyVertexBuffer(FSTUFF_Renderer * renderer, void * _gpuVertexBuffer)
 {
     GLuint bufferID = (GLuint)(uintptr_t)_gpuVertexBuffer;
     if (bufferID != 0) {
@@ -281,11 +281,10 @@ void FSTUFF_DestroyVertexBuffer(void * _gpuVertexBuffer)
     }
 }
 
-void FSTUFF_RenderShapes(FSTUFF_Renderer * renderer,
-                         FSTUFF_Shape * shape,
-                         size_t baseInstance,
-                         size_t count,
-                         float alpha)
+void FSTUFF_Renderer::RenderShapes(FSTUFF_Shape * shape,
+                                   size_t baseInstance,
+                                   size_t count,
+                                   float alpha)
 {
     FSTUFF_GPUData * gpuData = (FSTUFF_GPUData *) _gpuData;
     
@@ -306,7 +305,7 @@ void FSTUFF_RenderShapes(FSTUFF_Renderer * renderer,
             gpuPrimitiveType = GL_TRIANGLE_STRIP;
             break;
         default:
-            NSLog(@"Unknown or unmapped FSTUFF_PrimitiveType in shape: %u", shape->primitiveType);
+            FSTUFF_Log(@"Unknown or unmapped FSTUFF_PrimitiveType in shape: %u\n", shape->primitiveType);
             return;
     }
 
@@ -319,7 +318,7 @@ void FSTUFF_RenderShapes(FSTUFF_Renderer * renderer,
             shapesOffsetInGpuData = offsetof(FSTUFF_GPUData, boxes);
             break;
         default:
-            NSLog(@"Unknown or unmapped FSTUFF_ShapeType in shape: %u", shape->type);
+            FSTUFF_Log(@"Unknown or unmapped FSTUFF_ShapeType in shape: %u\n", shape->type);
             return;
     }
 
@@ -368,6 +367,7 @@ void FSTUFF_RenderShapes(FSTUFF_Renderer * renderer,
 
 - (void)update
 {
+    _renderer.appData = &_gpuData;
     FSTUFF_Update(&_sim, &_gpuData);
 }
 
@@ -397,7 +397,8 @@ void Draw(ESContext *esContext, FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuDat
     //eglSwapBuffers(esContext->eglDisplay, esContext->eglSurface);
     
     FSTUFF_Renderer renderer = {NULL, NULL, gpuData};
-    FSTUFF_Render(sim, &renderer);
+    //FSTUFF_Render(sim, &renderer);
+    sim->Render();
     
 }
 

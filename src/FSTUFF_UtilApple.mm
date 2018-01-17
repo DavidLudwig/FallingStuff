@@ -17,7 +17,7 @@
 
 #include "FSTUFF.h"
 
-void FSTUFF_GetViewSizeMM(void * _nativeView, float * outWidthMM, float * outHeightMM)
+void FSTUFF_Renderer::GetViewSizeMM(float * outWidthMM, float * outHeightMM)
 {
 #if TARGET_OS_IOS
     UIScreen * screen = [UIScreen mainScreen]; //self.view.window.screen;
@@ -31,8 +31,8 @@ void FSTUFF_GetViewSizeMM(void * _nativeView, float * outWidthMM, float * outHei
     *outWidthMM = (width / ppi) * 25.4f;
     *outHeightMM = (height / ppi) * 25.4f;
 #else
-    FSTUFF_Log("%s, _nativeView: %p\n", __FUNCTION__, _nativeView);
-    NSView * nativeView = (__bridge NSView *) _nativeView;
+    FSTUFF_Log("%s, this->nativeView: %p\n", __FUNCTION__, this->nativeView);
+    NSView * nativeView = (__bridge NSView *) this->nativeView;
     FSTUFF_Log(@"%s, nativeView: %@\n", __FUNCTION__, nativeView);
     FSTUFF_Log(@"%s, nativeView.window: %@\n", __FUNCTION__, nativeView.window);
     FSTUFF_Log("%s, nativeView.frame: {%f,%f,%f,%f}\n",
@@ -56,7 +56,7 @@ void FSTUFF_GetViewSizeMM(void * _nativeView, float * outWidthMM, float * outHei
     *outHeightMM = nativeView.bounds.size.height * ptsToMM.height;
 #endif
 
-//    NSLog(@"view size: {%f,%f} (pts?) --> {%f,%f} (mm?)\n",
+//    FSTUFF_Log(@"view size: {%f,%f} (pts?) --> {%f,%f} (mm?)\n",
 //          self.view.bounds.size.width,
 //          self.view.bounds.size.height,
 //          viewSizeMM.width,

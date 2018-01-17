@@ -1,17 +1,15 @@
 //
-//  FSTUFF_Simulation.cpp
+//  FSTUFF.cpp
 //  FallingStuff
 //
 //  Created by David Ludwig on 5/30/16.
 //  Copyright © 2018 David Ludwig. All rights reserved.
 //
 
-
-#import <simd/simd.h>
-#import "FSTUFF_AppleMetalStructs.h"
+//#import "FSTUFF_AppleMetalStructs.h"
+#include "FSTUFF.h"
 #include <sys/time.h>   // for gettimeofday()
 #include <random>
-#include "FSTUFF.h"
 
 #define GB_MATH_IMPLEMENTATION
 #include "gb_math.h"
@@ -99,7 +97,7 @@ void FSTUFF_MakeCircleLineStrip(vector_float4 * vertices, int maxVertices, int *
     }
 }
 
-void FSTUFF_ShapeInit(FSTUFF_Shape * shape, void * device)
+void FSTUFF_ShapeInit(FSTUFF_Shape * shape, FSTUFF_Renderer * renderer)
 {
     // Generate vertices in CPU-accessible memory
     vector_float4 vertices[2048];
@@ -154,9 +152,8 @@ void FSTUFF_ShapeInit(FSTUFF_Shape * shape, void * device)
     }
 
     if (didSet) {
-        shape->gpuVertexBuffer = FSTUFF_VertexBufferNew(device,
-                                                        vertices,
-                                                        shape->numVertices * sizeof(vector_float4));
+        shape->gpuVertexBuffer = renderer->NewVertexBuffer(vertices,
+                                                           shape->numVertices * sizeof(vector_float4));
     } else {
         shape->gpuVertexBuffer = NULL;
     }
@@ -189,12 +186,6 @@ int FSTUFF_RandRangeI(std::mt19937 & rng, int a, int b)
     return distribution(rng);
 }
 
-void FSTUFF_RenderShapes(FSTUFF_Renderer * renderer,
-                         FSTUFF_Shape * shape,
-                         size_t offset,
-                         size_t count,
-                         float alpha);
-
 
 #pragma mark - Simulation
 
@@ -217,7 +208,7 @@ const cpFloat kStepTimeS = 1./60.;          // step time, in seconds
 #define BOX_IDX(VAL)    ((((uintptr_t)(VAL)) - ((uintptr_t)(&sim->world.boxes[0]))) / sizeof(sim->world.boxes[0]))
 
 
-void FSTUFF_InitGPUShapes(FSTUFF_Simulation * sim, void * gpuDevice)
+void FSTUFF_InitGPUShapes(FSTUFF_Simulation * sim)
 {
     //
     // GPU init
@@ -226,7 +217,7 @@ void FSTUFF_InitGPUShapes(FSTUFF_Simulation * sim, void * gpuDevice)
     sim->circleFilled.type = FSTUFF_ShapeCircle;
     sim->circleFilled.appearance = FSTUFF_ShapeAppearanceFilled;
     sim->circleFilled.circle.numParts = kNumCircleParts;
-    FSTUFF_ShapeInit(&(sim->circleFilled), gpuDevice);
+    FSTUFF_ShapeInit(&(sim->circleFilled), sim->renderer);
 
     sim->circleDots.debugName = "FSTUFF_CircleDots";
     sim->circleDots.type = FSTUFF_ShapeCircle;
@@ -253,24 +244,24 @@ void FSTUFF_InitGPUShapes(FSTUFF_Simulation * sim, void * gpuDevice)
             );
             sim->circleDots.numVertices += tmpVertexCount;
         }
-        sim->circleDots.gpuVertexBuffer = FSTUFF_VertexBufferNew(gpuDevice, vertices, (sim->circleDots.numVertices * sizeof(vector_float4)));
+        sim->circleDots.gpuVertexBuffer = sim->renderer->NewVertexBuffer(vertices, (sim->circleDots.numVertices * sizeof(vector_float4)));
     }
 
     sim->circleEdged.debugName = "FSTUFF_CircleEdged";
     sim->circleEdged.type = FSTUFF_ShapeCircle;
     sim->circleEdged.appearance = FSTUFF_ShapeAppearanceEdged;
     sim->circleEdged.circle.numParts = kNumCircleParts;
-    FSTUFF_ShapeInit(&(sim->circleEdged), gpuDevice);
+    FSTUFF_ShapeInit(&(sim->circleEdged), sim->renderer);
 
     sim->boxFilled.debugName = "FSTUFF_BoxEdged";
     sim->boxFilled.type = FSTUFF_ShapeBox;
     sim->boxFilled.appearance = FSTUFF_ShapeAppearanceFilled;
-    FSTUFF_ShapeInit(&(sim->boxFilled), gpuDevice);
+    FSTUFF_ShapeInit(&(sim->boxFilled), sim->renderer);
     
     sim->boxEdged.debugName = "FSTUFF_BoxEdged";
     sim->boxEdged.type = FSTUFF_ShapeBox;
     sim->boxEdged.appearance = FSTUFF_ShapeAppearanceEdged;
-    FSTUFF_ShapeInit(&(sim->boxEdged), gpuDevice);
+    FSTUFF_ShapeInit(&(sim->boxEdged), sim->renderer);
 }
 
 void FSTUFF_InitWorld(FSTUFF_Simulation * sim)
@@ -389,14 +380,14 @@ void FSTUFF_InitWorld(FSTUFF_Simulation * sim)
     }
     
 //    for (int i = 0; i < 1500; i++) {
-//        FSTUFF_AddMarble(sim);
+//        sim->AddMarble();
 //    }
 }
 
 void FSTUFF_Init(FSTUFF_Simulation * sim) //, void * gpuDevice, void * nativeView)
 {
-    FSTUFF_Log("%s, sim:%p, state:%d, gpuDevice:%p, nativeView:%p\n",
-        __FUNCTION__, sim, sim->state, sim->gpuDevice, sim->nativeView);
+    FSTUFF_Log("%s, sim:%p, state:%d, renderer:%p\n",
+        __FUNCTION__, sim, sim->state, sim->renderer);
     
     // Don't re-initialize simulations that are already alive
     if (sim->state != FSTUFF_DEAD) {
@@ -404,8 +395,7 @@ void FSTUFF_Init(FSTUFF_Simulation * sim) //, void * gpuDevice, void * nativeVie
     }
 
     // Preserve OS-native resource handles, within 'sim'
-    void * gpuDevice = sim->gpuDevice;
-    void * nativeView = sim->nativeView;
+    FSTUFF_Renderer * renderer = sim->renderer;
 
     // Reset all variables in 'sim'
     sim = new (sim) FSTUFF_Simulation;
@@ -414,15 +404,14 @@ void FSTUFF_Init(FSTUFF_Simulation * sim) //, void * gpuDevice, void * nativeVie
     sim->state = FSTUFF_ALIVE;
 
     // Restore OS-native resource handles, to 'sim'
-    sim->gpuDevice = gpuDevice;
-    sim->nativeView = nativeView;
+    sim->renderer = renderer;
 
     // Initialize 'sim'
     float widthMM = 0.f;
     float heightMM = 0.f;
-    FSTUFF_GetViewSizeMM(nativeView, &widthMM, &heightMM);
-    FSTUFF_ViewChanged(sim, widthMM, heightMM);
-    FSTUFF_InitGPUShapes(sim, gpuDevice);
+    sim->renderer->GetViewSizeMM(&widthMM, &heightMM);
+    sim->ViewChanged(widthMM, heightMM);
+    FSTUFF_InitGPUShapes(sim);
     FSTUFF_InitWorld(sim);
 }
 
@@ -439,14 +428,16 @@ FSTUFF_Event FSTUFF_NewKeyEvent(FSTUFF_EventType eventType, const char * utf8Cha
     return event;
 }
 
-void FSTUFF_EventReceived(FSTUFF_Simulation *sim, FSTUFF_Event *event)
+void FSTUFF_Simulation::EventReceived(FSTUFF_Event *event)
 {
     switch (event->type) {
+        case FSTUFF_EventNone: {
+        } break;
         case FSTUFF_EventKeyDown: {
             switch (std::toupper(event->data.key.utf8[0])) {
                 case 'R': {
-                    FSTUFF_ShutdownWorld(sim);
-                    FSTUFF_InitWorld(sim);
+                    FSTUFF_ShutdownWorld(this);
+                    FSTUFF_InitWorld(this);
                     event->handled = true;
                 } break;
             }
@@ -465,8 +456,10 @@ void FSTUFF_CopyMatrix(gbMat4 & dest, const matrix_float4x4 & src)
 }
 
 
-void FSTUFF_Update(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
+void FSTUFF_Simulation::Update()
 {
+    FSTUFF_Simulation * sim = this;
+
     // Compute current time
     cpFloat nowS;           // current time, in seconds since UNIX epoch
     struct timeval nowSys;  // used to get current time from OS
@@ -474,63 +467,53 @@ void FSTUFF_Update(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
     nowS = (cpFloat)nowSys.tv_sec + ((cpFloat)nowSys.tv_usec / 1000000.);
     
     // Initialize simulation time vars, on first tick
-    if (sim->lastUpdateUTCTimeS == 0.) {
-        sim->lastUpdateUTCTimeS = nowS;
+    if (this->lastUpdateUTCTimeS == 0.) {
+        this->lastUpdateUTCTimeS = nowS;
     }
     
     // Compute delta-time
-    const double deltaTimeS = nowS - sim->lastUpdateUTCTimeS;
-    sim->elapsedTimeS += deltaTimeS;
+    const double deltaTimeS = nowS - this->lastUpdateUTCTimeS;
+    this->elapsedTimeS += deltaTimeS;
     
     // Add marbles, as warranted
-    if (sim->marblesCount < sim->marblesMax) {
-        if (sim->addMarblesInS > 0) {
-            sim->addMarblesInS -= deltaTimeS;
-            if (sim->addMarblesInS <= 0) {
-                FSTUFF_AddMarble(sim);
-                sim->addMarblesInS = FSTUFF_RandRangeF(sim->rng, sim->addMarblesInS_Range[0], sim->addMarblesInS_Range[1]);
+    if (this->marblesCount < this->marblesMax) {
+        if (this->addMarblesInS > 0) {
+            this->addMarblesInS -= deltaTimeS;
+            if (this->addMarblesInS <= 0) {
+                this->AddMarble();
+                this->addMarblesInS = FSTUFF_RandRangeF(this->rng, this->addMarblesInS_Range[0], this->addMarblesInS_Range[1]);
             }
         }
     }
     
     // Update physics
     const cpFloat kSubstepTimeS = kStepTimeS / ((cpFloat)kNumSubSteps);
-    while ((sim->lastUpdateUTCTimeS + kStepTimeS) <= nowS) {
+    while ((this->lastUpdateUTCTimeS + kStepTimeS) <= nowS) {
         for (size_t i = 0; i < kNumSubSteps; ++i) {
-            sim->lastUpdateUTCTimeS += kSubstepTimeS;
+            this->lastUpdateUTCTimeS += kSubstepTimeS;
             cpSpaceStep(SPACE, kSubstepTimeS);
         }
     }
     
     // Reset world, if warranted
-    if (sim->marblesCount >= sim->marblesMax) {
-        if (sim->resetInS_default > 0) {
-            if (sim->resetInS <= 0) {
-                sim->resetInS = sim->resetInS_default;
+    if (this->marblesCount >= this->marblesMax) {
+        if (this->resetInS_default > 0) {
+            if (this->resetInS <= 0) {
+                this->resetInS = this->resetInS_default;
             } else {
-                sim->resetInS -= deltaTimeS;
+                this->resetInS -= deltaTimeS;
             }
         }
-        if (sim->resetInS <= 0) {
-            sim->marblesCount = 0;
-            FSTUFF_ShutdownWorld(sim);
-            FSTUFF_InitWorld(sim);
+        if (this->resetInS <= 0) {
+            this->marblesCount = 0;
+            FSTUFF_ShutdownWorld(this);
+            FSTUFF_InitWorld(this);
         }
     }
 
     // Copy simulation/game data to GPU-accessible buffers
-    //gpuData->globals.projection_matrix = sim->projectionMatrix;
-
-//    gbMat4 m;
-//    memcpy((void *)&(m.e), (void *)&(sim->projectionMatrix), sizeof(float) * 16);
-//    memcpy((void *)&(gpuData->globals.projection_matrix), (void *)&(m.e), sizeof(float) * 16);
-
-
-    FSTUFF_CopyMatrix(gpuData->globals.projection_matrix, sim->projectionMatrix);
-
-    //memcpy((void *)&(gpuData->globals.projection_matrix), (void *)&(sim->projectionMatrix.e), sizeof(float) * 16);
-
-    for (size_t i = 0; i < sim->world.numCircles; ++i) {
+    FSTUFF_CopyMatrix(this->renderer->appData->globals.projection_matrix, this->projectionMatrix);
+    for (size_t i = 0; i < this->world.numCircles; ++i) {
         cpFloat shapeRadius = cpCircleShapeGetRadius((cpShape*)CIRCLE(i));
         cpBody * body = cpShapeGetBody((cpShape*)CIRCLE(i));
         cpVect bodyCenter = cpBodyGetPosition(body);
@@ -545,10 +528,10 @@ void FSTUFF_Update(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
         gb_mat4_scale(&tmp, {(float)shapeRadius, (float)shapeRadius, 1});
         dest *= tmp;
 
-        FSTUFF_CopyMatrix(gpuData->circles[i].model_matrix, dest);
-        gpuData->circles[i].color = sim->world.circleColors[i];
+        FSTUFF_CopyMatrix(this->renderer->appData->circles[i].model_matrix, dest);
+        this->renderer->appData->circles[i].color = this->world.circleColors[i];
     }
-    for (size_t i = 0; i < sim->world.numBoxes; ++i) {
+    for (size_t i = 0; i < this->world.numBoxes; ++i) {
         cpVect a = cpSegmentShapeGetA((cpShape*)BOX(i));
         cpVect b = cpSegmentShapeGetB((cpShape*)BOX(i));
         cpVect center = cpvlerp(a, b, 0.5);
@@ -569,9 +552,9 @@ void FSTUFF_Update(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
         dest *= tmp;
         gb_mat4_scale(&tmp, {(float)cpvlength(b-a), (float)(radius*2.), 1.});
         dest *= tmp;
-        FSTUFF_CopyMatrix(gpuData->boxes[i].model_matrix, dest);
+        FSTUFF_CopyMatrix(this->renderer->appData->boxes[i].model_matrix, dest);
 
-        gpuData->boxes[i].color = sim->world.boxColors[i];
+        this->renderer->appData->boxes[i].color = this->world.boxColors[i];
     }
     
 /*
@@ -582,18 +565,18 @@ void FSTUFF_Update(FSTUFF_Simulation * sim, FSTUFF_GPUData * gpuData)
 */
 }
 
-void FSTUFF_Render(FSTUFF_Simulation * sim, FSTUFF_Renderer * renderer)
+void FSTUFF_Simulation::Render()
 {
-    FSTUFF_RenderShapes(renderer, &sim->circleFilled, 0,                  sim->world.numCircles,                      0.35f);
-    FSTUFF_RenderShapes(renderer, &sim->circleDots,   sim->world.numPegs, sim->world.numCircles - sim->world.numPegs, 1.0f);
-    FSTUFF_RenderShapes(renderer, &sim->circleEdged,  0,                  sim->world.numCircles,                      1.0f);
-    FSTUFF_RenderShapes(renderer, &sim->boxFilled,    0,                  sim->world.numBoxes,                        0.35f);
-    FSTUFF_RenderShapes(renderer, &sim->boxEdged,     0,                  sim->world.numBoxes,                        1.0f);
+    renderer->RenderShapes(&circleFilled, 0,             world.numCircles,                 0.35f);
+    renderer->RenderShapes(&circleDots,   world.numPegs, world.numCircles - world.numPegs, 1.0f);
+    renderer->RenderShapes(&circleEdged,  0,             world.numCircles,                 1.0f);
+    renderer->RenderShapes(&boxFilled,    0,             world.numBoxes,                   0.35f);
+    renderer->RenderShapes(&boxEdged,     0,             world.numBoxes,                   1.0f);
 }
 
-void FSTUFF_ViewChanged(FSTUFF_Simulation * sim, float widthMM, float heightMM)
+void FSTUFF_Simulation::ViewChanged(float widthMM, float heightMM)
 {
-    sim->viewSizeMM = {widthMM, heightMM};
+    this->viewSizeMM = {widthMM, heightMM};
 
     gbMat4 translation;
     gb_mat4_translate(&translation, {-1, -1, 0});
@@ -601,7 +584,7 @@ void FSTUFF_ViewChanged(FSTUFF_Simulation * sim, float widthMM, float heightMM)
     gbMat4 scaling;
     gb_mat4_scale(&scaling, {2.0f / widthMM, 2.0f / heightMM, 1});
     
-    sim->projectionMatrix = translation * scaling;
+    this->projectionMatrix = translation * scaling;
 }
 
 void FSTUFF_ShutdownWorld(FSTUFF_Simulation * sim)
@@ -622,19 +605,19 @@ void FSTUFF_ShutdownWorld(FSTUFF_Simulation * sim)
 static void FSTUFF_ShutdownGPU(FSTUFF_Simulation * sim)
 {
     if (sim->circleDots.gpuVertexBuffer) {
-        FSTUFF_VertexBufferDestroy(sim->circleDots.gpuVertexBuffer);
+        sim->renderer->DestroyVertexBuffer(sim->circleDots.gpuVertexBuffer);
     }
     if (sim->circleEdged.gpuVertexBuffer) {
-        FSTUFF_VertexBufferDestroy(sim->circleEdged.gpuVertexBuffer);
+        sim->renderer->DestroyVertexBuffer(sim->circleEdged.gpuVertexBuffer);
     }
     if (sim->circleFilled.gpuVertexBuffer) {
-        FSTUFF_VertexBufferDestroy(sim->circleFilled.gpuVertexBuffer);
+        sim->renderer->DestroyVertexBuffer(sim->circleFilled.gpuVertexBuffer);
     }
     if (sim->boxEdged.gpuVertexBuffer) {
-        FSTUFF_VertexBufferDestroy(sim->boxEdged.gpuVertexBuffer);
+        sim->renderer->DestroyVertexBuffer(sim->boxEdged.gpuVertexBuffer);
     }
     if (sim->boxFilled.gpuVertexBuffer) {
-        FSTUFF_VertexBufferDestroy(sim->boxFilled.gpuVertexBuffer);
+        sim->renderer->DestroyVertexBuffer(sim->boxFilled.gpuVertexBuffer);
     }
 }
 
@@ -646,8 +629,9 @@ void FSTUFF_Shutdown(FSTUFF_Simulation * sim)
     ::operator delete(sim);
 }
 
-void FSTUFF_AddMarble(FSTUFF_Simulation * sim)
+void FSTUFF_Simulation::AddMarble()
 {
+    FSTUFF_Simulation * sim = this;
     cpBody * body = cpBodyInit(BODY_ALLOC(), 0, 0);
     cpSpaceAddBody(SPACE, body);
     const cpFloat marbleRadius = FSTUFF_RandRangeF(sim->rng, sim->marbleRadius_Range[0], sim->marbleRadius_Range[1]);

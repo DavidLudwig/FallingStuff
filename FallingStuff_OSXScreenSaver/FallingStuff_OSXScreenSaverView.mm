@@ -36,24 +36,14 @@ extern void FSTUFF_Log(NSString * fmt, ...);
 {
     self = [super initWithFrame:frame isPreview:isPreview];
     if (self) {
-
         FSTUFF_Log(@"init...\n");
         [self setAnimationTimeInterval:1/30.0];
         FSTUFF_Log(@"creating view controller...\n");
         self.viewController = [[FSTUFF_AppleMetalViewController alloc] init];
         FSTUFF_Log(@"getting view...\n");
         NSView * view = self.viewController.view;
-//        NSView * view = [[CustomView alloc] init];
-
         FSTUFF_Log(@"view:%@\n", view);
-
-//        [self addSubview:self.viewController.view];
         view.frame = self.frame;
-//        NSLog(@"hello");
-//        fprintf(stdout, "hello\n");
-//        fprintf(stderr, "hello\n");
-//
-        
         [self addSubview:view];
     }
     FSTUFF_Log("FallingStuff_OSXScreenSaverView initWithFrame, self.window:%p\n", self.window);
@@ -64,7 +54,7 @@ extern void FSTUFF_Log(NSString * fmt, ...);
 {
     FSTUFF_Log("FallingStuff_OSXScreenSaverView startAnimation, self.window:%p\n", self.window);
     [super startAnimation];
-    FSTUFF_Init(self.viewController.sim);
+//    FSTUFF_Init(self.viewController.sim);
 //    self.viewController.sim->Init();
 }
 
