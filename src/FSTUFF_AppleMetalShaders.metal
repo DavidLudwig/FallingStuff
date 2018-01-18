@@ -7,9 +7,9 @@
 //
 
 #include <metal_stdlib>
-#include "FSTUFF_AppleMetalStructs.h"
-
 using namespace metal;
+
+#include "FSTUFF_AppleMetalStructs.h"
 
 struct FSTUFF_Vertex
 {

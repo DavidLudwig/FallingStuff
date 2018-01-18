@@ -1,3 +1,11 @@
+#ifndef FSTUFF_Constants_h
+#define FSTUFF_Constants_h
+
+#define FSTUFF_BuildNumber  1
+#define FSTUFF_MaxBoxes     2048
+#define FSTUFF_MaxCircles   2048
+#define FSTUFF_MaxShapes    (FSTUFF_MaxCircles + FSTUFF_MaxBoxes)
+
 namespace FSTUFF_Colors {
     enum : uint32_t {
         AliceBlue            = 0xF0F8FF,
@@ -150,3 +158,5 @@ namespace FSTUFF_Colors {
         YellowGreen          = 0x9ACD32,
     };
 }
+
+#endif

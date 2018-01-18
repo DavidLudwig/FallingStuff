@@ -7,7 +7,7 @@
 //
 
 #import <ScreenSaver/ScreenSaver.h>
-#import "FSTUFF_AppleMetalViewController.h"
+#import "FSTUFF_Apple.h"
 
 @interface FallingStuff_OSXScreenSaverView : ScreenSaverView
 @property FSTUFF_AppleMetalViewController * viewController;
