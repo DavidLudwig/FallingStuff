@@ -34,19 +34,23 @@ extern void FSTUFF_Log(NSString * fmt, ...);
 
 - (instancetype)initWithFrame:(NSRect)frame isPreview:(BOOL)isPreview
 {
+    FSTUFF_Log("%s, frame:{%f,%f,%f,%f}, isPreview:%d\n",
+        __FUNCTION__,
+        frame.origin.x, frame.origin.y, frame.size.width, frame.size.height,
+        (int)isPreview);
+
     self = [super initWithFrame:frame isPreview:isPreview];
     if (self) {
-        FSTUFF_Log(@"init...\n");
         [self setAnimationTimeInterval:1/30.0];
-        FSTUFF_Log(@"creating view controller...\n");
         self.viewController = [[FSTUFF_AppleMetalViewController alloc] init];
-        FSTUFF_Log(@"getting view...\n");
         NSView * view = self.viewController.view;
-        FSTUFF_Log(@"view:%@\n", view);
-        view.frame = self.frame;
+        FSTUFF_Log("%s, sim:%p\n", __FUNCTION__, self.viewController.sim);
+        view.frame = CGRectMake(0, 0, self.frame.size.width, self.frame.size.height);
         [self addSubview:view];
+        if (isPreview) {
+            self.viewController.sim->SetGlobalScale({0.2f, 0.2f});
+        }
     }
-    FSTUFF_Log("FallingStuff_OSXScreenSaverView initWithFrame, self.window:%p\n", self.window);
     return self;
 }
 
@@ -72,11 +76,12 @@ extern void FSTUFF_Log(NSString * fmt, ...);
 {
     [super drawRect:rect];
     
-    FSTUFF_Log("FallingStuff_OSXScreenSaverView drawRect, self.window:%p\n", self.window);
+    FSTUFF_Log("%s, self.window:%p\n", __FUNCTION__, self.window);
+    FSTUFF_Log(@"%s, self.subviews:%@\n", __FUNCTION__, self.subviews);
 
-    NSColor* color = [NSColor colorWithCalibratedRed:0
+    NSColor* color = [NSColor colorWithCalibratedRed:1
                                   green:0
-                                   blue:1
+                                   blue:0
                                   alpha:1];
     [color set];
     NSBezierPath * path = [NSBezierPath bezierPathWithRect:rect];

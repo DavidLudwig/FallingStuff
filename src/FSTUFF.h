@@ -162,6 +162,11 @@ struct FSTUFF_Simulation {
     void    ViewChanged(float widthMM, float heightMM);
     void    Init();
     void    ResetWorld();
+    cpVect  globalScale = {1., 1.};
+    void    SetGlobalScale(cpVect scale);
+    cpFloat GetWorldWidth() const { return viewSizeMM.x * (1. / globalScale.x); }
+    cpFloat GetWorldHeight() const { return viewSizeMM.y * (1. / globalScale.y); }
+    void    UpdateProjectionMatrix();
     
 private:
     void    InitWorld();

@@ -319,9 +319,9 @@ void FSTUFF_Simulation::InitWorld()
     cpBodySetPosition(body, cpv(0, 0));
     static const cpFloat wallThickness = 5.0;
     static const cpFloat wallLeft   = -wallThickness / 2.;
-    static const cpFloat wallRight  = this->viewSizeMM.x + (wallThickness / 2.);
+    static const cpFloat wallRight  = this->GetWorldWidth() + (wallThickness / 2.);
     static const cpFloat wallBottom = -wallThickness / 2.;
-    static const cpFloat wallTop    = this->viewSizeMM.y * 2.;   // use a high ceiling, to make sure off-screen falling things don't go over walls
+    static const cpFloat wallTop    = this->GetWorldHeight() * 2.;   // use a high ceiling, to make sure off-screen falling things don't go over walls
     
     // Bottom
     shape = (cpShape*)cpSegmentShapeInit(NewBox(), body, cpv(wallLeft,wallBottom), cpv(wallRight,wallBottom), wallThickness/2.);
@@ -357,7 +357,7 @@ void FSTUFF_Simulation::InitWorld()
         Yellow,
         Cyan,
     };
-    const int numPegs = round((this->viewSizeMM.x * this->viewSizeMM.y) * 0.0005);
+    const int numPegs = round((this->GetWorldWidth() * this->GetWorldHeight()) * 0.0005);
     const cpFloat kPegScaleCircle = 2.5;
     const cpFloat kPegScaleBox = 4.;
     cpFloat cx, cy, radius, w, h, angleRad;
@@ -366,8 +366,8 @@ void FSTUFF_Simulation::InitWorld()
         switch (rand() % 2) {
             case 0:
             {
-                cx = FSTUFF_RandRangeF(this->rng, 0., this->viewSizeMM.x);
-                cy = FSTUFF_RandRangeF(this->rng, 0., this->viewSizeMM.y);
+                cx = FSTUFF_RandRangeF(this->rng, 0., this->GetWorldWidth());
+                cy = FSTUFF_RandRangeF(this->rng, 0., this->GetWorldHeight());
                 radius = kPegScaleCircle * FSTUFF_RandRangeF(this->rng, 6., 10.);
                 pegColorIndex = FSTUFF_RandRangeI(this->rng, 0, FSTUFF_countof(pegColors)-1);
 
@@ -385,8 +385,8 @@ void FSTUFF_Simulation::InitWorld()
             
             case 1:
             {
-                cx = FSTUFF_RandRangeF(this->rng, 0., this->viewSizeMM.x);
-                cy = FSTUFF_RandRangeF(this->rng, 0., this->viewSizeMM.y);
+                cx = FSTUFF_RandRangeF(this->rng, 0., this->GetWorldWidth());
+                cy = FSTUFF_RandRangeF(this->rng, 0., this->GetWorldHeight());
                 w = kPegScaleBox * FSTUFF_RandRangeF(this->rng, 6., 14.);
                 h = kPegScaleBox * FSTUFF_RandRangeF(this->rng, 1., 2.);
                 angleRad = FSTUFF_RandRangeF(this->rng, 0., M_PI);
@@ -416,7 +416,7 @@ void FSTUFF_Simulation::AddMarble()
     cpBody * body = cpBodyInit(NewBody(), 0, 0);
     cpSpaceAddBody(SPACE, body);
     const cpFloat marbleRadius = FSTUFF_RandRangeF(sim->rng, sim->marbleRadius_Range[0], sim->marbleRadius_Range[1]);
-    cpBodySetPosition(body, cpv(FSTUFF_RandRangeF(sim->rng, marbleRadius, sim->viewSizeMM.x - marbleRadius), sim->viewSizeMM.y * 1.1));
+    cpBodySetPosition(body, cpv(FSTUFF_RandRangeF(sim->rng, marbleRadius, sim->GetWorldWidth() - marbleRadius), sim->GetWorldHeight() * 1.1));
     cpShape * shape = (cpShape*)cpCircleShapeInit(NewCircle(), body, marbleRadius, cpvzero);
     cpSpaceAddShape(sim->world.physicsSpace, shape);
     cpShapeSetDensity(shape, 10);
@@ -441,8 +441,9 @@ void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
         return;
     }
 
-    // Preserve OS-native resource handles, within 'this'
-    FSTUFF_Renderer * renderer = this->renderer;
+    // Preserve various things within 'this'
+    auto renderer = this->renderer;
+    auto globalScale = this->globalScale;
 
     // Reset all variables in 'this'
     *this = FSTUFF_Simulation();
@@ -451,6 +452,7 @@ void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
     this->state = FSTUFF_ALIVE;
 
     // Restore OS-native resource handles, to 'this'
+    this->globalScale = globalScale;
     this->renderer = renderer;
 
     // Initialize 'this'
@@ -591,14 +593,36 @@ void FSTUFF_Simulation::Render()
 void FSTUFF_Simulation::ViewChanged(float widthMM, float heightMM)
 {
     this->viewSizeMM = {widthMM, heightMM};
+    this->UpdateProjectionMatrix();
+}
 
+void FSTUFF_Simulation::SetGlobalScale(cpVect scale)
+{
+    this->globalScale = scale;
+    this->UpdateProjectionMatrix();
+}
+
+void FSTUFF_Simulation::UpdateProjectionMatrix()
+{
     gbMat4 translation;
     gb_mat4_translate(&translation, {-1, -1, 0});
     
     gbMat4 scaling;
-    gb_mat4_scale(&scaling, {2.0f / widthMM, 2.0f / heightMM, 1});
-    
-    this->projectionMatrix = translation * scaling;
+    gb_mat4_scale(&scaling, {
+        (float)(2.0f / this->viewSizeMM.x),
+        (float)(2.0f / this->viewSizeMM.y),
+        1
+    });
+
+    gbMat4 scaling2;
+    gb_mat4_identity(&scaling2);
+    gb_mat4_scale(&scaling2, {
+        (float)(this->globalScale.x),
+        (float)(this->globalScale.y),
+        1
+    });
+
+    this->projectionMatrix = (translation * scaling) * scaling2;
 }
 
 void FSTUFF_Simulation::ShutdownWorld()

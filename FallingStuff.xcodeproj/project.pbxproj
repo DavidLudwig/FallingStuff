@@ -50,6 +50,10 @@
 		7568CB0A200FE97700FF086C /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7568CB09200FE97700FF086C /* MetalKit.framework */; };
 		7568CB0B200FE99500FF086C /* FSTUFF_iOSAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 75DE2F2D1CFCCD4C0052F8C1 /* FSTUFF_iOSAppDelegate.m */; };
 		7568CB0D200FEA5900FF086C /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7568CB0C200FEA5900FF086C /* Main.storyboard */; };
+		7568CBAE201121DB00FF086C /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CB1F201121BE00FF086C /* imgui.cpp */; };
+		7568CBAF2011220900FF086C /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA7201121BE00FF086C /* imgui_draw.cpp */; };
+		7568CBB02011222E00FF086C /* imgui_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA6201121BE00FF086C /* imgui_demo.cpp */; };
+		7568CBB3201122E200FF086C /* imgui_impl_mtl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */; };
 		756C8E4F200DB05C0019EA70 /* FSTUFF.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756C8E4E200DB05C0019EA70 /* FSTUFF.cpp */; };
 		756C8E50200DB05C0019EA70 /* FSTUFF.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756C8E4E200DB05C0019EA70 /* FSTUFF.cpp */; };
 		756C8E51200DB05C0019EA70 /* FSTUFF.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756C8E4E200DB05C0019EA70 /* FSTUFF.cpp */; };
@@ -181,6 +185,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		7568CBAA201121BE00FF086C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7568CB30201121BE00FF086C /* imguiex.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 6D2FC5541B2E632000C130BA;
+			remoteInfo = "imguiex-ios";
+		};
+		7568CBAC201121BE00FF086C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7568CB30201121BE00FF086C /* imguiex.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1A1A0F1F1CB39FB50090F036;
+			remoteInfo = "imguiex-osx";
+		};
 		75DE2F711CFCD3D60052F8C1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 75DE2F6C1CFCD3D60052F8C1 /* GBDeviceInfo.xcodeproj */;
@@ -289,6 +307,129 @@
 		7568CB07200FE97300FF086C /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS11.2.sdk/System/Library/Frameworks/GLKit.framework; sourceTree = DEVELOPER_DIR; };
 		7568CB09200FE97700FF086C /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS11.2.sdk/System/Library/Frameworks/MetalKit.framework; sourceTree = DEVELOPER_DIR; };
 		7568CB0C200FEA5900FF086C /* Main.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
+		7568CB10201121BE00FF086C /* imgui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui.h; sourceTree = "<group>"; };
+		7568CB11201121BE00FF086C /* imconfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imconfig.h; sourceTree = "<group>"; };
+		7568CB12201121BE00FF086C /* TODO.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = TODO.txt; sourceTree = "<group>"; };
+		7568CB13201121BE00FF086C /* stb_rect_pack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stb_rect_pack.h; sourceTree = "<group>"; };
+		7568CB15201121BE00FF086C /* Roboto-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Medium.ttf"; sourceTree = "<group>"; };
+		7568CB16201121BE00FF086C /* DroidSans.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = DroidSans.ttf; sourceTree = "<group>"; };
+		7568CB17201121BE00FF086C /* ProggyTiny.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = ProggyTiny.ttf; sourceTree = "<group>"; };
+		7568CB18201121BE00FF086C /* ProggyClean.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = ProggyClean.ttf; sourceTree = "<group>"; };
+		7568CB19201121BE00FF086C /* README.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
+		7568CB1A201121BE00FF086C /* Cousine-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Cousine-Regular.ttf"; sourceTree = "<group>"; };
+		7568CB1B201121BE00FF086C /* Karla-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Karla-Regular.ttf"; sourceTree = "<group>"; };
+		7568CB1C201121BE00FF086C /* binary_to_compressed_c.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = binary_to_compressed_c.cpp; sourceTree = "<group>"; };
+		7568CB1D201121BE00FF086C /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		7568CB1E201121BE00FF086C /* stb_truetype.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stb_truetype.h; sourceTree = "<group>"; };
+		7568CB1F201121BE00FF086C /* imgui.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui.cpp; sourceTree = "<group>"; };
+		7568CB22201121BE00FF086C /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		7568CB23201121BE00FF086C /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		7568CB24201121BE00FF086C /* build_win32.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = build_win32.bat; sourceTree = "<group>"; };
+		7568CB25201121BE00FF086C /* imgui_impl_sdl_gl3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_impl_sdl_gl3.h; sourceTree = "<group>"; };
+		7568CB26201121BE00FF086C /* imgui_impl_sdl_gl3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_sdl_gl3.cpp; sourceTree = "<group>"; };
+		7568CB27201121BE00FF086C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		7568CB29201121BE00FF086C /* imgui_impl_sdl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_impl_sdl.h; sourceTree = "<group>"; };
+		7568CB2A201121BE00FF086C /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		7568CB2B201121BE00FF086C /* build_win32.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = build_win32.bat; sourceTree = "<group>"; };
+		7568CB2C201121BE00FF086C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		7568CB2D201121BE00FF086C /* imgui_impl_sdl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_sdl.cpp; sourceTree = "<group>"; };
+		7568CB2E201121BE00FF086C /* imgui_examples_msvc2010.sln */ = {isa = PBXFileReference; lastKnownFileType = text; path = imgui_examples_msvc2010.sln; sourceTree = "<group>"; };
+		7568CB30201121BE00FF086C /* imguiex.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = imguiex.xcodeproj; sourceTree = "<group>"; };
+		7568CB33201121BE00FF086C /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		7568CB34201121BE00FF086C /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		7568CB36201121BE00FF086C /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		7568CB37201121BE00FF086C /* imgui_impl_ios.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = imgui_impl_ios.mm; sourceTree = "<group>"; };
+		7568CB38201121BE00FF086C /* imgui_ex_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = imgui_ex_icon.png; sourceTree = "<group>"; };
+		7568CB39201121BE00FF086C /* GameViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GameViewController.m; sourceTree = "<group>"; };
+		7568CB3A201121BE00FF086C /* debug_hud.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = debug_hud.cpp; sourceTree = "<group>"; };
+		7568CB3C201121BE00FF086C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
+		7568CB3E201121BE00FF086C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		7568CB3F201121BE00FF086C /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		7568CB40201121BE00FF086C /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		7568CB42201121BE00FF086C /* Shader.fsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Shader.fsh; sourceTree = "<group>"; };
+		7568CB43201121BE00FF086C /* Shader.vsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Shader.vsh; sourceTree = "<group>"; };
+		7568CB44201121BE00FF086C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		7568CB45201121BE00FF086C /* imgui_impl_ios.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_impl_ios.h; sourceTree = "<group>"; };
+		7568CB46201121BE00FF086C /* GameViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GameViewController.h; sourceTree = "<group>"; };
+		7568CB47201121BE00FF086C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7568CB48201121BE00FF086C /* debug_hud.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = debug_hud.h; sourceTree = "<group>"; };
+		7568CB4A201121BE00FF086C /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		7568CB4B201121BE00FF086C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7568CB4C201121BE00FF086C /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		7568CB4D201121BE00FF086C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		7568CB4E201121BE00FF086C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7568CB50201121BE00FF086C /* imgui_impl_glfw_vulkan.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_glfw_vulkan.cpp; sourceTree = "<group>"; };
+		7568CB51201121BE00FF086C /* build_win64.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = build_win64.bat; sourceTree = "<group>"; };
+		7568CB52201121BE00FF086C /* glsl_shader.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = glsl_shader.vert; sourceTree = "<group>"; };
+		7568CB53201121BE00FF086C /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		7568CB54201121BE00FF086C /* build_win32.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = build_win32.bat; sourceTree = "<group>"; };
+		7568CB55201121BE00FF086C /* glsl_shader.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = glsl_shader.frag; sourceTree = "<group>"; };
+		7568CB56201121BE00FF086C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		7568CB57201121BE00FF086C /* gen_spv.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = gen_spv.sh; sourceTree = "<group>"; };
+		7568CB58201121BE00FF086C /* imgui_impl_glfw_vulkan.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_impl_glfw_vulkan.h; sourceTree = "<group>"; };
+		7568CB5B201121BE00FF086C /* uSynergy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = uSynergy.h; sourceTree = "<group>"; };
+		7568CB5C201121BE00FF086C /* uSynergy.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = uSynergy.c; sourceTree = "<group>"; };
+		7568CB5F201121BE00FF086C /* gl3w.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gl3w.c; sourceTree = "<group>"; };
+		7568CB60201121BE00FF086C /* glcorearb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = glcorearb.h; sourceTree = "<group>"; };
+		7568CB61201121BE00FF086C /* gl3w.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gl3w.h; sourceTree = "<group>"; };
+		7568CB63201121BE00FF086C /* COPYING.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING.txt; sourceTree = "<group>"; };
+		7568CB65201121BE00FF086C /* glfw3.lib */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = glfw3.lib; sourceTree = "<group>"; };
+		7568CB68201121BE00FF086C /* glfw3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = glfw3.h; sourceTree = "<group>"; };
+		7568CB69201121BE00FF086C /* glfw3native.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = glfw3native.h; sourceTree = "<group>"; };
+		7568CB6B201121BE00FF086C /* glfw3.lib */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = glfw3.lib; sourceTree = "<group>"; };
+		7568CB6D201121BE00FF086C /* opengl2_example.vcxproj */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = opengl2_example.vcxproj; sourceTree = "<group>"; };
+		7568CB6E201121BE00FF086C /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		7568CB6F201121BE00FF086C /* build_win32.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = build_win32.bat; sourceTree = "<group>"; };
+		7568CB70201121BE00FF086C /* opengl2_example.vcxproj.filters */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = opengl2_example.vcxproj.filters; sourceTree = "<group>"; };
+		7568CB71201121BE00FF086C /* imgui_impl_glfw.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_impl_glfw.h; sourceTree = "<group>"; };
+		7568CB72201121BE00FF086C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		7568CB73201121BE00FF086C /* imgui_impl_glfw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_glfw.cpp; sourceTree = "<group>"; };
+		7568CB75201121BE00FF086C /* directx11_example.vcxproj.filters */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = directx11_example.vcxproj.filters; sourceTree = "<group>"; };
+		7568CB76201121BE00FF086C /* imgui_impl_dx11.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_impl_dx11.h; sourceTree = "<group>"; };
+		7568CB77201121BE00FF086C /* build_win32.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = build_win32.bat; sourceTree = "<group>"; };
+		7568CB78201121BE00FF086C /* imgui_impl_dx11.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_dx11.cpp; sourceTree = "<group>"; };
+		7568CB79201121BE00FF086C /* directx11_example.vcxproj */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = directx11_example.vcxproj; sourceTree = "<group>"; };
+		7568CB7A201121BE00FF086C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		7568CB7B201121BE00FF086C /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		7568CB7D201121BE00FF086C /* imgui_impl_a5.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_impl_a5.h; sourceTree = "<group>"; };
+		7568CB7E201121BE00FF086C /* imgui_impl_a5.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_a5.cpp; sourceTree = "<group>"; };
+		7568CB7F201121BE00FF086C /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		7568CB80201121BE00FF086C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		7568CB82201121BE00FF086C /* build_win32.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = build_win32.bat; sourceTree = "<group>"; };
+		7568CB83201121BE00FF086C /* imgui_impl_dx10.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_impl_dx10.h; sourceTree = "<group>"; };
+		7568CB84201121BE00FF086C /* directx10_example.vcxproj */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = directx10_example.vcxproj; sourceTree = "<group>"; };
+		7568CB85201121BE00FF086C /* directx10_example.vcxproj.filters */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = directx10_example.vcxproj.filters; sourceTree = "<group>"; };
+		7568CB86201121BE00FF086C /* imgui_impl_dx10.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_dx10.cpp; sourceTree = "<group>"; };
+		7568CB87201121BE00FF086C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		7568CB89201121BE00FF086C /* imgui_impl_glfw_gl3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_impl_glfw_gl3.h; sourceTree = "<group>"; };
+		7568CB8A201121BE00FF086C /* opengl3_example.vcxproj.filters */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = opengl3_example.vcxproj.filters; sourceTree = "<group>"; };
+		7568CB8B201121BE00FF086C /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		7568CB8C201121BE00FF086C /* opengl3_example.vcxproj */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = opengl3_example.vcxproj; sourceTree = "<group>"; };
+		7568CB8D201121BE00FF086C /* build_win32.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = build_win32.bat; sourceTree = "<group>"; };
+		7568CB8E201121BE00FF086C /* imgui_impl_glfw_gl3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_glfw_gl3.cpp; sourceTree = "<group>"; };
+		7568CB8F201121BE00FF086C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		7568CB90201121BE00FF086C /* README.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
+		7568CB92201121BE00FF086C /* marmalade_example.mkb */ = {isa = PBXFileReference; lastKnownFileType = text; path = marmalade_example.mkb; sourceTree = "<group>"; };
+		7568CB93201121BE00FF086C /* imgui_impl_marmalade.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_marmalade.cpp; sourceTree = "<group>"; };
+		7568CB94201121BE00FF086C /* imgui_impl_marmalade.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_impl_marmalade.h; sourceTree = "<group>"; };
+		7568CB96201121BE00FF086C /* app.icf */ = {isa = PBXFileReference; lastKnownFileType = text; path = app.icf; sourceTree = "<group>"; };
+		7568CB97201121BE00FF086C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		7568CB99201121BE00FF086C /* directx9_example.vcxproj */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = directx9_example.vcxproj; sourceTree = "<group>"; };
+		7568CB9A201121BE00FF086C /* build_win32.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = build_win32.bat; sourceTree = "<group>"; };
+		7568CB9B201121BE00FF086C /* imgui_impl_dx9.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_dx9.cpp; sourceTree = "<group>"; };
+		7568CB9C201121BE00FF086C /* directx9_example.vcxproj.filters */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = directx9_example.vcxproj.filters; sourceTree = "<group>"; };
+		7568CB9D201121BE00FF086C /* imgui_impl_dx9.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_impl_dx9.h; sourceTree = "<group>"; };
+		7568CB9E201121BE00FF086C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		7568CBA0201121BE00FF086C /* build_win32.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = build_win32.bat; sourceTree = "<group>"; };
+		7568CBA1201121BE00FF086C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		7568CBA2201121BE00FF086C /* imgui_internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_internal.h; sourceTree = "<group>"; };
+		7568CBA3201121BE00FF086C /* stb_textedit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stb_textedit.h; sourceTree = "<group>"; };
+		7568CBA4201121BE00FF086C /* LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
+		7568CBA5201121BE00FF086C /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
+		7568CBA6201121BE00FF086C /* imgui_demo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_demo.cpp; sourceTree = "<group>"; };
+		7568CBA7201121BE00FF086C /* imgui_draw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_draw.cpp; sourceTree = "<group>"; };
+		7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = imgui_impl_mtl.mm; sourceTree = "<group>"; };
+		7568CBB2201122E200FF086C /* imgui_impl_mtl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui_impl_mtl.h; sourceTree = "<group>"; };
 		756C8E4E200DB05C0019EA70 /* FSTUFF.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FSTUFF.cpp; sourceTree = "<group>"; };
 		759DFD031FF58EEC00F1B2D8 /* FallingStuff_OSXScreenSaver.saver */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FallingStuff_OSXScreenSaver.saver; sourceTree = BUILT_PRODUCTS_DIR; };
 		759DFD051FF58EEC00F1B2D8 /* FallingStuff_OSXScreenSaverView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FallingStuff_OSXScreenSaverView.h; sourceTree = "<group>"; };
@@ -389,6 +530,8 @@
 		75036FBE1CD540F10017DC04 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				7568CBB2201122E200FF086C /* imgui_impl_mtl.h */,
+				7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */,
 				7568CB05200FD88A00FF086C /* FSTUFF_Apple.h */,
 				75ADD63B1D035EB20042FC3A /* FSTUFF_Apple.mm */,
 				75036FC81CD540F10017DC04 /* FSTUFF_AppleMetalShaders.metal */,
@@ -505,6 +648,7 @@
 		7568AAF81CFCCBCC00262462 /* external */ = {
 			isa = PBXGroup;
 			children = (
+				7568CB0F201121BE00FF086C /* imgui */,
 				75DE2F6C1CFCD3D60052F8C1 /* GBDeviceInfo.xcodeproj */,
 				755855B41CDFC71800FC8EA4 /* Chipmunk2D */,
 			);
@@ -518,6 +662,360 @@
 				75B3913F1CD67637000F6E1E /* MetalKit.framework */,
 			);
 			name = mac;
+			sourceTree = "<group>";
+		};
+		7568CB0F201121BE00FF086C /* imgui */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB10201121BE00FF086C /* imgui.h */,
+				7568CB11201121BE00FF086C /* imconfig.h */,
+				7568CB12201121BE00FF086C /* TODO.txt */,
+				7568CB13201121BE00FF086C /* stb_rect_pack.h */,
+				7568CB14201121BE00FF086C /* extra_fonts */,
+				7568CB1D201121BE00FF086C /* README.md */,
+				7568CB1E201121BE00FF086C /* stb_truetype.h */,
+				7568CB1F201121BE00FF086C /* imgui.cpp */,
+				7568CB20201121BE00FF086C /* examples */,
+				7568CBA2201121BE00FF086C /* imgui_internal.h */,
+				7568CBA3201121BE00FF086C /* stb_textedit.h */,
+				7568CBA4201121BE00FF086C /* LICENSE.txt */,
+				7568CBA5201121BE00FF086C /* .travis.yml */,
+				7568CBA6201121BE00FF086C /* imgui_demo.cpp */,
+				7568CBA7201121BE00FF086C /* imgui_draw.cpp */,
+			);
+			name = imgui;
+			path = external/imgui;
+			sourceTree = "<group>";
+		};
+		7568CB14201121BE00FF086C /* extra_fonts */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB15201121BE00FF086C /* Roboto-Medium.ttf */,
+				7568CB16201121BE00FF086C /* DroidSans.ttf */,
+				7568CB17201121BE00FF086C /* ProggyTiny.ttf */,
+				7568CB18201121BE00FF086C /* ProggyClean.ttf */,
+				7568CB19201121BE00FF086C /* README.txt */,
+				7568CB1A201121BE00FF086C /* Cousine-Regular.ttf */,
+				7568CB1B201121BE00FF086C /* Karla-Regular.ttf */,
+				7568CB1C201121BE00FF086C /* binary_to_compressed_c.cpp */,
+			);
+			path = extra_fonts;
+			sourceTree = "<group>";
+		};
+		7568CB20201121BE00FF086C /* examples */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB21201121BE00FF086C /* sdl_opengl3_example */,
+				7568CB28201121BE00FF086C /* sdl_opengl2_example */,
+				7568CB2E201121BE00FF086C /* imgui_examples_msvc2010.sln */,
+				7568CB2F201121BE00FF086C /* apple_example */,
+				7568CB4F201121BE00FF086C /* vulkan_example */,
+				7568CB59201121BE00FF086C /* libs */,
+				7568CB6C201121BE00FF086C /* opengl2_example */,
+				7568CB74201121BE00FF086C /* directx11_example */,
+				7568CB7B201121BE00FF086C /* .gitignore */,
+				7568CB7C201121BE00FF086C /* allegro5_example */,
+				7568CB81201121BE00FF086C /* directx10_example */,
+				7568CB88201121BE00FF086C /* opengl3_example */,
+				7568CB90201121BE00FF086C /* README.txt */,
+				7568CB91201121BE00FF086C /* marmalade_example */,
+				7568CB98201121BE00FF086C /* directx9_example */,
+				7568CB9F201121BE00FF086C /* null_example */,
+			);
+			path = examples;
+			sourceTree = "<group>";
+		};
+		7568CB21201121BE00FF086C /* sdl_opengl3_example */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB22201121BE00FF086C /* Makefile */,
+				7568CB23201121BE00FF086C /* README.md */,
+				7568CB24201121BE00FF086C /* build_win32.bat */,
+				7568CB25201121BE00FF086C /* imgui_impl_sdl_gl3.h */,
+				7568CB26201121BE00FF086C /* imgui_impl_sdl_gl3.cpp */,
+				7568CB27201121BE00FF086C /* main.cpp */,
+			);
+			path = sdl_opengl3_example;
+			sourceTree = "<group>";
+		};
+		7568CB28201121BE00FF086C /* sdl_opengl2_example */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB29201121BE00FF086C /* imgui_impl_sdl.h */,
+				7568CB2A201121BE00FF086C /* README.md */,
+				7568CB2B201121BE00FF086C /* build_win32.bat */,
+				7568CB2C201121BE00FF086C /* main.cpp */,
+				7568CB2D201121BE00FF086C /* imgui_impl_sdl.cpp */,
+			);
+			path = sdl_opengl2_example;
+			sourceTree = "<group>";
+		};
+		7568CB2F201121BE00FF086C /* apple_example */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB30201121BE00FF086C /* imguiex.xcodeproj */,
+				7568CB33201121BE00FF086C /* README.md */,
+				7568CB34201121BE00FF086C /* .gitignore */,
+				7568CB35201121BE00FF086C /* imguiex-ios */,
+				7568CB49201121BE00FF086C /* imguiex-osx */,
+			);
+			path = apple_example;
+			sourceTree = "<group>";
+		};
+		7568CB31201121BE00FF086C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7568CBAB201121BE00FF086C /* imguiex-ios.app */,
+				7568CBAD201121BE00FF086C /* imguiex-osx.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		7568CB35201121BE00FF086C /* imguiex-ios */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB36201121BE00FF086C /* AppDelegate.h */,
+				7568CB37201121BE00FF086C /* imgui_impl_ios.mm */,
+				7568CB38201121BE00FF086C /* imgui_ex_icon.png */,
+				7568CB39201121BE00FF086C /* GameViewController.m */,
+				7568CB3A201121BE00FF086C /* debug_hud.cpp */,
+				7568CB3B201121BE00FF086C /* LaunchScreen.xib */,
+				7568CB3D201121BE00FF086C /* Main.storyboard */,
+				7568CB3F201121BE00FF086C /* main.m */,
+				7568CB40201121BE00FF086C /* Images.xcassets */,
+				7568CB41201121BE00FF086C /* Shaders */,
+				7568CB44201121BE00FF086C /* AppDelegate.m */,
+				7568CB45201121BE00FF086C /* imgui_impl_ios.h */,
+				7568CB46201121BE00FF086C /* GameViewController.h */,
+				7568CB47201121BE00FF086C /* Info.plist */,
+				7568CB48201121BE00FF086C /* debug_hud.h */,
+			);
+			path = "imguiex-ios";
+			sourceTree = "<group>";
+		};
+		7568CB41201121BE00FF086C /* Shaders */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB42201121BE00FF086C /* Shader.fsh */,
+				7568CB43201121BE00FF086C /* Shader.vsh */,
+			);
+			path = Shaders;
+			sourceTree = "<group>";
+		};
+		7568CB49201121BE00FF086C /* imguiex-osx */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB4A201121BE00FF086C /* AppDelegate.h */,
+				7568CB4B201121BE00FF086C /* Assets.xcassets */,
+				7568CB4C201121BE00FF086C /* main.m */,
+				7568CB4D201121BE00FF086C /* AppDelegate.m */,
+				7568CB4E201121BE00FF086C /* Info.plist */,
+			);
+			path = "imguiex-osx";
+			sourceTree = "<group>";
+		};
+		7568CB4F201121BE00FF086C /* vulkan_example */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB50201121BE00FF086C /* imgui_impl_glfw_vulkan.cpp */,
+				7568CB51201121BE00FF086C /* build_win64.bat */,
+				7568CB52201121BE00FF086C /* glsl_shader.vert */,
+				7568CB53201121BE00FF086C /* CMakeLists.txt */,
+				7568CB54201121BE00FF086C /* build_win32.bat */,
+				7568CB55201121BE00FF086C /* glsl_shader.frag */,
+				7568CB56201121BE00FF086C /* main.cpp */,
+				7568CB57201121BE00FF086C /* gen_spv.sh */,
+				7568CB58201121BE00FF086C /* imgui_impl_glfw_vulkan.h */,
+			);
+			path = vulkan_example;
+			sourceTree = "<group>";
+		};
+		7568CB59201121BE00FF086C /* libs */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB5A201121BE00FF086C /* usynergy */,
+				7568CB5D201121BE00FF086C /* gl3w */,
+				7568CB62201121BE00FF086C /* glfw */,
+			);
+			path = libs;
+			sourceTree = "<group>";
+		};
+		7568CB5A201121BE00FF086C /* usynergy */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB5B201121BE00FF086C /* uSynergy.h */,
+				7568CB5C201121BE00FF086C /* uSynergy.c */,
+			);
+			path = usynergy;
+			sourceTree = "<group>";
+		};
+		7568CB5D201121BE00FF086C /* gl3w */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB5E201121BE00FF086C /* GL */,
+			);
+			path = gl3w;
+			sourceTree = "<group>";
+		};
+		7568CB5E201121BE00FF086C /* GL */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB5F201121BE00FF086C /* gl3w.c */,
+				7568CB60201121BE00FF086C /* glcorearb.h */,
+				7568CB61201121BE00FF086C /* gl3w.h */,
+			);
+			path = GL;
+			sourceTree = "<group>";
+		};
+		7568CB62201121BE00FF086C /* glfw */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB63201121BE00FF086C /* COPYING.txt */,
+				7568CB64201121BE00FF086C /* lib-vc2010-64 */,
+				7568CB66201121BE00FF086C /* include */,
+				7568CB6A201121BE00FF086C /* lib-vc2010-32 */,
+			);
+			path = glfw;
+			sourceTree = "<group>";
+		};
+		7568CB64201121BE00FF086C /* lib-vc2010-64 */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB65201121BE00FF086C /* glfw3.lib */,
+			);
+			path = "lib-vc2010-64";
+			sourceTree = "<group>";
+		};
+		7568CB66201121BE00FF086C /* include */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB67201121BE00FF086C /* GLFW */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		7568CB67201121BE00FF086C /* GLFW */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB68201121BE00FF086C /* glfw3.h */,
+				7568CB69201121BE00FF086C /* glfw3native.h */,
+			);
+			path = GLFW;
+			sourceTree = "<group>";
+		};
+		7568CB6A201121BE00FF086C /* lib-vc2010-32 */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB6B201121BE00FF086C /* glfw3.lib */,
+			);
+			path = "lib-vc2010-32";
+			sourceTree = "<group>";
+		};
+		7568CB6C201121BE00FF086C /* opengl2_example */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB6D201121BE00FF086C /* opengl2_example.vcxproj */,
+				7568CB6E201121BE00FF086C /* Makefile */,
+				7568CB6F201121BE00FF086C /* build_win32.bat */,
+				7568CB70201121BE00FF086C /* opengl2_example.vcxproj.filters */,
+				7568CB71201121BE00FF086C /* imgui_impl_glfw.h */,
+				7568CB72201121BE00FF086C /* main.cpp */,
+				7568CB73201121BE00FF086C /* imgui_impl_glfw.cpp */,
+			);
+			path = opengl2_example;
+			sourceTree = "<group>";
+		};
+		7568CB74201121BE00FF086C /* directx11_example */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB75201121BE00FF086C /* directx11_example.vcxproj.filters */,
+				7568CB76201121BE00FF086C /* imgui_impl_dx11.h */,
+				7568CB77201121BE00FF086C /* build_win32.bat */,
+				7568CB78201121BE00FF086C /* imgui_impl_dx11.cpp */,
+				7568CB79201121BE00FF086C /* directx11_example.vcxproj */,
+				7568CB7A201121BE00FF086C /* main.cpp */,
+			);
+			path = directx11_example;
+			sourceTree = "<group>";
+		};
+		7568CB7C201121BE00FF086C /* allegro5_example */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB7D201121BE00FF086C /* imgui_impl_a5.h */,
+				7568CB7E201121BE00FF086C /* imgui_impl_a5.cpp */,
+				7568CB7F201121BE00FF086C /* README.md */,
+				7568CB80201121BE00FF086C /* main.cpp */,
+			);
+			path = allegro5_example;
+			sourceTree = "<group>";
+		};
+		7568CB81201121BE00FF086C /* directx10_example */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB82201121BE00FF086C /* build_win32.bat */,
+				7568CB83201121BE00FF086C /* imgui_impl_dx10.h */,
+				7568CB84201121BE00FF086C /* directx10_example.vcxproj */,
+				7568CB85201121BE00FF086C /* directx10_example.vcxproj.filters */,
+				7568CB86201121BE00FF086C /* imgui_impl_dx10.cpp */,
+				7568CB87201121BE00FF086C /* main.cpp */,
+			);
+			path = directx10_example;
+			sourceTree = "<group>";
+		};
+		7568CB88201121BE00FF086C /* opengl3_example */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB89201121BE00FF086C /* imgui_impl_glfw_gl3.h */,
+				7568CB8A201121BE00FF086C /* opengl3_example.vcxproj.filters */,
+				7568CB8B201121BE00FF086C /* Makefile */,
+				7568CB8C201121BE00FF086C /* opengl3_example.vcxproj */,
+				7568CB8D201121BE00FF086C /* build_win32.bat */,
+				7568CB8E201121BE00FF086C /* imgui_impl_glfw_gl3.cpp */,
+				7568CB8F201121BE00FF086C /* main.cpp */,
+			);
+			path = opengl3_example;
+			sourceTree = "<group>";
+		};
+		7568CB91201121BE00FF086C /* marmalade_example */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB92201121BE00FF086C /* marmalade_example.mkb */,
+				7568CB93201121BE00FF086C /* imgui_impl_marmalade.cpp */,
+				7568CB94201121BE00FF086C /* imgui_impl_marmalade.h */,
+				7568CB95201121BE00FF086C /* data */,
+				7568CB97201121BE00FF086C /* main.cpp */,
+			);
+			path = marmalade_example;
+			sourceTree = "<group>";
+		};
+		7568CB95201121BE00FF086C /* data */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB96201121BE00FF086C /* app.icf */,
+			);
+			path = data;
+			sourceTree = "<group>";
+		};
+		7568CB98201121BE00FF086C /* directx9_example */ = {
+			isa = PBXGroup;
+			children = (
+				7568CB99201121BE00FF086C /* directx9_example.vcxproj */,
+				7568CB9A201121BE00FF086C /* build_win32.bat */,
+				7568CB9B201121BE00FF086C /* imgui_impl_dx9.cpp */,
+				7568CB9C201121BE00FF086C /* directx9_example.vcxproj.filters */,
+				7568CB9D201121BE00FF086C /* imgui_impl_dx9.h */,
+				7568CB9E201121BE00FF086C /* main.cpp */,
+			);
+			path = directx9_example;
+			sourceTree = "<group>";
+		};
+		7568CB9F201121BE00FF086C /* null_example */ = {
+			isa = PBXGroup;
+			children = (
+				7568CBA0201121BE00FF086C /* build_win32.bat */,
+				7568CBA1201121BE00FF086C /* main.cpp */,
+			);
+			path = null_example;
 			sourceTree = "<group>";
 		};
 		759DFD041FF58EEC00F1B2D8 /* FallingStuff_OSXScreenSaver */ = {
@@ -726,6 +1224,10 @@
 					ProductGroup = 75DE2F6D1CFCD3D60052F8C1 /* Products */;
 					ProjectRef = 75DE2F6C1CFCD3D60052F8C1 /* GBDeviceInfo.xcodeproj */;
 				},
+				{
+					ProductGroup = 7568CB31201121BE00FF086C /* Products */;
+					ProjectRef = 7568CB30201121BE00FF086C /* imguiex.xcodeproj */;
+				},
 			);
 			projectRoot = "";
 			targets = (
@@ -738,6 +1240,20 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		7568CBAB201121BE00FF086C /* imguiex-ios.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "imguiex-ios.app";
+			remoteRef = 7568CBAA201121BE00FF086C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		7568CBAD201121BE00FF086C /* imguiex-osx.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "imguiex-osx.app";
+			remoteRef = 7568CBAC201121BE00FF086C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		75DE2F721CFCD3D60052F8C1 /* libGBDeviceInfo.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -798,9 +1314,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7568CBB02011222E00FF086C /* imgui_demo.cpp in Sources */,
+				7568CBAF2011220900FF086C /* imgui_draw.cpp in Sources */,
+				7568CBAE201121DB00FF086C /* imgui.cpp in Sources */,
 				755856231CDFC96F00FC8EA4 /* cpMarch.c in Sources */,
 				755856311CDFC96F00FC8EA4 /* cpSpaceHash.c in Sources */,
 				7558562F1CDFC96F00FC8EA4 /* cpSpaceComponent.c in Sources */,
+				7568CBB3201122E200FF086C /* imgui_impl_mtl.mm in Sources */,
 				755856321CDFC96F00FC8EA4 /* cpSpaceQuery.c in Sources */,
 				7558562A1CDFC96F00FC8EA4 /* cpRotaryLimitJoint.c in Sources */,
 				7558562B1CDFC96F00FC8EA4 /* cpShape.c in Sources */,
@@ -982,6 +1502,22 @@
 			name = FSTUFF_MacMainMenu.xib;
 			sourceTree = "<group>";
 		};
+		7568CB3B201121BE00FF086C /* LaunchScreen.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7568CB3C201121BE00FF086C /* Base */,
+			);
+			name = LaunchScreen.xib;
+			sourceTree = "<group>";
+		};
+		7568CB3D201121BE00FF086C /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7568CB3E201121BE00FF086C /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
 		75ADD60F1D035AB10042FC3A /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1057,6 +1593,7 @@
 				HEADER_SEARCH_PATHS = (
 					external/Chipmunk2D/include,
 					external/GBDeviceInfo,
+					external/imgui,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = YES;
@@ -1108,6 +1645,7 @@
 				HEADER_SEARCH_PATHS = (
 					external/Chipmunk2D/include,
 					external/GBDeviceInfo,
+					external/imgui,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;

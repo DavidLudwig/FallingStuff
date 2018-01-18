@@ -1,5 +1,5 @@
 //
-//  FSTUFF_UtilApple.mm
+//  FSTUFF_Apple.mm
 //  FallingStuff
 //
 //  Created by David Ludwig on 6/4/16.
@@ -8,6 +8,8 @@
 
 #include "FSTUFF.h"
 #include "FSTUFF_Apple.h"
+#include "imgui.h"
+#include "imgui_impl_mtl.h"
 #ifdef __OBJC__
 
 #import <Foundation/Foundation.h>
@@ -128,13 +130,6 @@ void FSTUFF_Log(const char * fmt, ...) {
 
 #pragma mark - Renderer
 
-// The max number of command buffers in flight
-static const NSUInteger FSTUFF_MaxInflightBuffers = 3;
-
-// Max API memory buffer size.
-static const size_t FSTUFF_MaxBytesPerFrame = 1024 * 1024; //64; //sizeof(vector_float4) * 3; //*1024;
-
-
 void FSTUFF_Apple_CopyMatrix(matrix_float4x4 & dest, const gbMat4 & src)
 {
     memcpy((void *)&(dest), (const void *)&(src.e), sizeof(float) * 16);
@@ -155,122 +150,108 @@ void FSTUFF_Apple_CopyVector(gbMat4 & dest, const vector_float4 & src)
     memcpy((void *)&(dest.e), (const void *)&(src), sizeof(float) * 4);
 }
 
-
-struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
+void FSTUFF_AppleMetalRenderer::DestroyVertexBuffer(void * _gpuVertexBuffer)
 {
-    // controller
-    dispatch_semaphore_t _inflight_semaphore;
+    id <MTLBuffer> gpuVertexBuffer = (__bridge_transfer id <MTLBuffer>)_gpuVertexBuffer;
+    gpuVertexBuffer = nil;
+}
 
-    // renderer
-    id <MTLDevice> device = nil;
-    id <MTLRenderCommandEncoder> renderCommandEncoder = nil;
-    MTKView * nativeView = nil;
-    FSTUFF_GPUData * appData = NULL;
-    id <MTLCommandQueue> commandQueue;
-    id <MTLLibrary> defaultLibrary;
-    id <MTLRenderPipelineState> pipelineState;
-    uint8_t constantDataBufferIndex;
-    id <MTLBuffer> gpuConstants[FSTUFF_MaxInflightBuffers];
+void * FSTUFF_AppleMetalRenderer::NewVertexBuffer(void * src, size_t size)
+{
+    return (__bridge_retained void *)[this->device newBufferWithBytes:src length:size options:MTLResourceOptionCPUCacheModeDefault];
+}
 
-    void    DestroyVertexBuffer(void * _gpuVertexBuffer) override {
-        id <MTLBuffer> gpuVertexBuffer = (__bridge_transfer id <MTLBuffer>)_gpuVertexBuffer;
-        gpuVertexBuffer = nil;
+void FSTUFF_AppleMetalRenderer::GetViewSizeMM(float *outWidthMM, float *outHeightMM)
+{
+    return FSTUFF_Apple_GetViewSizeMM((__bridge void *)(this->nativeView), outWidthMM, outHeightMM);
+}
+
+void FSTUFF_AppleMetalRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha)
+{
+    // Metal can raise a program-crashing assertion, if zero amount of shapes attempts to get
+    // rendered.
+    if (count == 0) {
+        return;
     }
 
-    void *  NewVertexBuffer(void * src, size_t size) override {
-        return (__bridge_retained void *)[this->device newBufferWithBytes:src length:size options:MTLResourceOptionCPUCacheModeDefault];
-    }
+    id <MTLDevice> gpuDevice = this->device;
+    id <MTLRenderCommandEncoder> renderCommandEncoder = this->renderCommandEncoder;
+    id <MTLBuffer> gpuData = (__bridge id <MTLBuffer>) this->appData;
 
-    void    GetViewSizeMM(float *outWidthMM, float *outHeightMM) override {
-        return FSTUFF_Apple_GetViewSizeMM((__bridge void *)(this->nativeView), outWidthMM, outHeightMM);
-    }
-
-    void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) override
-    {
-        // Metal can raise a program-crashing assertion, if zero amount of shapes attempts to get
-        // rendered.
-        if (count == 0) {
+    MTLPrimitiveType gpuPrimitiveType;
+    switch (shape->primitiveType) {
+        case FSTUFF_PrimitiveLineStrip:
+            gpuPrimitiveType = MTLPrimitiveTypeLineStrip;
+            break;
+        case FSTUFF_PrimitiveTriangles:
+            gpuPrimitiveType = MTLPrimitiveTypeTriangle;
+            break;
+        case FSTUFF_PrimitiveTriangleFan:
+            gpuPrimitiveType = MTLPrimitiveTypeTriangleStrip;
+            break;
+        default:
+            FSTUFF_Log(@"Unknown or unmapped FSTUFF_PrimitiveType in shape: %u\n", shape->primitiveType);
             return;
-        }
+    }
 
-        id <MTLDevice> gpuDevice = this->device;
-        id <MTLRenderCommandEncoder> renderCommandEncoder = this->renderCommandEncoder;
-        id <MTLBuffer> gpuData = (__bridge id <MTLBuffer>) this->appData;
+    NSUInteger shapesOffsetInGpuData;
+    switch (shape->type) {
+        case FSTUFF_ShapeCircle:
+            shapesOffsetInGpuData = offsetof(FSTUFF_GPUData, circles);
+            break;
+        case FSTUFF_ShapeBox:
+            shapesOffsetInGpuData = offsetof(FSTUFF_GPUData, boxes);
+            break;
+        default:
+            FSTUFF_Log(@"Unknown or unmapped FSTUFF_ShapeType in shape: %u\n", shape->type);
+            return;
+    }
 
-        MTLPrimitiveType gpuPrimitiveType;
-        switch (shape->primitiveType) {
-            case FSTUFF_PrimitiveLineStrip:
-                gpuPrimitiveType = MTLPrimitiveTypeLineStrip;
-                break;
-            case FSTUFF_PrimitiveTriangles:
-                gpuPrimitiveType = MTLPrimitiveTypeTriangle;
-                break;
-            case FSTUFF_PrimitiveTriangleFan:
-                gpuPrimitiveType = MTLPrimitiveTypeTriangleStrip;
-                break;
-            default:
-                FSTUFF_Log(@"Unknown or unmapped FSTUFF_PrimitiveType in shape: %u\n", shape->primitiveType);
-                return;
-        }
+    [renderCommandEncoder pushDebugGroup:[[NSString alloc] initWithUTF8String:shape->debugName]];
+    [renderCommandEncoder setVertexBuffer:(__bridge id <MTLBuffer>)shape->gpuVertexBuffer offset:0 atIndex:0];   // 'position[<vertex id>]'
+    [renderCommandEncoder setVertexBuffer:gpuData offset:offsetof(FSTUFF_GPUData, globals) atIndex:1];           // 'gpuGlobals'
+    [renderCommandEncoder setVertexBuffer:gpuData offset:shapesOffsetInGpuData atIndex:2];                       // 'gpuShapes[<instance id>]'
+    [renderCommandEncoder setVertexBytes:&alpha length:sizeof(alpha) atIndex:3];                                 // 'alpha'
 
-        NSUInteger shapesOffsetInGpuData;
-        switch (shape->type) {
-            case FSTUFF_ShapeCircle:
-                shapesOffsetInGpuData = offsetof(FSTUFF_GPUData, circles);
-                break;
-            case FSTUFF_ShapeBox:
-                shapesOffsetInGpuData = offsetof(FSTUFF_GPUData, boxes);
-                break;
-            default:
-                FSTUFF_Log(@"Unknown or unmapped FSTUFF_ShapeType in shape: %u\n", shape->type);
-                return;
-        }
-    
-        [renderCommandEncoder pushDebugGroup:[[NSString alloc] initWithUTF8String:shape->debugName]];
-        [renderCommandEncoder setVertexBuffer:(__bridge id <MTLBuffer>)shape->gpuVertexBuffer offset:0 atIndex:0];   // 'position[<vertex id>]'
-        [renderCommandEncoder setVertexBuffer:gpuData offset:offsetof(FSTUFF_GPUData, globals) atIndex:1];           // 'gpuGlobals'
-        [renderCommandEncoder setVertexBuffer:gpuData offset:shapesOffsetInGpuData atIndex:2];                       // 'gpuShapes[<instance id>]'
-        [renderCommandEncoder setVertexBytes:&alpha length:sizeof(alpha) atIndex:3];                                 // 'alpha'
-    
 #if TARGET_OS_IOS
-        const MTLFeatureSet featureSetForBaseInstance = MTLFeatureSet_iOS_GPUFamily3_v1;
+    const MTLFeatureSet featureSetForBaseInstance = MTLFeatureSet_iOS_GPUFamily3_v1;
 #else
-        const MTLFeatureSet featureSetForBaseInstance = MTLFeatureSet_OSX_GPUFamily1_v1;
+    const MTLFeatureSet featureSetForBaseInstance = MTLFeatureSet_OSX_GPUFamily1_v1;
 #endif
-        if (offset == 0) {
-            [renderCommandEncoder drawPrimitives:gpuPrimitiveType
-                            vertexStart:0
-                            vertexCount:shape->numVertices
-                          instanceCount:count];
-        } else if ([gpuDevice supportsFeatureSet:featureSetForBaseInstance]) {
-            [renderCommandEncoder drawPrimitives:gpuPrimitiveType
-                                     vertexStart:0
-                                     vertexCount:shape->numVertices
-                                   instanceCount:count
-                                    baseInstance:offset];
-        }
-        [renderCommandEncoder popDebugGroup];
-
+    if (offset == 0) {
+        [renderCommandEncoder drawPrimitives:gpuPrimitiveType
+                        vertexStart:0
+                        vertexCount:shape->numVertices
+                      instanceCount:count];
+    } else if ([gpuDevice supportsFeatureSet:featureSetForBaseInstance]) {
+        [renderCommandEncoder drawPrimitives:gpuPrimitiveType
+                                 vertexStart:0
+                                 vertexCount:shape->numVertices
+                               instanceCount:count
+                                baseInstance:offset];
     }
+    [renderCommandEncoder popDebugGroup];
 
-    void    SetProjectionMatrix(const gbMat4 & matrix) override {
-        FSTUFF_Apple_CopyMatrix(this->appData->globals.projection_matrix, matrix);
-    }
+}
 
-    void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) override
-    {
-        switch (shape) {
-            case FSTUFF_ShapeCircle: {
-                FSTUFF_Apple_CopyMatrix(this->appData->circles[i].model_matrix, matrix);
-                FSTUFF_Apple_CopyVector(this->appData->circles[i].color, color);
-            } break;
-            case FSTUFF_ShapeBox: {
-                FSTUFF_Apple_CopyMatrix(this->appData->boxes[i].model_matrix, matrix);
-                FSTUFF_Apple_CopyVector(this->appData->boxes[i].color, color);
-            } break;
-        }
+void FSTUFF_AppleMetalRenderer::SetProjectionMatrix(const gbMat4 & matrix)
+{
+    FSTUFF_Apple_CopyMatrix(this->appData->globals.projection_matrix, matrix);
+}
+
+void FSTUFF_AppleMetalRenderer::SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color)
+{
+    switch (shape) {
+        case FSTUFF_ShapeCircle: {
+            FSTUFF_Apple_CopyMatrix(this->appData->circles[i].model_matrix, matrix);
+            FSTUFF_Apple_CopyVector(this->appData->circles[i].color, color);
+        } break;
+        case FSTUFF_ShapeBox: {
+            FSTUFF_Apple_CopyMatrix(this->appData->boxes[i].model_matrix, matrix);
+            FSTUFF_Apple_CopyVector(this->appData->boxes[i].color, color);
+        } break;
     }
-};
+}
 
 
 @interface FSTUFF_AppleMetalViewController()
@@ -283,7 +264,32 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
     FSTUFF_AppleMetalRenderer * _renderer;
 
     // game
-    FSTUFF_Simulation _sim;
+    FSTUFF_Simulation * _sim;
+}
+
+- (FSTUFF_Simulation *) sim
+{
+    @synchronized(self) {
+        if ( ! _sim) {
+            _sim = new FSTUFF_Simulation();
+        }
+        return _sim;
+    }
+}
+
+- (void)dealloc
+{
+    if (_sim) {
+        delete _sim;
+        _sim = NULL;
+    }
+    
+    if (_renderer) {
+        delete _renderer;
+        _renderer = NULL;
+    }
+    
+    ImGui_ImplMtl_Shutdown();
 }
 
 - (void)loadView
@@ -301,6 +307,7 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
 //    );
     [super viewDidLoad];
     
+    //_sim = new FSTUFF_Simulation();
     _renderer = new FSTUFF_AppleMetalRenderer();
 
     _renderer->constantDataBufferIndex = 0;
@@ -330,10 +337,11 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
         _renderer->nativeView = (MTKView *)self.view;
         _renderer->nativeView.delegate = self;
         _renderer->nativeView.device = _renderer->device;
-        _sim.renderer = _renderer;
+        self.sim->renderer = _renderer;
 
         // Describe stuff common to all pipeline states
-        MTLRenderPipelineDescriptor *pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+        MTLRenderPipelineDescriptor *pipelineStateDescriptor = nil;
+        pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
         pipelineStateDescriptor.label = @"FSTUFF_Pipeline";
         pipelineStateDescriptor.sampleCount = _renderer->nativeView.sampleCount;
         pipelineStateDescriptor.fragmentFunction = [_renderer->defaultLibrary newFunctionWithName:@"FSTUFF_FragmentShader"];
@@ -351,6 +359,27 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
             FSTUFF_Log(@"Failed to create pipeline state, error:%@\n", err);
         }
 
+#if 0
+        pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+        pipelineStateDescriptor.label = @"FSTUFF_OverlayPipeline";
+        pipelineStateDescriptor.sampleCount = _renderer->nativeView.sampleCount;
+        pipelineStateDescriptor.fragmentFunction = [_renderer->defaultLibrary newFunctionWithName:@"FSTUFF_FragmentShader"];
+        pipelineStateDescriptor.vertexFunction = [_renderer->defaultLibrary newFunctionWithName:@"FSTUFF_VertexShader"];
+        pipelineStateDescriptor.colorAttachments[0].pixelFormat = _renderer->nativeView.colorPixelFormat;
+        pipelineStateDescriptor.colorAttachments[0].blendingEnabled = YES;
+        pipelineStateDescriptor.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
+        pipelineStateDescriptor.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
+        pipelineStateDescriptor.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+        pipelineStateDescriptor.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
+        pipelineStateDescriptor.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+        pipelineStateDescriptor.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+        _renderer->pipelineState = [_renderer->device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&err];
+        if ( ! _renderer->pipelineState) {
+            FSTUFF_Log(@"Failed to create overlay pipeline state, error:%@\n", err);
+        }
+#endif
+
+
 //        _renderer->nativeView = _view;
 
         // allocate a number of buffers in memory that matches the sempahore count so that
@@ -360,6 +389,10 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
             _renderer->gpuConstants[i] = [_renderer->device newBufferWithLength:FSTUFF_MaxBytesPerFrame options:0];
             _renderer->gpuConstants[i].label = [NSString stringWithFormat:@"FSTUFF_ConstantBuffer%i", i];
         }
+        
+        ImGui_ImplMtl_Init(self.sim, true);
+
+        
     } else { // Fallback to a blank NSView, an application could also fallback to OpenGL here.
         FSTUFF_Log(@"Metal is not supported on this device\n");
 #if ! TARGET_OS_IOS
@@ -372,7 +405,7 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
 - (void)keyDown:(NSEvent *)theEvent
 {
     FSTUFF_Event event = FSTUFF_Event::NewKeyEvent(FSTUFF_EventKeyDown, [theEvent.characters cStringUsingEncoding:NSUTF8StringEncoding]);
-    _sim.EventReceived(&event);
+    self.sim->EventReceived(&event);
     if ( ! event.handled) {
         [super keyDown:theEvent];
     }
@@ -387,7 +420,7 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
     float widthMM, heightMM;
     _renderer->nativeView = (MTKView *) self.view;
     _renderer->GetViewSizeMM(&widthMM, &heightMM);
-    _sim.ViewChanged(widthMM, heightMM);
+    self.sim->ViewChanged(widthMM, heightMM);
 }
 
 // Called whenever the view needs to render
@@ -396,9 +429,14 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
     @autoreleasepool {
         dispatch_semaphore_wait(_renderer->_inflight_semaphore, DISPATCH_TIME_FOREVER);
         
+        // Update ImGUI state
+        ImGui_ImplMtl_NewFrame();
+        ImGui::ShowDemoWindow();
+        ImGui::Render();    // renders to a texture that's retrieve-able via ImGui_ImplMtl_MainTexture()
+        
         // Update FSTUFF state
         _renderer->appData = (FSTUFF_GPUData *) [_renderer->gpuConstants[_renderer->constantDataBufferIndex] contents];
-        _sim.Update();
+        self.sim->Update();
 
         // Create a new command buffer for each renderpass to the current drawable
         id <MTLCommandBuffer> commandBuffer = [_renderer->commandQueue commandBuffer];
@@ -422,12 +460,18 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
             // Draw shapes
             _renderer->renderCommandEncoder = renderCommandEncoder;
             _renderer->appData = (__bridge FSTUFF_GPUData *)_renderer->gpuConstants[_renderer->constantDataBufferIndex];
-//            _sim.renderer = _renderer;
-            _sim.Render();
+//            self.sim->renderer = _renderer;
+            self.sim->Render();
             
             // We're done encoding commands
             [renderCommandEncoder endEncoding];
-            
+
+//            // Create another render command encoder so we can render the overlay
+//            id <MTLRenderCommandEncoder> overlayCommandEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+//            overlayCommandEncoder.label = @"FSTUFF_OverlayRenderEncoder";
+//            [overlayCommandEncoder setRenderPipelineState:_renderer->pipelineState];
+
+
             // Schedule a present once the framebuffer is complete using the current drawable
             [commandBuffer presentDrawable:_renderer->nativeView.currentDrawable];
         }
