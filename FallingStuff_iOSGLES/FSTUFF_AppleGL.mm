@@ -19,6 +19,8 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     GLuint programObject = 0;
     int width = 0;
     int height = 0;
+    GLint vertexShaderAttribute_vPosition = -1;
+    GLint vertexShaderAttribute_mModelMatrix = -1;
 
     FSTUFF_GLESRenderer() {
         appData = new FSTUFF_GPUData();
@@ -45,6 +47,8 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
         glGenBuffers(1, &newBuffer);
         glBindBuffer(GL_ARRAY_BUFFER, newBuffer);
         glBufferData(GL_ARRAY_BUFFER, size, src, GL_STATIC_DRAW);
+//        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
+//        glEnableVertexAttribArray(0);
 
         // Restore previously-current buffer
         glBindBuffer(GL_ARRAY_BUFFER, prevBuffer);
@@ -113,6 +117,7 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     GLbyte vShaderStr[] = R"(
         uniform mat4 mMatrix;
         attribute vec4 vPosition;
+        attribute mat4 mModelMatrix;
         void main()
         {
             gl_Position = mMatrix * vPosition;
@@ -143,8 +148,16 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
 
     glAttachShader(programObject, vertexShader);
     glAttachShader(programObject, fragmentShader);
+
+    GLenum err = GL_NO_ERROR;
+
     // Bind vPosition to attribute 0
     glBindAttribLocation(programObject, 0, "vPosition");
+    err = glGetError();
+    // Bind mModelMatrix to attribute 1
+    glBindAttribLocation(programObject, 1, "mModelMatrix");
+    err = glGetError();
+
     // Link the program
     glLinkProgram(programObject);
     // Check the link status
@@ -165,7 +178,13 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
 
     // Store the program object
     renderer->programObject = programObject;
-    
+
+    renderer->vertexShaderAttribute_vPosition = glGetAttribLocation(programObject, "vPosition");
+    err = glGetError();
+    renderer->vertexShaderAttribute_mModelMatrix = glGetAttribLocation(programObject, "mModelMatrix");
+    err = glGetError();
+
+
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     _sim.Init();
@@ -215,8 +234,9 @@ GLuint LoadShader(GLenum type, GLbyte *shaderSrc)
     
     // Create the shader object
     shader = glCreateShader(type);
-    if(shader == 0)
+    if ( ! shader) {
         return 0;
+    }
     // Load the shader source
     glShaderSource(shader, 1, (const GLchar* const *)&shaderSrc, NULL);
     
@@ -225,12 +245,11 @@ GLuint LoadShader(GLenum type, GLbyte *shaderSrc)
     // Check the compile status
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
     
-    if (!compiled) {
+    if ( ! compiled) {
         GLint infoLen = 0;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
-        
         if (infoLen > 1) {
-            char* infoLog = (char *) malloc(sizeof(char) * infoLen);
+            char * infoLog = (char *) malloc(sizeof(char) * infoLen);
             glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
             FSTUFF_Log(@"Error compiling shader:\n%s\n\n", infoLog);
             free(infoLog);
@@ -243,13 +262,6 @@ GLuint LoadShader(GLenum type, GLbyte *shaderSrc)
 
 void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha)
 {
-    //glBindBuffer(GL_ARRAY_BUFFER, (GLuint)(uintptr_t) this->vertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, (GLuint)(uintptr_t) shape->gpuVertexBuffer);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(0);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    return;
-
     // Metal can raise a program-crashing assertion, if zero amount of shapes attempts to get
     // rendered.
     if (count == 0) {
@@ -280,36 +292,19 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
         case FSTUFF_ShapeBox:
             shapesOffsetInGpuData = offsetof(FSTUFF_GPUData, boxes);
             break;
+        case FSTUFF_ShapeDebug:
+            break;
         default:
             FSTUFF_Log(@"Unknown or unmapped FSTUFF_ShapeType in shape: %u\n", shape->type);
             return;
     }
     
-    if (shape->type != FSTUFF_ShapeDebug) {
-        return;
+    if (shape->type == FSTUFF_ShapeDebug) {
+        glBindBuffer(GL_ARRAY_BUFFER, (GLuint)(uintptr_t) shape->gpuVertexBuffer);
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(0);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
     }
-    
-//    glBindBuffer(GL_ARRAY_BUFFER, (GLuint)(uintptr_t) esContext->vertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, (GLuint)(uintptr_t) shape->gpuVertexBuffer);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(0);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-//        glBindBuffer(GL_ARRAY_BUFFER, (GLuint)(uintptr_t) esContext->vertexBuffer);
-//        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-//        glEnableVertexAttribArray(0);
-//        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-//        glBindBuffer(GL_ARRAY_BUFFER, (GLuint)(uintptr_t) shape->gpuVertexBuffer);
-//        glEnableVertexAttribArray(0);
-//        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-//        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
-
-//        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-//        glBindBuffer(GL_ARRAY_BUFFER, esContext->vertexBuffer);
-//        glEnableVertexAttribArray(0);
-//        glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 
@@ -317,24 +312,14 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
 
 - (void)update
 {
-//    _renderer.appData = &_gpuData;
-//    FSTUFF_Update(&_sim, &_gpuData);
     _sim.Update();
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
-    FSTUFF_GLESRenderer * renderer = (FSTUFF_GLESRenderer *)_sim.renderer;
-    
     // Set the viewport
     int uniform_mMatrix = glGetUniformLocation(renderer->programObject, "mMatrix");
-#if 0
-    gbMat4 mat;
-    gb_mat4_translate(&mat, {0.f, 0.f, 0.f});
-    glUniformMatrix4fv(uniform_mMatrix, 1, 0, (const GLfloat *)&mat.e);
-#else
     glUniformMatrix4fv(uniform_mMatrix, 1, 0, (const GLfloat *)&(renderer->appData->globals.projection_matrix));
-#endif
     glViewport(0, 0, renderer->width, renderer->height);
     
     // Clear the color buffer
@@ -342,14 +327,8 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
     // Use the program object
     glUseProgram(renderer->programObject);
 
-    // Load the vertex data
-//    glBindBuffer(GL_ARRAY_BUFFER, (GLuint)(uintptr_t) renderer->vertexBuffer);
-//    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-//    glEnableVertexAttribArray(0);
-//    glDrawArrays(GL_TRIANGLES, 0, 3);
-    
+    // Render the scene
     _sim.Render();
-
 }
 
 @end
