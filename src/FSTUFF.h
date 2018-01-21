@@ -178,7 +178,7 @@ struct FSTUFF_Simulation {
     //
     std::bitset<128> keysPressed;  // key-press state: 0|false for up, 1|true for pressed-down; indexed by 7-bit ASCII codes
     bool showGUIDemo = false;
-    bool showSettings = true;
+    bool showSettings = false;
 
     //
     // Physics
