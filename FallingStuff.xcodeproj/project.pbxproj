@@ -182,6 +182,18 @@
 		75DE2F691CFCCE710052F8C1 /* cpSweep1D.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856151CDFC96F00FC8EA4 /* cpSweep1D.c */; };
 		75DE2F6B1CFCCEFD0052F8C1 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75DE2F411CFCCE3B0052F8C1 /* MetalKit.framework */; };
 		75DE2F781CFCD4590052F8C1 /* libGBDeviceInfo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 75DE2F721CFCD3D60052F8C1 /* libGBDeviceInfo.a */; };
+		75EE9FB720144245004C065B /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CB1F201121BE00FF086C /* imgui.cpp */; };
+		75EE9FB820144246004C065B /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CB1F201121BE00FF086C /* imgui.cpp */; };
+		75EE9FB920144246004C065B /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CB1F201121BE00FF086C /* imgui.cpp */; };
+		75EE9FBA2014424C004C065B /* imgui_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA6201121BE00FF086C /* imgui_demo.cpp */; };
+		75EE9FBB2014424C004C065B /* imgui_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA6201121BE00FF086C /* imgui_demo.cpp */; };
+		75EE9FBC2014424D004C065B /* imgui_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA6201121BE00FF086C /* imgui_demo.cpp */; };
+		75EE9FBD20144250004C065B /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA7201121BE00FF086C /* imgui_draw.cpp */; };
+		75EE9FBE20144251004C065B /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA7201121BE00FF086C /* imgui_draw.cpp */; };
+		75EE9FBF20144251004C065B /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA7201121BE00FF086C /* imgui_draw.cpp */; };
+		75EE9FC020144258004C065B /* imgui_impl_mtl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */; };
+		75EE9FC120144258004C065B /* imgui_impl_mtl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */; };
+		75EE9FC220144259004C065B /* imgui_impl_mtl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -915,6 +927,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				75EE9FBF20144251004C065B /* imgui_draw.cpp in Sources */,
 				759DFD401FF96CCE00F1B2D8 /* FSTUFF_AppleMetalShaders.metal in Sources */,
 				759DFD351FF598A000F1B2D8 /* FSTUFF_Apple.mm in Sources */,
 				759DFD121FF5987A00F1B2D8 /* chipmunk.c in Sources */,
@@ -924,6 +937,7 @@
 				759DFD161FF5987A00F1B2D8 /* cpBody.c in Sources */,
 				759DFD171FF5987A00F1B2D8 /* cpCollision.c in Sources */,
 				759DFD181FF5987A00F1B2D8 /* cpConstraint.c in Sources */,
+				75EE9FB920144246004C065B /* imgui.cpp in Sources */,
 				759DFD191FF5987A00F1B2D8 /* cpDampedRotarySpring.c in Sources */,
 				759DFD1A1FF5987A00F1B2D8 /* cpDampedSpring.c in Sources */,
 				759DFD1B1FF5987A00F1B2D8 /* cpGearJoint.c in Sources */,
@@ -938,6 +952,8 @@
 				759DFD241FF5987A00F1B2D8 /* cpRatchetJoint.c in Sources */,
 				759DFD251FF5987A00F1B2D8 /* cpRobust.c in Sources */,
 				759DFD261FF5987A00F1B2D8 /* cpRotaryLimitJoint.c in Sources */,
+				75EE9FC220144259004C065B /* imgui_impl_mtl.mm in Sources */,
+				75EE9FBC2014424D004C065B /* imgui_demo.cpp in Sources */,
 				759DFD271FF5987A00F1B2D8 /* cpShape.c in Sources */,
 				759DFD281FF5987A00F1B2D8 /* cpSimpleMotor.c in Sources */,
 				759DFD291FF5987A00F1B2D8 /* cpSlideJoint.c in Sources */,
@@ -972,6 +988,7 @@
 				75ADD6211D035B600042FC3A /* cpGearJoint.c in Sources */,
 				75ADD6221D035B600042FC3A /* cpGrooveJoint.c in Sources */,
 				75ADD63E1D035EB20042FC3A /* FSTUFF_Apple.mm in Sources */,
+				75EE9FB820144246004C065B /* imgui.cpp in Sources */,
 				75ADD6231D035B600042FC3A /* cpHashSet.c in Sources */,
 				75ADD6241D035B600042FC3A /* cpHastySpace.c in Sources */,
 				75ADD6251D035B600042FC3A /* cpMarch.c in Sources */,
@@ -981,12 +998,14 @@
 				75ADD6291D035B600042FC3A /* cpPolyShape.c in Sources */,
 				75ADD62A1D035B600042FC3A /* cpRatchetJoint.c in Sources */,
 				75ADD62B1D035B600042FC3A /* cpRobust.c in Sources */,
+				75EE9FBE20144251004C065B /* imgui_draw.cpp in Sources */,
 				75ADD62C1D035B600042FC3A /* cpRotaryLimitJoint.c in Sources */,
 				75ADD62D1D035B600042FC3A /* cpShape.c in Sources */,
 				75ADD62E1D035B600042FC3A /* cpSimpleMotor.c in Sources */,
 				75ADD62F1D035B600042FC3A /* cpSlideJoint.c in Sources */,
 				75ADD6301D035B600042FC3A /* cpSpace.c in Sources */,
 				75ADD6311D035B600042FC3A /* cpSpaceComponent.c in Sources */,
+				75EE9FC120144258004C065B /* imgui_impl_mtl.mm in Sources */,
 				75ADD6321D035B600042FC3A /* cpSpaceDebug.c in Sources */,
 				75ADD6331D035B600042FC3A /* cpSpaceHash.c in Sources */,
 				75ADD6341D035B600042FC3A /* cpSpaceQuery.c in Sources */,
@@ -995,6 +1014,7 @@
 				75ADD6371D035B600042FC3A /* cpSweep1D.c in Sources */,
 				75ADD6021D035AB10042FC3A /* FSTUFF_MacAppDelegate.m in Sources */,
 				75ADD6091D035AB10042FC3A /* FSTUFF_AppleGL.mm in Sources */,
+				75EE9FBB2014424C004C065B /* imgui_demo.cpp in Sources */,
 				75ADD5FF1D035AB10042FC3A /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1017,6 +1037,7 @@
 				75DE2F551CFCCE710052F8C1 /* cpHashSet.c in Sources */,
 				75DE2F561CFCCE710052F8C1 /* cpHastySpace.c in Sources */,
 				75DE2F571CFCCE710052F8C1 /* cpMarch.c in Sources */,
+				75EE9FB720144245004C065B /* imgui.cpp in Sources */,
 				75DE2F581CFCCE710052F8C1 /* cpPinJoint.c in Sources */,
 				75DE2F591CFCCE710052F8C1 /* cpPivotJoint.c in Sources */,
 				75DE2F5A1CFCCE710052F8C1 /* cpPolyline.c in Sources */,
@@ -1026,12 +1047,14 @@
 				75DE2F5D1CFCCE710052F8C1 /* cpRobust.c in Sources */,
 				75DE2F5E1CFCCE710052F8C1 /* cpRotaryLimitJoint.c in Sources */,
 				75DE2F5F1CFCCE710052F8C1 /* cpShape.c in Sources */,
+				75EE9FBD20144250004C065B /* imgui_draw.cpp in Sources */,
 				75DE2F601CFCCE710052F8C1 /* cpSimpleMotor.c in Sources */,
 				75DE2F611CFCCE710052F8C1 /* cpSlideJoint.c in Sources */,
 				75DE2F621CFCCE710052F8C1 /* cpSpace.c in Sources */,
 				75DE2F631CFCCE710052F8C1 /* cpSpaceComponent.c in Sources */,
 				75DE2F641CFCCE710052F8C1 /* cpSpaceDebug.c in Sources */,
 				75DE2F651CFCCE710052F8C1 /* cpSpaceHash.c in Sources */,
+				75EE9FC020144258004C065B /* imgui_impl_mtl.mm in Sources */,
 				75DE2F661CFCCE710052F8C1 /* cpSpaceQuery.c in Sources */,
 				75DE2F671CFCCE710052F8C1 /* cpSpaceStep.c in Sources */,
 				75ADD63D1D035EB20042FC3A /* FSTUFF_Apple.mm in Sources */,
@@ -1040,6 +1063,7 @@
 				75DE2F481CFCCE5C0052F8C1 /* FSTUFF_AppleMetalShaders.metal in Sources */,
 				75DE2F491CFCCE5C0052F8C1 /* FSTUFF_AppleMetalStructs.h in Sources */,
 				75DE2F2E1CFCCD4C0052F8C1 /* FSTUFF_iOSAppDelegate.m in Sources */,
+				75EE9FBA2014424C004C065B /* imgui_demo.cpp in Sources */,
 				75DE2F2B1CFCCD4C0052F8C1 /* FSTUFF_iOSMain.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

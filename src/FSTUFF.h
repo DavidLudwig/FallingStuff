@@ -23,6 +23,13 @@ extern "C" {
 
 void FSTUFF_Log(const char * fmt, ...) __attribute__((format(printf, 1, 2)));
 
+#if 0
+    #define FSTUFF_LOG_IMPLEMENT_ME(EXTRA) FSTUFF_Log("%s: %s%s\n", "IMPLEMENT ME", __FUNCTION__, EXTRA)
+#else
+    #define FSTUFF_LOG_IMPLEMENT_ME(EXTRA)
+#endif
+
+
 enum FSTUFF_ShapeType : uint8_t {
     FSTUFF_ShapeCircle = 0,
     FSTUFF_ShapeBox,

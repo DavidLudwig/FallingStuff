@@ -165,12 +165,6 @@ void ImGui_ImplMtl_RenderDrawLists(ImDrawData* draw_data)
     }
 }
 
-#if 1
-    #define FSTUFF_LOG_IMPLEMENT_ME(EXTRA) FSTUFF_Log("%s: %s%s\n", "IMPLEMENT ME", __FUNCTION__, EXTRA)
-#else
-    #define FSTUFF_LOG_IMPLEMENT_ME(EXTRA)
-#endif
-
 static const char* ImGui_ImplMtl_GetClipboardText(void * userdata)
 {
     FSTUFF_LOG_IMPLEMENT_ME("");

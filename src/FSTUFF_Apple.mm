@@ -304,14 +304,18 @@ void FSTUFF_AppleMetalRenderer::SetShapeProperties(FSTUFF_ShapeType shape, size_
 
 FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
 {
+#if TARGET_OS_IOS
+    FSTUFF_LOG_IMPLEMENT_ME(", get cursor info on iOS");
+    return FSTUFF_CursorInfo();
+#else
     const NSUInteger pressedMouseButtons = [NSEvent pressedMouseButtons];
-    const NSPoint mouseLocation = [NSEvent mouseLocation];
-    const NSPoint windowPos = this->nativeView.window.frame.origin;
-    const NSPoint posInWindow = {
+    const CGPoint mouseLocation = [NSEvent mouseLocation];
+    const CGPoint windowPos = this->nativeView.window.frame.origin;
+    const CGPoint posInWindow = {
         mouseLocation.x - windowPos.x,
         mouseLocation.y - windowPos.y
     };
-    const NSPoint posInView = [this->nativeView convertPoint:posInWindow fromView:nil];
+    const CGPoint posInView = [this->nativeView convertPoint:posInWindow fromView:nil];
     
     // Cocoa views seem to like making Y=0 be at the bottom of the view, rather than at the top.
     // ImGui wants coordinates with Y=0 being at the top, so, convert to that!
@@ -326,6 +330,7 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
     out.pressed = (pressedMouseButtons != 0);
 //    out.contained = NSPointInRect(this->nativeView.window.)
     return out;
+#endif
 }
 
 
@@ -342,8 +347,10 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
     // game
     FSTUFF_Simulation * sim;
     
+#if ! TARGET_OS_IOS
     // Cursor tracking area
     NSTrackingArea * area;
+#endif
 }
 
 - (FSTUFF_Simulation *) sim
@@ -378,6 +385,7 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
 
 - (void)updateTrackingArea
 {
+#if ! TARGET_OS_IOS
     if (area) {
         [self.view removeTrackingArea:area];
         area = nil;
@@ -389,6 +397,7 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
                                           owner:self
                                        userInfo:nil];
     [self.view addTrackingArea:area];
+#endif
 }
 
 - (void)viewDidLoad
