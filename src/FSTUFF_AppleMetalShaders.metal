@@ -116,9 +116,9 @@ samplingShader(RasterizerData in [[stage_in]],
     };
     
     const half4 srcSample = overlaySample;
-//    const half srcAlpha = srcSample[3];
+    const half srcAlpha = srcSample[3];
 //    const half srcAlpha = (srcSample[3] > 0) ? 1 : 0;
-    const half srcAlpha = metal::min(srcSample[3] * half(1.5), half(1));
+//    const half srcAlpha = metal::min(srcSample[3] * half(1.5), half(1));
 
     destSample[0] = srcAlpha * srcSample[0] + (1 - srcAlpha) * destSample[0];
     destSample[1] = srcAlpha * srcSample[1] + (1 - srcAlpha) * destSample[1];
