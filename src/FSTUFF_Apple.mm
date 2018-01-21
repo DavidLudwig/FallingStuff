@@ -188,6 +188,13 @@ void FSTUFF_AppleMetalRenderer::ViewChanged()
 {
     const FSTUFF_ViewSize viewSize = this->GetViewSize();
 
+    // If the view is zero-sized, don't try creating a texture for it, yet.  Metal
+    // can crash, if an attempt to create a zero-sized texture is performed.
+    // The view is apt to change size once again, anyways.
+    if (viewSize.widthPixels == 0 || viewSize.heightPixels == 0) {
+        return;
+    }
+
     MTLTextureDescriptor *simTextureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
                                                                                                      width:viewSize.widthPixels
                                                                                                     height:viewSize.heightPixels
