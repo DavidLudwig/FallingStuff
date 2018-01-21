@@ -467,33 +467,15 @@ void ImGui_ImplMtl_NewFrame(const FSTUFF_ViewSize & viewSize) // int widthPixels
     g_MtlCurrentCommandBuffer = [g_MtlCommandQueue commandBuffer];
     g_MtlCurrentCommandBuffer.label = @"ImGui Command Buffer";
     
-        MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+    MTLRenderPassDescriptor *imguiRenderPass = [MTLRenderPassDescriptor renderPassDescriptor];
 //    renderPassDescriptor.colorAttachments[0].texture = [(id<CAMetalDrawable>)g_MtlCurrentDrawable texture];
-    renderPassDescriptor.colorAttachments[0].texture = g_MtlMainTexture;
+    imguiRenderPass.colorAttachments[0].texture = g_MtlMainTexture;
 //    renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionLoad;
-    renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-    renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-    renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0);
-    g_MtlCurrentCommandEncoder = [g_MtlCurrentCommandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+    imguiRenderPass.colorAttachments[0].loadAction = MTLLoadActionClear;
+    imguiRenderPass.colorAttachments[0].storeAction = MTLStoreActionStore;
+    imguiRenderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0);
+    g_MtlCurrentCommandEncoder = [g_MtlCurrentCommandBuffer renderCommandEncoderWithDescriptor:imguiRenderPass];
     g_MtlCurrentCommandEncoder.label = @"ImGui Command Encoder";
-
-    
-//    {
-//        MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-//    //    renderPassDescriptor.colorAttachments[0].texture = [(id<CAMetalDrawable>)g_MtlCurrentDrawable texture];
-//        renderPassDescriptor.colorAttachments[0].texture = g_MtlMainTexture;
-//    //    renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionLoad;
-//        renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-//        renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-//        renderPassDescriptor.colorAttachments[0].clearColor = [MTLClearColorMake(0, 0, 0, 0);
-//    }
-
-    
-//    id<MTLBlitCommandEncoder> blitEncoder = [g_MtlCurrentCommandBuffer blitCommandEncoder];
-//    FSTUFF_Log(@"buffer = %@\n", g_MtlMainTexture.buffer);
-//    [blitEncoder fillBuffer:g_MtlMainTexture.buffer range:NSMakeRange(0, g_MtlMainTexture.allocatedSize) value:0];
-//    [blitEncoder endEncoding];
-
 
     ImGuiIO& io = ImGui::GetIO();
 
