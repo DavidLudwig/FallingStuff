@@ -456,22 +456,28 @@ void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
     this->renderer = renderer;
 
     // Initialize 'this'
-    float widthMM = 0.f;
-    float heightMM = 0.f;
-    this->renderer->GetViewSizeMM(&widthMM, &heightMM);
-    this->ViewChanged(widthMM, heightMM);
+    this->keysPressed.reset();  // Mark all keys as being down/un-pressed
+    const FSTUFF_ViewSize viewSize = this->renderer->GetViewSize();
+    this->ViewChanged(viewSize);
     this->InitGPUShapes();
     this->InitWorld();
 }
 
 void FSTUFF_Simulation::ResetWorld()
 {
+    this->marblesCount = 0;
     this->ShutdownWorld();
     this->InitWorld();
 }
 
 void FSTUFF_Simulation::Update()
 {
+    ImGui::StyleColorsDark(&ImGui::GetStyle());
+
+    if (this->showGUIDemo) {
+        ImGui::ShowDemoWindow();
+    }
+
     // Initialize the simulation, if need be.
     if (this->state == FSTUFF_DEAD) {
         this->Init();
@@ -494,15 +500,15 @@ void FSTUFF_Simulation::Update()
     
     // Add marbles, as warranted
     if (this->marblesCount < this->marblesMax) {
-        if (this->addMarblesInS > 0) {
+        if (this->addNumMarblesPerSecond > 0) {
             this->addMarblesInS -= deltaTimeS;
             if (this->addMarblesInS <= 0) {
                 this->AddMarble();
-                this->addMarblesInS = FSTUFF_RandRangeF(this->rng, this->addMarblesInS_Range[0], this->addMarblesInS_Range[1]);
+                this->addMarblesInS = 1.f / this->addNumMarblesPerSecond;
             }
         }
     }
-    
+
     // Update physics
     const cpFloat kSubstepTimeS = kStepTimeS / ((cpFloat)kNumSubSteps);
     while ((this->lastUpdateUTCTimeS + kStepTimeS) <= nowS) {
@@ -522,10 +528,28 @@ void FSTUFF_Simulation::Update()
             }
         }
         if (this->resetInS <= 0) {
-            this->marblesCount = 0;
             this->ResetWorld();
         }
     }
+    
+    // Process GUI
+    if (this->showSettings) {
+//        ImGui::SetNextWindowSize(ImVec2(450, 200));
+//        ImGui::Begin("Settings", NULL, ImVec2(500, 200));
+        ImGui::Begin("Settings", &this->showSettings, ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::SliderInt("Marbles, Max", &this->marblesMax, 0, 1000);
+        if (ImGui::SliderFloat("Spawn Rate (marbles/second)", &this->addNumMarblesPerSecond, 0, 10, "%.3f", 3.0f)) {
+            this->addMarblesInS = 1.f / this->addNumMarblesPerSecond;
+        }
+        ImGui::InvisibleButton("padding1", ImVec2(0, 8));
+        ImGui::Separator();
+        ImGui::InvisibleButton("padding2", ImVec2(0, 8));
+        if (ImGui::Button("Restart Simulation", ImVec2(400, 32))) {
+            this->ResetWorld();
+        }
+        ImGui::End();
+    }
+
 
     // Copy simulation/game data to GPU-accessible buffers
     this->renderer->SetProjectionMatrix(this->projectionMatrix);
@@ -590,9 +614,9 @@ void FSTUFF_Simulation::Render()
 //    renderer->RenderShapes(&debugShape, 0, 1, 1.0f);
 }
 
-void FSTUFF_Simulation::ViewChanged(float widthMM, float heightMM)
+void FSTUFF_Simulation::ViewChanged(const FSTUFF_ViewSize & viewSize)
 {
-    this->viewSizeMM = {widthMM, heightMM};
+    this->viewSize = viewSize;
     this->UpdateProjectionMatrix();
 }
 
@@ -609,8 +633,8 @@ void FSTUFF_Simulation::UpdateProjectionMatrix()
     
     gbMat4 scaling;
     gb_mat4_scale(&scaling, {
-        (float)(2.0f / this->viewSizeMM.x),
-        (float)(2.0f / this->viewSizeMM.y),
+        (float)(2.0f / this->viewSize.widthMM),
+        (float)(2.0f / this->viewSize.heightMM),
         1
     });
 
@@ -623,6 +647,35 @@ void FSTUFF_Simulation::UpdateProjectionMatrix()
     });
 
     this->projectionMatrix = (translation * scaling) * scaling2;
+}
+
+void FSTUFF_Simulation::UpdateCursorInfo(const FSTUFF_CursorInfo & newInfo)
+{
+    const FSTUFF_CursorInfo oldInfo = cursorInfo;
+
+    if (newInfo.pressed != oldInfo.pressed) {
+        cursorInfo.pressed = newInfo.pressed;
+
+        FSTUFF_Event event;
+        memset(&event, 0, sizeof(event));
+        event.type = FSTUFF_CursorButton;
+        event.data.cursorButton.xOS = cursorInfo.xOS;
+        event.data.cursorButton.yOS = cursorInfo.yOS;
+        event.data.cursorButton.down = cursorInfo.pressed;
+        this->EventReceived(&event);
+    }
+
+    if (newInfo.xOS != oldInfo.xOS || newInfo.yOS != oldInfo.yOS) {
+        cursorInfo.xOS = newInfo.xOS;
+        cursorInfo.yOS = newInfo.yOS;
+
+        FSTUFF_Event event;
+        memset(&event, 0, sizeof(event));
+        event.type = FSTUFF_CursorMotion;
+        event.data.cursorMotion.xOS = cursorInfo.xOS;
+        event.data.cursorMotion.yOS = cursorInfo.yOS;
+        this->EventReceived(&event);
+    }
 }
 
 void FSTUFF_Simulation::ShutdownWorld()
@@ -681,19 +734,102 @@ FSTUFF_Event FSTUFF_Event::NewKeyEvent(FSTUFF_EventType eventType, const char * 
     return event;
 }
 
+//FSTUFF_Event FSTUFF_Event::NewCursorMotionEvent(float xOS, float yOS)
+//{
+//    FSTUFF_Event event;
+//    memset(&event, 0, sizeof(event));
+//    event.type = FSTUFF_CursorMotion;
+//    event.data.cursorMotion.xOS = xOS;
+//    event.data.cursorMotion.yOS = yOS;
+//    return event;
+//}
+//
+//FSTUFF_Event FSTUFF_Event::NewCursorButtonEvent(float xOS, float yOS, bool down)
+//{
+//    FSTUFF_Event event;
+//    memset(&event, 0, sizeof(event));
+//    event.type = FSTUFF_CursorButton;
+//    event.data.cursorButton.xOS = xOS;
+//    event.data.cursorButton.yOS = yOS;
+//    event.data.cursorButton.down = down;
+//    return event;
+//}
+//
+//FSTUFF_Event FSTUFF_Event::NewCursorContainedEvent(bool contained)
+//{
+//    FSTUFF_Event event;
+//    memset(&event, 0, sizeof(event));
+//    event.type = FSTUFF_CursorContained;
+//    event.data.cursorContain.contained = contained;
+//    return event;
+//}
+
 void FSTUFF_Simulation::EventReceived(FSTUFF_Event *event)
 {
+//    ImGuiIO& io = ImGui::GetIO();
+//    if (action == GLFW_PRESS)
+//        io.KeysDown[key] = true;
+//    if (action == GLFW_RELEASE)
+//        io.KeysDown[key] = false;
+//
+//    (void)mods; // Modifiers are not reliable across systems
+//    io.KeyCtrl = io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
+//    io.KeyShift = io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
+//    io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
+//    io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
+
+    ImGuiIO &guiIO = ImGui::GetIO();
+
     switch (event->type) {
         case FSTUFF_EventNone: {
         } break;
+
         case FSTUFF_EventKeyDown: {
-            switch (std::toupper(event->data.key.utf8[0])) {
-                case 'R': {
-                    this->ShutdownWorld();
-                    this->InitWorld();
+            if (event->data.key.utf8[0] <= 127) {
+                const auto key = event->data.key.utf8[0];
+                this->keysPressed[key] = 1;
+                guiIO.KeysDown[key] = 1;
+                bool unhandled = false;
+                switch (std::toupper(key)) {
+                    case 'D': {
+                        this->showGUIDemo = !this->showGUIDemo;
+                    } break;
+                    case 'R': {
+                        this->ShutdownWorld();
+                        this->InitWorld();
+                    } break;
+                    case 'S': {
+                        this->showSettings = !this->showSettings;
+                    } break;
+                    default: {
+                        unhandled = true;
+                    } break;
+                }
+                if (!unhandled) {
                     event->handled = true;
-                } break;
+                }
             }
+        
+        } break;
+        
+        case FSTUFF_EventKeyUp: {
+            if (event->data.key.utf8[0] <= 127) {
+                const auto key = event->data.key.utf8[0];
+                this->keysPressed[key] = 0;
+                guiIO.KeysDown[key] = 0;
+            }
+        } break;
+        
+        case FSTUFF_CursorButton: {
+//            FSTUFF_Log("FSTUFF_CursorButton: os position = {%f,%f}, down?=%s\n", event->data.cursorButton.xOS, event->data.cursorButton.yOS, (event->data.cursorButton.down ? "YES" : "NO"));
+        } break;
+
+        case FSTUFF_CursorMotion: {
+//            FSTUFF_Log("FSTUFF_CursorMotion: os position = {%f,%f}\n", event->data.cursorMotion.xOS, event->data.cursorMotion.yOS);
+        } break;
+        
+        case FSTUFF_CursorContained: {
+            FSTUFF_Log("FSTUFF_CursorContained: contained?=%s\n", (event->data.cursorContain.contained ? "YES" : "NO"));
         } break;
     }
 }

@@ -36,6 +36,8 @@ static float        g_MouseWheel = 0.0f;
 //static CAMetalLayer *g_MtlLayer;
 //static id<MTLDevice> g_MtlDevice;
 static id<MTLCommandQueue> g_MtlCommandQueue;
+static id<MTLCommandBuffer> g_MtlCurrentCommandBuffer = nil;
+static id<MTLRenderCommandEncoder> g_MtlCurrentCommandEncoder = nil;
 static id<MTLRenderPipelineState> g_MtlRenderPipelineState;
 static id<MTLTexture> g_MtlFontTexture;
 static id<MTLSamplerState> g_MtlSamplerState;
@@ -72,17 +74,8 @@ void ImGui_ImplMtl_RenderDrawLists(ImDrawData* draw_data)
         return;
     draw_data->ScaleClipRects(io.DisplayFramebufferScale);
 
-    id<MTLCommandBuffer> commandBuffer = [g_MtlCommandQueue commandBuffer];
-    commandBuffer.label = @"ImGui Command Queue";
-
-    MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-//    renderPassDescriptor.colorAttachments[0].texture = [(id<CAMetalDrawable>)g_MtlCurrentDrawable texture];
-    renderPassDescriptor.colorAttachments[0].texture = g_MtlMainTexture;
-    renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionLoad;
-    renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-    renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1);
-
-    id<MTLRenderCommandEncoder> commandEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+    id<MTLCommandBuffer> commandBuffer = g_MtlCurrentCommandBuffer;
+    id<MTLRenderCommandEncoder> commandEncoder = g_MtlCurrentCommandEncoder;
 
     [commandEncoder setRenderPipelineState:g_MtlRenderPipelineState];
 
@@ -170,41 +163,64 @@ void ImGui_ImplMtl_RenderDrawLists(ImDrawData* draw_data)
             });
         }];
     }
-
-    [commandEncoder endEncoding];
-
-    [commandBuffer commit];
 }
+
+#if 1
+    #define FSTUFF_LOG_IMPLEMENT_ME(EXTRA) FSTUFF_Log("%s: %s%s\n", "IMPLEMENT ME", __FUNCTION__, EXTRA)
+#else
+    #define FSTUFF_LOG_IMPLEMENT_ME(EXTRA)
+#endif
 
 static const char* ImGui_ImplMtl_GetClipboardText(void * userdata)
 {
-    FSTUFF_Log("IMPLEMENT ME: %s\n", __FUNCTION__);
+    FSTUFF_LOG_IMPLEMENT_ME("");
+//    @autoreleasepool {
+//        static std::string text;
+//        NSPasteboard * pasteboard = [NSPasteboard generalPasteboard];
+//        NSString * available = [pasteboard availableTypeFromArray:@[NSPasteboardTypeString]];
+//        if ([available isEqualToString:NSPasteboardTypeString]) {
+//            NSString * str = [pasteboard stringForType:NSPasteboardTypeString];
+//            if (str) {
+//                text = [str UTF8String];
+//            } else {
+//                text.clear();
+//            }
+//        } else {
+//            text.clear();
+//        }
+//        return text.c_str();
+//    }
     return "";
-    //return glfwGetClipboardString(g_Window);
 }
 
 static void ImGui_ImplMtl_SetClipboardText(void * userdata, const char* text)
 {
-    FSTUFF_Log("IMPLEMENT ME: %s\n", __FUNCTION__);
+    FSTUFF_LOG_IMPLEMENT_ME("");
 //    glfwSetClipboardString(g_Window, text);
+
+//    @autoreleasepool {
+//        NSPasteboard * pasteboard = [NSPasteboard generalPasteboard];
+//        [pasteboard setString:[[NSString alloc] initWithUTF8String:text]
+//                      forType:NSPasteboardTypeString];
+//    }
 }
 
 void ImGui_ImplMtl_MouseButtonCallback(GLFWwindow*, int button, int action, int /*mods*/)
 {
-    FSTUFF_Log("IMPLEMENT ME: %s\n", __FUNCTION__);
+    FSTUFF_LOG_IMPLEMENT_ME("");
 //    if (action == GLFW_PRESS && button >= 0 && button < 3)
 //        g_MousePressed[button] = true;
 }
 
 void ImGui_ImplMtl_ScrollCallback(GLFWwindow*, double /*xoffset*/, double yoffset)
 {
-    FSTUFF_Log("IMPLEMENT ME: %s\n", __FUNCTION__);
+    FSTUFF_LOG_IMPLEMENT_ME("");
 //    g_MouseWheel += (float)yoffset; // Use fractional mouse wheel, 1.0 unit 5 lines.
 }
 
 void ImGui_ImplMtl_KeyCallback(GLFWwindow*, int key, int, int action, int mods)
 {
-    FSTUFF_Log("IMPLEMENT ME: %s\n", __FUNCTION__);
+    FSTUFF_LOG_IMPLEMENT_ME("");
 //    ImGuiIO& io = ImGui::GetIO();
 //    if (action == GLFW_PRESS)
 //        io.KeysDown[key] = true;
@@ -220,7 +236,7 @@ void ImGui_ImplMtl_KeyCallback(GLFWwindow*, int key, int, int action, int mods)
 
 void ImGui_ImplMtl_CharCallback(GLFWwindow*, unsigned int c)
 {
-    FSTUFF_Log("IMPLEMENT ME: %s\n", __FUNCTION__);
+    FSTUFF_LOG_IMPLEMENT_ME("");
 //
 //    ImGuiIO& io = ImGui::GetIO();
 //    if (c > 0 && c < 0x10000)
@@ -242,16 +258,17 @@ bool ImGui_ImplMtl_CreateDeviceObjects()
         return false;
     }
     
-    FSTUFF_Log("IMPLEMENT ME: %s, set appropriate size for main texture\n", __FUNCTION__);
+    FSTUFF_LOG_IMPLEMENT_ME(", set appropriate size for main texture");
+    const FSTUFF_ViewSize viewSize = g_Renderer->GetViewSize();
     MTLTextureDescriptor *mainTextureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
-                                                                                                     width:1024
-                                                                                                    height:768
+                                                                                                     width:viewSize.widthPixels
+                                                                                                    height:viewSize.heightPixels
                                                                                                  mipmapped:NO];
-    mainTextureDescriptor.usage = MTLTextureUsageRenderTarget;
+    mainTextureDescriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
 //    mainTextureDescriptor.label = @"ImGui Main Texture";
     g_MtlMainTexture = [g_Renderer->device newTextureWithDescriptor:mainTextureDescriptor];
     g_MtlMainTexture.label = @"ImGui Main Texture";
-    FSTUFF_Log(@"%s, g_MtlMainTexture = %@\n", __FUNCTION__, g_MtlMainTexture);
+//    FSTUFF_Log(@"%s, g_MtlMainTexture = %@\n", __FUNCTION__, g_MtlMainTexture);
 
 
 //    [g_MtlLayer setDevice:g_MtlDevice];
@@ -394,7 +411,7 @@ bool    ImGui_ImplMtl_Init(void * _nativeView, bool install_callbacks)
 //    [[nativeWindow contentView] setLayer:g_MtlLayer];
 //    [[nativeWindow contentView] setWantsLayer:YES];
 
-    FSTUFF_Log("IMPLEMENT ME: %s, keymap\n", __FUNCTION__);
+    FSTUFF_LOG_IMPLEMENT_ME(", keymap");
     ImGuiIO& io = ImGui::GetIO();
 //    io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;                     // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
 //    io.KeyMap[ImGuiKey_LeftArrow] = GLFW_KEY_LEFT;
@@ -425,7 +442,7 @@ bool    ImGui_ImplMtl_Init(void * _nativeView, bool install_callbacks)
 
     if (install_callbacks)
     {
-        FSTUFF_Log("IMPLEMENT ME: %s, install callbacks\n", __FUNCTION__);
+        FSTUFF_LOG_IMPLEMENT_ME(", install callbacks");
 //        glfwSetMouseButtonCallback(window, ImGui_ImplMtl_MouseButtonCallback);
 //        glfwSetScrollCallback(window, ImGui_ImplMtl_ScrollCallback);
 //        glfwSetKeyCallback(window, ImGui_ImplMtl_KeyCallback);
@@ -441,29 +458,73 @@ void ImGui_ImplMtl_Shutdown()
     ImGui::Shutdown();
 }
 
-void ImGui_ImplMtl_NewFrame()
+void ImGui_ImplMtl_EndFrame()
+{
+    [g_MtlCurrentCommandEncoder endEncoding];
+    [g_MtlCurrentCommandBuffer commit];
+}
+
+void ImGui_ImplMtl_NewFrame(const FSTUFF_ViewSize & viewSize) // int widthPixels, int heightPixels)
 {
     if (!g_MtlFontTexture) {
         ImGui_ImplMtl_CreateDeviceObjects();
     }
+    
+    g_MtlCurrentCommandBuffer = [g_MtlCommandQueue commandBuffer];
+    g_MtlCurrentCommandBuffer.label = @"ImGui Command Buffer";
+    
+        MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+//    renderPassDescriptor.colorAttachments[0].texture = [(id<CAMetalDrawable>)g_MtlCurrentDrawable texture];
+    renderPassDescriptor.colorAttachments[0].texture = g_MtlMainTexture;
+//    renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionLoad;
+    renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+    renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+    renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0);
+    g_MtlCurrentCommandEncoder = [g_MtlCurrentCommandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+    g_MtlCurrentCommandEncoder.label = @"ImGui Command Encoder";
+
+    
+//    {
+//        MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+//    //    renderPassDescriptor.colorAttachments[0].texture = [(id<CAMetalDrawable>)g_MtlCurrentDrawable texture];
+//        renderPassDescriptor.colorAttachments[0].texture = g_MtlMainTexture;
+//    //    renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionLoad;
+//        renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+//        renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+//        renderPassDescriptor.colorAttachments[0].clearColor = [MTLClearColorMake(0, 0, 0, 0);
+//    }
+
+    
+//    id<MTLBlitCommandEncoder> blitEncoder = [g_MtlCurrentCommandBuffer blitCommandEncoder];
+//    FSTUFF_Log(@"buffer = %@\n", g_MtlMainTexture.buffer);
+//    [blitEncoder fillBuffer:g_MtlMainTexture.buffer range:NSMakeRange(0, g_MtlMainTexture.allocatedSize) value:0];
+//    [blitEncoder endEncoding];
+
 
     ImGuiIO& io = ImGui::GetIO();
 
     // Setup display size (every frame to accommodate for window resizing)
     int w, h;
     int display_w, display_h;
+#if 0
 //    glfwGetWindowSize(g_Window, &w, &h);
 //    glfwGetFramebufferSize(g_Window, &display_w, &display_h);
     w = 1024;
     h = 768;
     display_w = 1024;
     display_h = 768;
-    FSTUFF_Log("IMPLEMENT ME: %s, get display size\n", __FUNCTION__);
+    FSTUFF_LOG_IMPLEMENT_ME(", get display size");
+#else
+    w = viewSize.widthOS;
+    h = viewSize.heightOS;
+    display_w = viewSize.widthPixels;
+    display_h = viewSize.heightPixels;
+#endif
     io.DisplaySize = ImVec2((float)w, (float)h);
     io.DisplayFramebufferScale = ImVec2(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0);
 
-    CGRect bounds = CGRectMake(0, 0, w, h);
-    CGRect nativeBounds = CGRectMake(0, 0, display_w, display_h);
+//    CGRect bounds = CGRectMake(0, 0, w, h);
+//    CGRect nativeBounds = CGRectMake(0, 0, display_w, display_h);
 //    [g_MtlLayer setFrame:bounds];
 //    [g_MtlLayer setContentsScale:nativeBounds.size.width / bounds.size.width];
 //    [g_MtlLayer setDrawableSize:nativeBounds.size];
@@ -473,14 +534,14 @@ void ImGui_ImplMtl_NewFrame()
 //    g_MtlCurrentDrawable = [g_MtlLayer nextDrawable];
 
     // Setup time step
-    double current_time = 0; // glfwGetTime();
-    FSTUFF_Log("IMPLEMENT ME: %s, get time\n", __FUNCTION__);
+    double current_time = g_Sim->elapsedTimeS; // glfwGetTime();
     io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0f/60.0f);
     g_Time = current_time;
+    //FSTUFF_Log("io.DeltaTime: %f\n", io.DeltaTime);
 
     // Setup inputs
     // (we already got mouse wheel, keyboard keys & characters from glfw callbacks polled in glfwPollEvents())
-    FSTUFF_Log("IMPLEMENT ME: %s, set cursor pos\n", __FUNCTION__);
+//    FSTUFF_LOG_IMPLEMENT_ME(", set cursor pos");
 
 //    if (glfwGetWindowAttrib(g_Window, GLFW_FOCUSED))
 //    {
@@ -493,18 +554,24 @@ void ImGui_ImplMtl_NewFrame()
 //        io.MousePos = ImVec2(-1,-1);
 //    }
 
-    FSTUFF_Log("IMPLEMENT ME: %s, get cursor press state\n", __FUNCTION__);
-    for (int i = 0; i < 3; i++)
-    {
-//        io.MouseDown[i] = g_MousePressed[i] || glfwGetMouseButton(g_Window, i) != 0;    // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
-        g_MousePressed[i] = false;
-    }
+    io.MousePos = ImVec2((float)g_Sim->cursorInfo.xOS, (float)g_Sim->cursorInfo.yOS);
+
+    //FSTUFF_LOG_IMPLEMENT_ME(", get cursor press state");
+//    for (int i = 0; i < 3; i++)
+//    {
+////        io.MouseDown[i] = g_MousePressed[i] || glfwGetMouseButton(g_Window, i) != 0;    // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
+//        //g_MousePressed[i] = false;
+//    }
+
+    io.MouseDown[0] = g_Sim->cursorInfo.pressed;
+//    g_MousePressed[1] = false;
+//    g_MousePressed[2] = false;
 
     io.MouseWheel = g_MouseWheel;
     g_MouseWheel = 0.0f;
 
     // Hide OS mouse cursor if ImGui is drawing it
-    FSTUFF_Log("IMPLEMENT ME: %s, hide OS mouse cursor\n", __FUNCTION__);
+//    FSTUFF_LOG_IMPLEMENT_ME(", hide OS mouse cursor");
 //    glfwSetInputMode(g_Window, GLFW_CURSOR, io.MouseDrawCursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
     // Start the frame

@@ -22,7 +22,7 @@ typedef NSViewController AppleViewController;
 @property (readonly) FSTUFF_Simulation * sim;
 @end
 
-void    FSTUFF_Apple_GetViewSizeMM(void * nativeView, float * outWidthMM, float * outHeightMM);
+FSTUFF_ViewSize FSTUFF_Apple_GetViewSize(void * nativeView);
 void    FSTUFF_Apple_CopyMatrix(matrix_float4x4 & dest, const gbMat4 & src);
 void    FSTUFF_Apple_CopyMatrix(gbMat4 & dest, const matrix_float4x4 & src);
 void    FSTUFF_Apple_CopyVector(vector_float4 & dest, const gbVec4 & src);
@@ -42,22 +42,39 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
 
     // renderer
     id <MTLDevice> device = nil;
-    id <MTLRenderCommandEncoder> renderCommandEncoder = nil;
+    id <MTLRenderCommandEncoder> simRenderCommandEncoder = nil;
+    id <MTLRenderCommandEncoder> mainRenderCommandEncoder = nil;
     MTKView * nativeView = nil;
     FSTUFF_GPUData * appData = NULL;
     id <MTLCommandQueue> commandQueue;
     id <MTLLibrary> defaultLibrary;
-    id <MTLRenderPipelineState> pipelineState;
-    id <MTLRenderPipelineState> overlayPipelineState;
+    id <MTLRenderPipelineState> simulationPipelineState;
+    id <MTLRenderPipelineState> mainPipelineState;
+    id <MTLTexture> simTexture; // texture with simulation data
+    //id <MTLRenderPipelineState> overlayPipelineState;
     uint8_t constantDataBufferIndex;
     id <MTLBuffer> gpuConstants[FSTUFF_MaxInflightBuffers];
+    
+    
+    // The Metal texture object
+//    id<MTLTexture> _texture;
+    // The Metal buffer in which we store our vertex data
+    id<MTLBuffer> _vertices = nil;
+    // The number of vertices in our vertex buffer
+    NSUInteger _numVertices = 0;
+    
+    // Projection matrix for main drawing
+    matrix_float4x4 _projectionMatrix;
+
 
     void    DestroyVertexBuffer(void * _gpuVertexBuffer) override;
     void *  NewVertexBuffer(void * src, size_t size) override;
-    void    GetViewSizeMM(float *outWidthMM, float *outHeightMM) override;
+    void    ViewChanged() override;
+    FSTUFF_ViewSize GetViewSize() override;
     void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) override;
     void    SetProjectionMatrix(const gbMat4 & matrix) override;
     void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) override;
+    FSTUFF_CursorInfo GetCursorInfo() override;
 };
 
 

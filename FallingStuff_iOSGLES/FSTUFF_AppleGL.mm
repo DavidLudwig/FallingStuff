@@ -57,8 +57,8 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
         return (void *)(uintptr_t)newBuffer;
     }
 
-    void    GetViewSizeMM(float *outWidthMM, float *outHeightMM) override {
-        return FSTUFF_Apple_GetViewSizeMM(NULL, outWidthMM, outHeightMM);
+    FSTUFF_ViewSize GetViewSize() override {
+        return FSTUFF_Apple_GetViewSize(NULL);
     }
 
     void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) override;
@@ -193,9 +193,8 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
 - (void)_reshape
 {
     // When reshape is called, update the view and projection matricies since this means the view orientation or size changed
-    float widthMM, heightMM;
-    _sim.renderer->GetViewSizeMM(&widthMM, &heightMM);
-    _sim.ViewChanged(widthMM, heightMM);
+    const FSTUFF_ViewSize viewSize = _sim.renderer->GetViewSize();
+    _sim.ViewChanged(viewSize);
 }
 
 - (void)dealloc

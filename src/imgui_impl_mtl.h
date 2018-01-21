@@ -10,7 +10,9 @@ struct GLFWwindow;
 
 IMGUI_API bool        ImGui_ImplMtl_Init(void * nativeView, bool install_callbacks);
 IMGUI_API void        ImGui_ImplMtl_Shutdown();
-IMGUI_API void        ImGui_ImplMtl_NewFrame();
+IMGUI_API void        ImGui_ImplMtl_NewFrame(const FSTUFF_ViewSize & viewSize); //int widthPixels, int heightPixels);
+IMGUI_API void        ImGui_ImplMtl_EndFrame();
+
 
 IMGUI_API id          ImGui_ImplMtl_CommandQueue();
 //IMGUI_API id          ImGui_ImplMtl_CurrentDrawable();

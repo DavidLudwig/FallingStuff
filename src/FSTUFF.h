@@ -9,14 +9,16 @@
 #ifndef FSTUFF_Simulation_hpp
 #define FSTUFF_Simulation_hpp
 
+#include <array>    // C++ std library, fixed-size arrays
 #include <random>   // C++ std library, random numbers
-
 extern "C" {
     //#include <chipmunk/chipmunk_structs.h>
     #include <chipmunk/chipmunk_private.h>  // #include'd for allowing static cp* structs (cpSpace, cpBody, etc.)
 }
 #include <chipmunk/chipmunk.h>  // Physics library
 #include "gb_math.h"            // Vector and Matrix math
+#include "imgui.h"
+
 #include "FSTUFF_Constants.h"   // Miscellaneous constants
 
 void FSTUFF_Log(const char * fmt, ...) __attribute__((format(printf, 1, 2)));
@@ -59,19 +61,41 @@ struct FSTUFF_Shape {
     void * gpuVertexBuffer = NULL;
 };
 
+struct FSTUFF_ViewSize {
+    float widthMM;
+    float heightMM;
+    int widthPixels;
+    int heightPixels;
+    int widthOS;
+    int heightOS;
+};
+
+struct FSTUFF_CursorInfo {
+    float xOS = -1.f;
+    float yOS = -1.f;
+    bool pressed = false;
+    //bool contained;
+};
+
 struct FSTUFF_Renderer {
     virtual         ~FSTUFF_Renderer();
     virtual void    DestroyVertexBuffer(void * gpuVertexBuffer) = 0;
     virtual void *  NewVertexBuffer(void * src, size_t size) = 0;
-    virtual void    GetViewSizeMM(float *outWidthMM, float *outHeightMM) = 0;
+    virtual void    ViewChanged() = 0;
+    virtual FSTUFF_ViewSize GetViewSize() = 0;
     virtual void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) = 0;
     virtual void    SetProjectionMatrix(const gbMat4 & matrix) = 0;
     virtual void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) = 0;
+    virtual FSTUFF_CursorInfo GetCursorInfo() = 0;
 };
 
 enum FSTUFF_EventType : uint8_t {
     FSTUFF_EventNone = 0,
-    FSTUFF_EventKeyDown = 1,
+    FSTUFF_EventKeyDown,
+    FSTUFF_EventKeyUp,
+    FSTUFF_CursorMotion,
+    FSTUFF_CursorButton,
+    FSTUFF_CursorContained,
 };
 
 struct FSTUFF_Event {
@@ -82,9 +106,24 @@ struct FSTUFF_Event {
         struct {
             const char utf8[8];
         } key;
+        struct {
+            float xOS;
+            float yOS;
+            bool down;
+        } cursorButton;
+        struct {
+            float xOS;
+            float yOS;
+        } cursorMotion;
+        struct {
+            bool contained;
+        } cursorContain;
     } data;
     
     static FSTUFF_Event NewKeyEvent(FSTUFF_EventType keyEventType, const char * utf8Char);
+//    static FSTUFF_Event NewCursorButtonEvent(float xOS, float yOS, bool down);
+//    static FSTUFF_Event NewCursorMotionEvent(float xOS, float yOS);
+//    static FSTUFF_Event NewCursorContainedEvent(bool contained);
 };
 
 struct FSTUFF_Simulation {
@@ -100,7 +139,8 @@ struct FSTUFF_Simulation {
     FSTUFF_Shape boxEdged;
     FSTUFF_Shape debugShape;
     gbMat4 projectionMatrix;
-    cpVect viewSizeMM = {0, 0};
+    //cpVect viewSizeMM = {0, 0};
+    FSTUFF_ViewSize viewSize;
     FSTUFF_Renderer * renderer = NULL;
     
     //
@@ -117,8 +157,8 @@ struct FSTUFF_Simulation {
     //
     // Misc parameters
     //
-    double addMarblesInS_Range[2]   = {0.3, 1.0};
-    double addMarblesInS            = addMarblesInS_Range[0];
+    float addMarblesInS             = 0.0f;
+    float addNumMarblesPerSecond    = 1.0f;
     cpVect gravity                  = cpv(0, -196);
     cpFloat marbleRadius_Range[2]   = {2, 4};
     int32_t marblesCount            = 0;
@@ -126,6 +166,12 @@ struct FSTUFF_Simulation {
     double resetInS_default         = 15;
     double resetInS                 = 0;
     
+    //
+    // User Interface
+    //
+    std::bitset<128> keysPressed;  // key-press state: 0|false for up, 1|true for pressed-down; indexed by 7-bit ASCII codes
+    bool showGUIDemo = false;
+    bool showSettings = true;
 
     //
     // Physics
@@ -159,14 +205,16 @@ struct FSTUFF_Simulation {
     void    EventReceived(FSTUFF_Event * event);
     void    Render();
     void    Update();
-    void    ViewChanged(float widthMM, float heightMM);
+    void    ViewChanged(const FSTUFF_ViewSize & viewSize);
     void    Init();
     void    ResetWorld();
     cpVect  globalScale = {1., 1.};
     void    SetGlobalScale(cpVect scale);
-    cpFloat GetWorldWidth() const { return viewSizeMM.x * (1. / globalScale.x); }
-    cpFloat GetWorldHeight() const { return viewSizeMM.y * (1. / globalScale.y); }
+    cpFloat GetWorldWidth() const { return viewSize.widthMM * (1. / globalScale.x); }
+    cpFloat GetWorldHeight() const { return viewSize.heightMM * (1. / globalScale.y); }
     void    UpdateProjectionMatrix();
+    FSTUFF_CursorInfo cursorInfo;
+    void    UpdateCursorInfo(const FSTUFF_CursorInfo & newInfo);
     
 private:
     void    InitWorld();
