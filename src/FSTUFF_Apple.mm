@@ -192,6 +192,7 @@ void FSTUFF_AppleMetalRenderer::ViewChanged()
     // can crash, if an attempt to create a zero-sized texture is performed.
     // The view is apt to change size once again, anyways.
     if (viewSize.widthPixels == 0 || viewSize.heightPixels == 0) {
+        FSTUFF_Log("%s, viewSize is empty!\n", __FUNCTION__);
         return;
     }
 
@@ -407,14 +408,28 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
 #endif
 }
 
+- (void)viewWillAppear
+{
+    FSTUFF_Log("FSTUFF_AppleMetalViewController viewWillAppear: frame:{%f,%f,%f,%f}\n",
+        self.view.frame.origin.x,
+        self.view.frame.origin.y,
+        self.view.frame.size.width,
+        self.view.frame.size.height
+    );
+    [super viewWillAppear];
+    
+    // Setup a texture to draw the simulation to
+    renderer->ViewChanged();
+}
+
 - (void)viewDidLoad
 {
-//    FSTUFF_Log("FSTUFF_AppleMetalViewController viewDidLoad, starting: frame:{%f,%f,%f,%f}\n",
-//        self.view.frame.origin.x,
-//        self.view.frame.origin.y,
-//        self.view.frame.size.width,
-//        self.view.frame.size.height
-//    );
+    FSTUFF_Log("FSTUFF_AppleMetalViewController viewDidLoad: frame:{%f,%f,%f,%f}\n",
+        self.view.frame.origin.x,
+        self.view.frame.origin.y,
+        self.view.frame.size.width,
+        self.view.frame.size.height
+    );
     [super viewDidLoad];
     
     //_sim = new FSTUFF_Simulation();
@@ -449,8 +464,8 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
         renderer->nativeView.device = renderer->device;
         self.sim->renderer = renderer;
 
-        // Setup a texture to draw the simulation to
-        renderer->ViewChanged();
+//        // Setup a texture to draw the simulation to
+//        renderer->ViewChanged();
 
         // Describe stuff common to all pipeline states
         MTLRenderPipelineDescriptor *pipelineStateDescriptor = nil;
