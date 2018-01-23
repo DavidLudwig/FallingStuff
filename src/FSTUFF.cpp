@@ -427,6 +427,20 @@ void FSTUFF_Simulation::AddMarble()
 }
 
 
+bool FSTUFF_Simulation::DidInit() const
+{
+    return (this->state != FSTUFF_DEAD);
+}
+
+FSTUFF_Simulation::FSTUFF_Simulation() {
+    FSTUFF_Log("%s, this:%p\n", __FUNCTION__, this);
+}
+
+FSTUFF_Simulation::~FSTUFF_Simulation() {
+    FSTUFF_Log("%s, this:%p, this->state:%d\n", __FUNCTION__, this, this->state);
+}
+
+
 void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
 {
     FSTUFF_Log("%s, this:%p, state:%d, renderer:%p\n",
@@ -444,6 +458,8 @@ void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
     // Preserve various things within 'this'
     auto renderer = this->renderer;
     auto globalScale = this->globalScale;
+    auto showSettings = this->showSettings;
+    auto configurationMode = this->configurationMode;
 
     // Reset all variables in 'this'
     *this = FSTUFF_Simulation();
@@ -452,6 +468,8 @@ void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
     this->state = FSTUFF_ALIVE;
 
     // Restore OS-native resource handles, to 'this'
+    this->configurationMode = configurationMode;
+    this->showSettings = showSettings;
     this->globalScale = globalScale;
     this->renderer = renderer;
 
@@ -480,6 +498,7 @@ void FSTUFF_Simulation::Update()
 
     // Initialize the simulation, if need be.
     if (this->state == FSTUFF_DEAD) {
+        this->renderer->ViewChanged();
         this->Init();
     }
 
@@ -536,7 +555,13 @@ void FSTUFF_Simulation::Update()
     if (this->showSettings) {
 //        ImGui::SetNextWindowSize(ImVec2(450, 200));
 //        ImGui::Begin("Settings", NULL, ImVec2(500, 200));
-        ImGui::Begin("Settings", &this->showSettings, ImGuiWindowFlags_AlwaysAutoResize);
+        bool * closeBoxState = NULL;
+        if (this->configurationMode) {
+            closeBoxState = NULL;   // Don't show the close box, in Screen Saver configuration mode.
+        } else {
+            closeBoxState = &this->showSettings;
+        }
+        ImGui::Begin("Settings", closeBoxState, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::SliderInt("Marbles, Max", &this->marblesMax, 0, 1000);
         if (ImGui::SliderFloat("Spawn Rate (marbles/second)", &this->addNumMarblesPerSecond, 0, 10, "%.3f", 3.0f)) {
             this->addMarblesInS = 1.f / this->addNumMarblesPerSecond;
@@ -546,6 +571,15 @@ void FSTUFF_Simulation::Update()
         ImGui::InvisibleButton("padding2", ImVec2(0, 8));
         if (ImGui::Button("Restart Simulation", ImVec2(400, 32))) {
             this->ResetWorld();
+        }
+        if (this->configurationMode) {
+            ImGui::InvisibleButton("padding1", ImVec2(0, 8));
+            ImGui::Separator();
+            ImGui::InvisibleButton("padding2", ImVec2(0, 8));
+            if (ImGui::Button("OK", ImVec2(400, 32))) {
+//                FSTUFF_Log("%s, doEndConfiguration set to true for sim:%p\n", __PRETTY_FUNCTION__, this);
+                this->doEndConfiguration = true;
+            }
         }
         ImGui::End();
     }
@@ -799,7 +833,9 @@ void FSTUFF_Simulation::EventReceived(FSTUFF_Event *event)
                         this->InitWorld();
                     } break;
                     case 'S': {
-                        this->showSettings = !this->showSettings;
+                        if ( ! this->configurationMode) {
+                            this->showSettings = !this->showSettings;
+                        }
                     } break;
                     default: {
                         unhandled = true;

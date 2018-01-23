@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="13771" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
-        <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13771"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -17,12 +16,12 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <rect key="contentRect" x="335" y="390" width="1024" height="768"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
-            <view key="contentView" id="EiT-Mj-1SZ" customClass="FSTUFF_AppleMetalView">
+            <view key="contentView" id="EiT-Mj-1SZ" customClass="FSTUFF_MetalView">
                 <rect key="frame" x="0.0" y="0.0" width="1024" height="768"/>
                 <autoresizingMask key="autoresizingMask"/>
             </view>
         </window>
-        <viewController id="hW3-AJ-wXb" customClass="FSTUFF_AppleMetalViewController">
+        <viewController id="hW3-AJ-wXb" customClass="FSTUFF_MetalViewController">
             <connections>
                 <outlet property="view" destination="EiT-Mj-1SZ" id="csQ-UI-Tdb"/>
             </connections>

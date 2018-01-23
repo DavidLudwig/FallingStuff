@@ -30,4 +30,9 @@ typedef struct
     FSTUFF_ShapeGPUInfo boxes[FSTUFF_MaxBoxes];
 } FSTUFF_GPUData;
 
+typedef struct {
+    vector_float4 position;
+    vector_float4 color;
+} VertexInfo;
+
 #endif /* FSTUFF_AppleMetalStructs_h */

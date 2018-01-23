@@ -8,6 +8,9 @@
 
 #include "FSTUFF.h"
 #include "FSTUFF_Apple.h"
+
+#define FSTUFF_USE_IMGUI 1
+
 #include "imgui.h"
 #ifdef __OBJC__
 #include "imgui_impl_mtl.h"
@@ -56,6 +59,10 @@ FSTUFF_ViewSize FSTUFF_Apple_GetViewSize(void * _nativeView)
     );
     NSScreen * screen = nativeView.window.screen;
     FSTUFF_Log(@"%s, screen: %@\n", __FUNCTION__, screen);
+    if ( ! screen) {
+        screen = [NSScreen mainScreen];
+        FSTUFF_Log(@"%s, 'screen' hacked to mainScreen: %@\n", __FUNCTION__, screen);
+    }
     NSNumber * displayID = [[screen deviceDescription] objectForKey:@"NSScreenNumber"];
     FSTUFF_Log(@"%s, displayID: %@\n", __FUNCTION__, displayID);
     CGDirectDisplayID cgDisplayID = (CGDirectDisplayID) [displayID intValue];
@@ -141,14 +148,203 @@ void FSTUFF_Log(const char * fmt, ...) {
 #endif
 
 
-@interface FSTUFF_AppleMetalView : MTKView
+@interface FSTUFF_MetalView : MTKView
+@property (weak) FSTUFF_MetalViewController * viewController;
 @end
 
-@implementation FSTUFF_AppleMetalView
+@implementation FSTUFF_MetalView
+
+//- (void)mouseDown:(NSEvent *)nsEvent
+//{
+//    FSTUFF_Log(@"%s, nsEvent:<%@>\n", __PRETTY_FUNCTION__, nsEvent);
+//    [super mouseDown:nsEvent];
+//}
+//
+//- (void)mouseUp:(NSEvent *)nsEvent
+//{
+//    FSTUFF_Log(@"%s, nsEvent:<%@>\n", __PRETTY_FUNCTION__, nsEvent);
+//    [super mouseUp:nsEvent];
+//}
+
+- (void)mouseDown:(NSEvent *)nsEvent
+{
+//    const NSPoint pos = [self.viewController mouseLocationFromEvent:nsEvent];
+//    const FSTUFF_CursorInfo cur = self.viewController.renderer->GetCursorInfo();
+//    FSTUFF_Log("mouse down: event={%f,%f}, get={%f,%f}\n", pos.x, pos.y, cur.xOS, cur.yOS);
+    self.viewController.sim->UpdateCursorInfo(self.viewController.renderer->GetCursorInfo());
+    [super mouseDown:nsEvent];
+}
+
+- (void)mouseUp:(NSEvent *)nsEvent
+{
+//    const NSPoint pos = [self.viewController mouseLocationFromEvent:nsEvent];
+//    FSTUFF_Log("mouse up: {%f, %f}\n", pos.x, pos.y);
+    self.viewController.sim->UpdateCursorInfo(self.viewController.renderer->GetCursorInfo());
+    [super mouseUp:nsEvent];
+}
+
+- (void)mouseMoved:(NSEvent *)nsEvent
+{
+//    const NSPoint pos = [self.viewController mouseLocationFromEvent:nsEvent];
+//    FSTUFF_Log("mouse moved: {%f, %f}\n", pos.x, pos.y);
+    self.viewController.sim->UpdateCursorInfo(self.viewController.renderer->GetCursorInfo());
+    [super mouseMoved:nsEvent];
+}
+
+- (void)mouseDragged:(NSEvent *)nsEvent
+{
+//    const NSPoint pos = [self.viewController mouseLocationFromEvent:nsEvent];
+//    FSTUFF_Log("mouse dragged: {%f, %f}\n", pos.x, pos.y);
+    self.viewController.sim->UpdateCursorInfo(self.viewController.renderer->GetCursorInfo());
+    [super mouseDragged:nsEvent];
+}
+
 - (BOOL) acceptsFirstResponder {
     return YES;
 }
+
+//- (void) drawRect:(NSRect)dirtyRect {
+//    [[NSColor blueColor] set];
+//    NSRectFill(dirtyRect);
+//}
 @end
+
+
+@interface FSTUFF_DebugNSView : NSView
+@end
+
+@implementation FSTUFF_DebugNSView
+- (BOOL) acceptsFirstResponder {
+    return YES;
+}
+
+//- (void) drawRect:(NSRect)dirtyRect {
+//    [[NSColor blueColor] set];
+//    NSRectFill(dirtyRect);
+//}
+@end
+
+
+
+@interface FSTUFF_MetalDebugViewController : NSViewController<MTKViewDelegate>
+{
+    MTKView * _metalView;
+    id<MTLCommandQueue> _commandQueue;
+    id<MTLLibrary> _library;
+    id<MTLBuffer> _vertexBuffer;
+    id<MTLBuffer> _indexBuffer;
+    id<MTLRenderPipelineState> _renderPipelineState;
+    NSUInteger _indexCount;
+}
+//@property (weak, readonly) MTKView * mtkView;
+@property (strong) NSString * label;
+@end
+
+@implementation FSTUFF_MetalDebugViewController
+
+//- (MTKView *) mtkView {
+//    if ([self.view isKindOfClass:[MTKView class]]) {
+//        return (MTKView *) self.view;
+//    }
+//    return nil;
+//}
+
+- (void) loadView {
+
+//    _metalView = [[FSTUFF_MetalView alloc] initWithFrame:NSMakeRect(0, 0, 600, 400)];
+    _metalView = [[FSTUFF_MetalView alloc] initWithFrame:NSMakeRect(0, 0, 600, 400)];
+    self.view = _metalView;
+//    self.view = [[FSTUFF_DebugNSView alloc] initWithFrame:NSMakeRect(0, 0, 600, 400)];
+//    self.view = [[NSView alloc] init];
+
+    FSTUFF_Log(@"%s, label:%@, view:<%@>, view.size:{%.0f,%.0f}, drawableSize:{%.0f,%.0f}\n", __PRETTY_FUNCTION__, self.label, _metalView, _metalView.frame.size.width, _metalView.frame.size.height, _metalView.drawableSize.width, _metalView.drawableSize.height);
+
+}
+
+- (void) viewDidLoad {
+    [super viewDidLoad];
+    
+    FSTUFF_Log(@"%s, label:%@, view:<%@>, view.size:{%.0f,%.0f}, drawableSize:{%.0f,%.0f}\n", __PRETTY_FUNCTION__, self.label, _metalView, _metalView.frame.size.width, _metalView.frame.size.height, _metalView.drawableSize.width, _metalView.drawableSize.height);
+
+    
+    // creating MTLDevice and MTKView
+    id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+    bool metalViewWasCreated = false;
+    if ( ! _metalView) {
+        _metalView = [[FSTUFF_MetalView alloc] initWithFrame:self.view.bounds];
+        metalViewWasCreated = true;
+    }
+    _metalView.device = device;
+    _metalView.delegate = self;
+    _metalView.clearColor = MTLClearColorMake(1, 1, 1, 1);
+    
+    // creating vertex buffer
+    VertexInfo vertexInfo[] = {
+        {{-0.5, -0.5, 0, 1}, {1, 0, 0, 1}},
+        {{0.5, 0.5, 0, 1}, {0, 1, 0, 1}},
+        {{-0.5, 0.5, 0, 1}, {0, 0, 1, 1}},
+        {{0.5, -0.5, 0, 1}, {1, 1, 0, 1}}
+    };
+    _vertexBuffer = [device newBufferWithBytes:vertexInfo length:sizeof(vertexInfo) options:MTLResourceOptionCPUCacheModeDefault];
+    
+    // creating index buffer
+    uint16_t indexInfo[] = {2, 1, 0, 0, 3, 1};
+    _indexCount = sizeof(indexInfo) / sizeof(uint16_t);
+    _indexBuffer = [device newBufferWithBytes:indexInfo length:sizeof(indexInfo) options:MTLResourceOptionCPUCacheModeDefault];
+    
+    // creating command queue and shader functions
+    _commandQueue = [device newCommandQueue];
+    //_library = [device newDefaultLibrary];
+    NSBundle * bundle = [NSBundle bundleForClass:[self class]];
+    NSString * path = [bundle pathForResource:@"default" ofType:@"metallib"];
+    NSError * err = nil;
+    _library = [device newLibraryWithFile:path error:&err];
+    id<MTLFunction> vertexShader = [_library newFunctionWithName:@"vertex_shader"];
+    id<MTLFunction> fragmentShader = [_library newFunctionWithName:@"fragment_shader"];
+    
+    // creating render pipeline
+    MTLRenderPipelineDescriptor *renderPipelineDesc = [MTLRenderPipelineDescriptor new];
+    renderPipelineDesc.vertexFunction = vertexShader;
+    renderPipelineDesc.fragmentFunction = fragmentShader;
+    renderPipelineDesc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+    
+//    NSError *err = nil;
+    _renderPipelineState = [device newRenderPipelineStateWithDescriptor:renderPipelineDesc error:&err];
+    NSAssert(!err, [err description]);
+
+    if (metalViewWasCreated) {
+        [self.view addSubview:_metalView];
+    }
+    
+    FSTUFF_Log(@"%s, DONE, label:%@, view:<%@>, view.size:{%.0f,%.0f}, drawableSize:{%.0f,%.0f}\n", __PRETTY_FUNCTION__, self.label, _metalView, _metalView.frame.size.width, _metalView.frame.size.height, _metalView.drawableSize.width, _metalView.drawableSize.height);
+
+}
+
+- (void)mtkView:(MTKView *)view drawableSizeWillChange:(CGSize)size {
+    FSTUFF_Log(@"%s, label:%@, view:<%@>, size:{%.0f,%.0f}\n", __PRETTY_FUNCTION__, self.label, view, size.width, size.height);
+}
+
+- (void) drawInMTKView:(nonnull MTKView *)view {
+    FSTUFF_Log(@"%s, view:<%@>, view.size:{%.0f,%.0f}, drawableSize:{%.0f,%.0f}\n", __PRETTY_FUNCTION__, view, view.frame.size.width, view.frame.size.height, view.drawableSize.width, view.drawableSize.height);
+
+    // creating command encoder
+    id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
+    id<MTLRenderCommandEncoder> commandEncoder = [commandBuffer renderCommandEncoderWithDescriptor:view.currentRenderPassDescriptor];
+    
+    // encoding commands
+    [commandEncoder setRenderPipelineState:_renderPipelineState];
+    [commandEncoder setVertexBuffer:_vertexBuffer offset:0 atIndex:0];
+    [commandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_indexCount indexType:MTLIndexTypeUInt16 indexBuffer:_indexBuffer indexBufferOffset:0];
+    [commandEncoder setFrontFacingWinding:MTLWindingCounterClockwise];
+    
+    // committing the drawing
+    [commandEncoder endEncoding];
+    [commandBuffer presentDrawable:view.currentDrawable];
+    [commandBuffer commit];
+}
+
+@end
+
 
 
 #pragma mark - Renderer
@@ -341,13 +537,11 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
 #endif
 }
 
-
-
-@interface FSTUFF_AppleMetalViewController()
+@interface FSTUFF_MetalViewController()
 @property (nonatomic, strong) MTKView *theView;
 @end
 
-@implementation FSTUFF_AppleMetalViewController
+@implementation FSTUFF_MetalViewController
 {
     // renderer
     FSTUFF_AppleMetalRenderer * renderer;
@@ -359,6 +553,8 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
     // Cursor tracking area
     NSTrackingArea * area;
 #endif
+
+    FSTUFF_ImGuiMetal fstuff_gui;
 }
 
 - (FSTUFF_Simulation *) sim
@@ -371,24 +567,44 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
     }
 }
 
+- (FSTUFF_AppleMetalRenderer *) renderer
+{
+    @synchronized(self) {
+        return renderer;
+    }
+}
+
 - (void)dealloc
 {
+return;
+    FSTUFF_Log(@"%s, &fstuff_gui:%p\n", __PRETTY_FUNCTION__, &fstuff_gui);
+    fstuff_gui.Shutdown();
+
+    FSTUFF_Log(@"%s, sim:%p\n", __PRETTY_FUNCTION__, sim);
     if (sim) {
         delete sim;
         sim = NULL;
     }
     
+    FSTUFF_Log(@"%s, renderer:%p\n", __PRETTY_FUNCTION__, renderer);
     if (renderer) {
         delete renderer;
         renderer = NULL;
     }
-    
-    ImGui_ImplMtl_Shutdown();
 }
 
 - (void)loadView
 {
-    self.view = [[FSTUFF_AppleMetalView alloc] init];
+    MTKView * _metalView = nil;
+    if (self.initialViewFrame.size.width > 0 && self.initialViewFrame.size.height > 0) {
+        _metalView = [[FSTUFF_MetalView alloc] initWithFrame:self.initialViewFrame];
+    } else {
+        _metalView = [[FSTUFF_MetalView alloc] init];
+    }
+
+    self.view = _metalView;
+    FSTUFF_Log(@"%s, label:%@, view:<%@>, view.size:{%.0f,%.0f}, drawableSize:{%.0f,%.0f}\n", __PRETTY_FUNCTION__, self.label, _metalView, _metalView.frame.size.width, _metalView.frame.size.height, _metalView.drawableSize.width, _metalView.drawableSize.height);
+
 }
 
 - (void)updateTrackingArea
@@ -410,27 +626,26 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
 
 - (void)viewWillAppear
 {
-    FSTUFF_Log("FSTUFF_AppleMetalViewController viewWillAppear: frame:{%f,%f,%f,%f}\n",
-        self.view.frame.origin.x,
-        self.view.frame.origin.y,
-        self.view.frame.size.width,
-        self.view.frame.size.height
-    );
+    MTKView * _metalView = (MTKView *)self.view;
+    self.view = _metalView;
+    FSTUFF_Log(@"%s, view:<%@>, view.size:{%.0f,%.0f}, drawableSize:{%.0f,%.0f}\n", __PRETTY_FUNCTION__, _metalView, _metalView.frame.size.width, _metalView.frame.size.height, _metalView.drawableSize.width, _metalView.drawableSize.height);
     [super viewWillAppear];
     
     // Setup a texture to draw the simulation to
-    renderer->ViewChanged();
+    if (sim->DidInit()) {
+        renderer->ViewChanged();
+    }
 }
 
 - (void)viewDidLoad
 {
-    FSTUFF_Log("FSTUFF_AppleMetalViewController viewDidLoad: frame:{%f,%f,%f,%f}\n",
-        self.view.frame.origin.x,
-        self.view.frame.origin.y,
-        self.view.frame.size.width,
-        self.view.frame.size.height
-    );
+    FSTUFF_MetalView * _metalView = (FSTUFF_MetalView *)self.view;
+    FSTUFF_Log(@"%s, view:<%@>, view.size:{%.0f,%.0f}, drawableSize:{%.0f,%.0f}\n", __PRETTY_FUNCTION__, _metalView, _metalView.frame.size.width, _metalView.frame.size.height, _metalView.drawableSize.width, _metalView.drawableSize.height);
     [super viewDidLoad];
+    
+    if ( ! self.label) {
+        self.label = @"Unlabelled";
+    }
     
     //_sim = new FSTUFF_Simulation();
     renderer = new FSTUFF_AppleMetalRenderer();
@@ -547,7 +762,7 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
             renderer->gpuConstants[i].label = [NSString stringWithFormat:@"FSTUFF_ConstantBuffer%i", i];
         }
         
-        ImGui_ImplMtl_Init(self.sim, true);
+        fstuff_gui.Init(self.sim, true);
 
         
     } else { // Fallback to a blank NSView, an application could also fallback to OpenGL here.
@@ -557,15 +772,56 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
 #endif
     }
 
-
+    _metalView.viewController = self;
     [self updateTrackingArea];
     self.sim->UpdateCursorInfo(renderer->GetCursorInfo());
+    
+    //MTKView * _metalView = (MTKView *) self.view;
+    FSTUFF_Log(@"%s, DONE, view:<%@>, view.size:{%.0f,%.0f}, drawableSize:{%.0f,%.0f}\n", __PRETTY_FUNCTION__, _metalView, _metalView.frame.size.width, _metalView.frame.size.height, _metalView.drawableSize.width, _metalView.drawableSize.height);
+
+}
+
+NSWindow * FSTUFF_CreateConfigureSheet()
+{
+    @autoreleasepool {
+        NSUInteger styleMask = NSWindowStyleMaskBorderless;
+        NSPanel * configSheet = [[NSPanel alloc] initWithContentRect:NSMakeRect(0, 0, 600, 400) styleMask:styleMask backing:NSBackingStoreBuffered defer:YES];
+        [configSheet setBackgroundColor:[NSColor blackColor]];
+
+        FSTUFF_MetalViewController * viewController = [[FSTUFF_MetalViewController alloc] init];
+        viewController.label = @"Configuration Sheet";
+        viewController.initialViewFrame = NSMakeRect(0, 0, 600, 400);
+        viewController.sim->showSettings = true;
+        viewController.sim->configurationMode = true;
+        viewController.sim->SetGlobalScale(cpv(0.5,0.5));
+//            FSTUFF_MetalDebugViewController * viewController = [[FSTUFF_MetalDebugViewController alloc] init];
+        configSheet.contentViewController = viewController;
+        MTKView * view = (MTKView *) viewController.view;
+        if ([view isKindOfClass:[MTKView class]]) {
+            view.autoResizeDrawable = YES;
+        }
+        return configSheet;
+    }
 }
 
 #if ! TARGET_OS_IOS
 - (void)keyDown:(NSEvent *)theEvent
 {
     FSTUFF_Event event = FSTUFF_Event::NewKeyEvent(FSTUFF_EventKeyDown, [theEvent.characters cStringUsingEncoding:NSUTF8StringEncoding]);
+    
+    if (std::toupper([theEvent.characters cStringUsingEncoding:NSUTF8StringEncoding][0]) == 'C') {
+        NSWindow * window = FSTUFF_CreateConfigureSheet();
+#if 0
+        [window makeKeyAndOrderFront:window];
+#else
+        [self.renderer->nativeView.window beginSheet:window completionHandler:^(NSModalResponse returnCode)
+        {
+            FSTUFF_Log(@"sheet completion handler reached, returnCode=%ld\n", (long)returnCode);
+        }];
+        event.handled = true;
+#endif
+    }
+    
     self.sim->EventReceived(&event);
     if ( ! event.handled) {
         [super keyDown:theEvent];
@@ -580,7 +836,6 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
         [super keyUp:theEvent];
     }
 }
-
 
 - (NSPoint)mouseLocationFromEvent:(NSEvent *)nsEvent
 {
@@ -599,12 +854,6 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
 //    const NSPoint pos = [self mouseLocationFromEvent:nsEvent];
 //    const FSTUFF_CursorInfo cur = renderer->GetCursorInfo();
 //    FSTUFF_Log("mouse down: event={%f,%f}, get={%f,%f}\n", pos.x, pos.y, cur.xOS, cur.yOS);
-//    FSTUFF_Event event = FSTUFF_Event::NewCursorButtonEvent(pos.x, pos.y, true);
-//    self.sim->EventReceived(&event);
-//    if ( ! event.handled) {
-//        [super mouseDown:nsEvent];
-//    }
-
     sim->UpdateCursorInfo(renderer->GetCursorInfo());
     [super mouseDown:nsEvent];
 }
@@ -612,13 +861,7 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
 - (void)mouseUp:(NSEvent *)nsEvent
 {
 //    const NSPoint pos = [self mouseLocationFromEvent:nsEvent];
-////    FSTUFF_Log("mouse up: {%f, %f}\n", pos.x, pos.y);
-//    FSTUFF_Event event = FSTUFF_Event::NewCursorButtonEvent(pos.x, pos.y, false);
-//    self.sim->EventReceived(&event);
-//    if ( ! event.handled) {
-//        [super mouseUp:nsEvent];
-//    }
-
+//    FSTUFF_Log("mouse up: {%f, %f}\n", pos.x, pos.y);
     sim->UpdateCursorInfo(renderer->GetCursorInfo());
     [super mouseUp:nsEvent];
 }
@@ -626,13 +869,7 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
 - (void)mouseMoved:(NSEvent *)nsEvent
 {
 //    const NSPoint pos = [self mouseLocationFromEvent:nsEvent];
-////    FSTUFF_Log("mouse moved: {%f, %f}\n", pos.x, pos.y);
-//    FSTUFF_Event event = FSTUFF_Event::NewCursorMotionEvent(pos.x, pos.y);
-//    self.sim->EventReceived(&event);
-//    if ( ! event.handled) {
-//        [super mouseMoved:nsEvent];
-//    }
-
+//    FSTUFF_Log("mouse moved: {%f, %f}\n", pos.x, pos.y);
     sim->UpdateCursorInfo(renderer->GetCursorInfo());
     [super mouseMoved:nsEvent];
 }
@@ -640,13 +877,7 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
 - (void)mouseDragged:(NSEvent *)nsEvent
 {
 //    const NSPoint pos = [self mouseLocationFromEvent:nsEvent];
-////    FSTUFF_Log("mouse dragged: {%f, %f}\n", pos.x, pos.y);
-//    FSTUFF_Event event = FSTUFF_Event::NewCursorMotionEvent(pos.x, pos.y);
-//    self.sim->EventReceived(&event);
-//    if ( ! event.handled) {
-//        [super mouseDragged:nsEvent];
-//    }
-
+//    FSTUFF_Log("mouse dragged: {%f, %f}\n", pos.x, pos.y);
     sim->UpdateCursorInfo(renderer->GetCursorInfo());
     [super mouseDragged:nsEvent];
 }
@@ -683,11 +914,15 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
 // Called whenever view changes orientation or layout is changed
 - (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
 {
-    renderer->nativeView = (MTKView *) self.view;
-    renderer->ViewChanged();
-    [self updateTrackingArea];
-    const FSTUFF_ViewSize viewSize = renderer->GetViewSize();
-    self.sim->ViewChanged(viewSize);
+    @autoreleasepool {
+        if (sim->DidInit()) {
+            renderer->nativeView = (MTKView *) self.view;
+            renderer->ViewChanged();
+            [self updateTrackingArea];
+            const FSTUFF_ViewSize viewSize = renderer->GetViewSize();
+            self.sim->ViewChanged(viewSize);
+        }
+    }
 }
 
 // Called whenever the view needs to render
@@ -697,7 +932,9 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
         dispatch_semaphore_wait(renderer->_inflight_semaphore, DISPATCH_TIME_FOREVER);
 
         // Tell ImGUI that a new frame is starting.
-        ImGui_ImplMtl_NewFrame(self.sim->viewSize);
+#if FSTUFF_USE_IMGUI
+        fstuff_gui.NewFrame(self.sim->viewSize);
+#endif
 
         // Update FSTUFF state
         renderer->appData = (FSTUFF_GPUData *) [renderer->gpuConstants[renderer->constantDataBufferIndex] contents];
@@ -705,10 +942,12 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
 
         // Start drawing previously-requested ImGUI content, to an
         // offscreen texture.
+#if FSTUFF_USE_IMGUI
         ImGui::Render();    // renders to a texture that's retrieve-able via ImGui_ImplMtl_MainTexture()
-        
+
         // Finish-up the rendering of ImGUI content.
-        ImGui_ImplMtl_EndFrame();
+        fstuff_gui.EndFrame();
+#endif
 
         // Create a new command buffer for each renderpass to the current drawable
         id <MTLCommandBuffer> commandBuffer = [renderer->commandQueue commandBuffer];
@@ -727,7 +966,7 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
 
             // Create a render pass, for the simulation
             MTLRenderPassDescriptor *simRenderPass = [MTLRenderPassDescriptor renderPassDescriptor];
-        //    renderPassDescriptor.colorAttachments[0].texture = [(id<CAMetalDrawable>)g_MtlCurrentDrawable texture];
+        //    renderPassDescriptor.colorAttachments[0].texture = [(id<CAMetalDrawable>)mtlCurrentDrawable texture];
             simRenderPass.colorAttachments[0].texture = renderer->simTexture;
             simRenderPass.colorAttachments[0].loadAction = MTLLoadActionClear;
             simRenderPass.colorAttachments[0].storeAction = MTLStoreActionStore;
@@ -757,7 +996,7 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
                                               atIndex:AAPLVertexInputIndexVertices];
             [mainRenderCommandEncoder setFragmentTexture:renderer->simTexture
                                                  atIndex:AAPLTextureIndexBaseColor];
-            [mainRenderCommandEncoder setFragmentTexture:ImGui_ImplMtl_MainTexture()
+            [mainRenderCommandEncoder setFragmentTexture:fstuff_gui.MainTexture()
                                                  atIndex:AAPLTextureIndexOverlayColor];
             [mainRenderCommandEncoder drawPrimitives:MTLPrimitiveTypeTriangle
                                          vertexStart:0
@@ -774,6 +1013,12 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
 
         // Finalize rendering here & push the command buffer to the GPU
         [commandBuffer commit];
+        
+        // Close configuration sheets, as necessary
+        if (sim->doEndConfiguration) {
+//            FSTUFF_Log(@"%s, doEndConfiguration was true in sim:%p, self:%p, self.view.window:%@\n", __PRETTY_FUNCTION__, sim, self, self.view.window);
+            [self.view.window.sheetParent endSheet:self.view.window];
+        }
     }
 }
 

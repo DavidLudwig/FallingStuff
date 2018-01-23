@@ -179,6 +179,8 @@ struct FSTUFF_Simulation {
     std::bitset<128> keysPressed;  // key-press state: 0|false for up, 1|true for pressed-down; indexed by 7-bit ASCII codes
     bool showGUIDemo = false;
     bool showSettings = false;
+    bool configurationMode = false;
+    bool doEndConfiguration = false;
 
     //
     // Physics
@@ -208,12 +210,15 @@ struct FSTUFF_Simulation {
         cpBody bodies[FSTUFF_MaxShapes] = {0};
     } world;
     
+    FSTUFF_Simulation();
+    ~FSTUFF_Simulation();
     void    AddMarble();
     void    EventReceived(FSTUFF_Event * event);
     void    Render();
     void    Update();
     void    ViewChanged(const FSTUFF_ViewSize & viewSize);
     void    Init();
+    bool    DidInit() const;
     void    ResetWorld();
     cpVect  globalScale = {1., 1.};
     void    SetGlobalScale(cpVect scale);

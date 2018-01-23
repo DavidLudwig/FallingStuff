@@ -42,7 +42,9 @@ extern void FSTUFF_Log(NSString * fmt, ...);
     self = [super initWithFrame:frame isPreview:isPreview];
     if (self) {
         [self setAnimationTimeInterval:1/30.0];
-        self.viewController = [[FSTUFF_AppleMetalViewController alloc] init];
+        FSTUFF_MetalViewController * viewController = [[FSTUFF_MetalViewController alloc] init];
+        viewController.label = @"Screen Saver Main Display";
+        self.viewController = viewController;
         NSView * view = self.viewController.view;
         FSTUFF_Log("%s, sim:%p\n", __FUNCTION__, self.viewController.sim);
         view.frame = CGRectMake(0, 0, self.frame.size.width, self.frame.size.height);
@@ -60,6 +62,13 @@ extern void FSTUFF_Log(NSString * fmt, ...);
     [super startAnimation];
 //    FSTUFF_Init(self.viewController.sim);
 //    self.viewController.sim->Init();
+}
+
+- (void)animateOneFrame {
+    [super animateOneFrame];
+//    if (self.viewController.sim->doEndConfiguration) {
+//        [self.window.sheetParent endSheet:self.window];
+//    }
 }
 
 - (void)stopAnimation
@@ -88,19 +97,22 @@ extern void FSTUFF_Log(NSString * fmt, ...);
     [path fill];
 }
 
-- (void)animateOneFrame
-{
-    return;
-}
+//- (void)animateOneFrame
+//{
+//    return;
+//}
 
 - (BOOL)hasConfigureSheet
 {
-    return NO;
+    return YES;
 }
 
 - (NSWindow*)configureSheet
 {
-    return nil;
+    extern NSWindow * FSTUFF_CreateConfigureSheet();
+    NSWindow * window = FSTUFF_CreateConfigureSheet();
+    //[window retain];
+    return window;
 }
 
 @end

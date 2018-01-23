@@ -18,10 +18,6 @@ typedef UIViewController AppleViewController;
 typedef NSViewController AppleViewController;
 #endif
 
-@interface FSTUFF_AppleMetalViewController : AppleViewController<MTKViewDelegate>
-@property (readonly) FSTUFF_Simulation * sim;
-@end
-
 FSTUFF_ViewSize FSTUFF_Apple_GetViewSize(void * nativeView);
 void    FSTUFF_Apple_CopyMatrix(matrix_float4x4 & dest, const gbMat4 & src);
 void    FSTUFF_Apple_CopyMatrix(gbMat4 & dest, const matrix_float4x4 & src);
@@ -76,6 +72,15 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
     void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) override;
     FSTUFF_CursorInfo GetCursorInfo() override;
 };
+
+
+@interface FSTUFF_MetalViewController : AppleViewController<MTKViewDelegate>
+@property (readonly) FSTUFF_Simulation * sim;
+@property (readonly) FSTUFF_AppleMetalRenderer * renderer;
+@property (assign) NSRect initialViewFrame;
+@property (strong) NSString * label;
+- (NSPoint)mouseLocationFromEvent:(NSEvent *)nsEvent;
+@end
 
 
 #endif
