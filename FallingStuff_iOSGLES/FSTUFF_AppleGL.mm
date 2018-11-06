@@ -56,6 +56,10 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
         // All done!
         return (void *)(uintptr_t)newBuffer;
     }
+    
+    void    ViewChanged() override {
+        FSTUFF_Log("IMPLEMENT ME: %s\n", __PRETTY_FUNCTION__);
+    }
 
     FSTUFF_ViewSize GetViewSize() override {
         return FSTUFF_Apple_GetViewSize(NULL);
@@ -79,6 +83,11 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
                 FSTUFF_Apple_CopyVector(this->appData->boxes[i].color, color);
             } break;
         }
+    }
+    
+    FSTUFF_CursorInfo GetCursorInfo() override {
+        FSTUFF_Log("IMPLEMENT ME: %s\n", __PRETTY_FUNCTION__);
+        return FSTUFF_CursorInfo();
     }
 };
 

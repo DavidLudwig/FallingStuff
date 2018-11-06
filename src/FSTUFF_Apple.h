@@ -24,7 +24,10 @@ void    FSTUFF_Apple_CopyMatrix(gbMat4 & dest, const matrix_float4x4 & src);
 void    FSTUFF_Apple_CopyVector(vector_float4 & dest, const gbVec4 & src);
 void    FSTUFF_Apple_CopyVector(gbMat4 & dest, const vector_float4 & src);
 void    FSTUFF_Log(NSString * fmt, ...) __attribute__((format(NSString, 1, 2)));
+
+#if TARGET_OS_OSX
 NSWindow * FSTUFF_CreateConfigureSheet();
+#endif
 
 #endif  // __OBJC__
 #endif  // FSTUFF_Apple_h

@@ -19,6 +19,14 @@ extern "C" {
 #include "gb_math.h"            // Vector and Matrix math
 #include "imgui.h"
 
+#ifndef FSTUFF_USE_METAL
+    #if __APPLE__
+        #define FSTUFF_USE_METAL 1
+    #else
+        #define FSTUFF_USE_METAL 0
+    #endif
+#endif
+
 #include "FSTUFF_Constants.h"   // Miscellaneous constants
 
 void FSTUFF_Log(const char * fmt, ...) __attribute__((format(printf, 1, 2)));

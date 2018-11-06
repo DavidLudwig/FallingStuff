@@ -6,6 +6,9 @@
 // If you are new to ImGui, see examples/README.txt and documentation at the top of imgui.cpp.
 // https://github.com/ocornut/imgui
 
+#include "FSTUFF.h"
+#if FSTUFF_USE_METAL
+
 #include "FSTUFF_AppleMetal.h"
 
 struct GLFWwindow;
@@ -64,3 +67,5 @@ struct FSTUFF_ImGuiMetal {
     
     ImGuiIO & GetIO();
 };
+
+#endif  // FSTUFF_USE_METAL

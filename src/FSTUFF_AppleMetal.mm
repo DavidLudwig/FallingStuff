@@ -6,14 +6,16 @@
 //  Copyright © 2018 David Ludwig. All rights reserved.
 //
 
-#include "FSTUFF_AppleMetal.h"
 #include "FSTUFF.h"
+#if FSTUFF_USE_METAL
+
+#include "FSTUFF_AppleMetal.h"
 #include "FSTUFF_Apple.h"
+
 
 #define FSTUFF_USE_IMGUI 1
 
 #include "imgui.h"
-#ifdef __OBJC__
 #include "imgui_impl_mtl.h"
 
 #include "AAPLShaderTypes.h"
@@ -23,7 +25,7 @@
 #if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
 #import <GBDeviceInfo/GBDeviceInfo.h>
-#elif TARGET_OS_MAC
+#elif TARGET_OS_OSX
 #import <AppKit/AppKit.h>
 #endif
 
@@ -868,6 +870,4 @@ return;
 
 @end
 
-
-#endif
-
+#endif  // FSTUFF_USE_METAL

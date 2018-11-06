@@ -22,7 +22,7 @@
 #if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
 #import <GBDeviceInfo/GBDeviceInfo.h>
-#elif TARGET_OS_MAC
+#elif TARGET_OS_OSX
 #import <AppKit/AppKit.h>
 #endif
 
@@ -163,6 +163,7 @@ void FSTUFF_Apple_CopyVector(gbMat4 & dest, const vector_float4 & src)
     memcpy((void *)&(dest.e), (const void *)&(src), sizeof(float) * 4);
 }
 
+#if TARGET_OS_OSX
 NSWindow * FSTUFF_CreateConfigureSheet()
 {
     @autoreleasepool {
@@ -185,6 +186,7 @@ NSWindow * FSTUFF_CreateConfigureSheet()
         return configSheet;
     }
 }
+#endif
 
 void FSTUFF_Log(NSString * fmt, ...) {
     va_list args;

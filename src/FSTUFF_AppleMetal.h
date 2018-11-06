@@ -2,12 +2,12 @@
 #ifndef FSTUFF_AppleMetal_h
 #define FSTUFF_AppleMetal_h
 
-#ifdef __OBJC__
+#include "FSTUFF.h"
+#if FSTUFF_USE_METAL
 
 #import <Foundation/Foundation.h>
 #import <MetalKit/MetalKit.h>
 #include <simd/simd.h>
-#include "FSTUFF.h"
 #include "FSTUFF_Apple.h"
 #include "FSTUFF_AppleMetalStructs.h"
 
@@ -69,6 +69,6 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
 @end
 
 
-#endif  // __OBJC__
+#endif  // FSTUFF_USE_METAL
 #endif  // FSTUFF_AppleMetal_h
 
