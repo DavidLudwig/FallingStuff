@@ -99,6 +99,11 @@
 		759DFD3C1FF5997C00F1B2D8 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 759DFD3B1FF5997C00F1B2D8 /* AppKit.framework */; };
 		759DFD3E1FF5998800F1B2D8 /* ScreenSaver.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 759DFD3D1FF5998800F1B2D8 /* ScreenSaver.framework */; };
 		759DFD401FF96CCE00F1B2D8 /* FSTUFF_AppleMetalShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 75036FC81CD540F10017DC04 /* FSTUFF_AppleMetalShaders.metal */; };
+		759E7D4C2191FEE400B679E4 /* FSTUFF_AppleMetal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 759E7D4A2191FEE400B679E4 /* FSTUFF_AppleMetal.mm */; };
+		759E7D4D2191FEE400B679E4 /* FSTUFF_AppleMetal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 759E7D4A2191FEE400B679E4 /* FSTUFF_AppleMetal.mm */; };
+		759E7D4E2191FEE400B679E4 /* FSTUFF_AppleMetal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 759E7D4A2191FEE400B679E4 /* FSTUFF_AppleMetal.mm */; };
+		759E7D4F2191FEE400B679E4 /* FSTUFF_AppleMetal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 759E7D4A2191FEE400B679E4 /* FSTUFF_AppleMetal.mm */; };
+		759E7D502191FEE400B679E4 /* FSTUFF_AppleMetal.h in Headers */ = {isa = PBXBuildFile; fileRef = 759E7D4B2191FEE400B679E4 /* FSTUFF_AppleMetal.h */; };
 		75ADD5FF1D035AB10042FC3A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 75ADD5FE1D035AB10042FC3A /* main.m */; };
 		75ADD6021D035AB10042FC3A /* FSTUFF_MacAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 75ADD6011D035AB10042FC3A /* FSTUFF_MacAppDelegate.m */; };
 		75ADD6091D035AB10042FC3A /* FSTUFF_AppleGL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75ADD6081D035AB10042FC3A /* FSTUFF_AppleGL.mm */; };
@@ -192,7 +197,6 @@
 		75EE9FBE20144251004C065B /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA7201121BE00FF086C /* imgui_draw.cpp */; };
 		75EE9FBF20144251004C065B /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA7201121BE00FF086C /* imgui_draw.cpp */; };
 		75EE9FC020144258004C065B /* imgui_impl_mtl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */; };
-		75EE9FC120144258004C065B /* imgui_impl_mtl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */; };
 		75EE9FC220144259004C065B /* imgui_impl_mtl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */; };
 /* End PBXBuildFile section */
 
@@ -338,6 +342,8 @@
 		759DFD3B1FF5997C00F1B2D8 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		759DFD3D1FF5998800F1B2D8 /* ScreenSaver.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScreenSaver.framework; path = System/Library/Frameworks/ScreenSaver.framework; sourceTree = SDKROOT; };
 		759DFD48200424EA00F1B2D8 /* gb_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gb_math.h; sourceTree = "<group>"; };
+		759E7D4A2191FEE400B679E4 /* FSTUFF_AppleMetal.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FSTUFF_AppleMetal.mm; sourceTree = "<group>"; };
+		759E7D4B2191FEE400B679E4 /* FSTUFF_AppleMetal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FSTUFF_AppleMetal.h; sourceTree = "<group>"; };
 		75ADD5FB1D035AB10042FC3A /* FallingStuff_iOSGLES.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FallingStuff_iOSGLES.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		75ADD5FE1D035AB10042FC3A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		75ADD6001D035AB10042FC3A /* FSTUFF_MacAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FSTUFF_MacAppDelegate.h; sourceTree = "<group>"; };
@@ -429,6 +435,8 @@
 		75036FBE1CD540F10017DC04 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				759E7D4B2191FEE400B679E4 /* FSTUFF_AppleMetal.h */,
+				759E7D4A2191FEE400B679E4 /* FSTUFF_AppleMetal.mm */,
 				7568CBB42012547500FF086C /* AAPLShaderTypes.h */,
 				7568CBB2201122E200FF086C /* imgui_impl_mtl.h */,
 				7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */,
@@ -689,6 +697,7 @@
 				7568CB04200FD06200FF086C /* FSTUFF_Constants.h in Headers */,
 				759DFD061FF58EEC00F1B2D8 /* FallingStuff_OSXScreenSaverView.h in Headers */,
 				7568CB06200FD88A00FF086C /* FSTUFF_Apple.h in Headers */,
+				759E7D502191FEE400B679E4 /* FSTUFF_AppleMetal.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -895,6 +904,7 @@
 				755856331CDFC96F00FC8EA4 /* cpSpaceStep.c in Sources */,
 				755856281CDFC96F00FC8EA4 /* cpRatchetJoint.c in Sources */,
 				75036FC41CD540F10017DC04 /* FSTUFF_MacMain.m in Sources */,
+				759E7D4C2191FEE400B679E4 /* FSTUFF_AppleMetal.mm in Sources */,
 				755856291CDFC96F00FC8EA4 /* cpRobust.c in Sources */,
 				7558561A1CDFC96F00FC8EA4 /* cpBody.c in Sources */,
 				7558561F1CDFC96F00FC8EA4 /* cpGearJoint.c in Sources */,
@@ -933,6 +943,7 @@
 				759DFD121FF5987A00F1B2D8 /* chipmunk.c in Sources */,
 				759DFD131FF5987A00F1B2D8 /* cpArbiter.c in Sources */,
 				759DFD141FF5987A00F1B2D8 /* cpArray.c in Sources */,
+				759E7D4F2191FEE400B679E4 /* FSTUFF_AppleMetal.mm in Sources */,
 				759DFD151FF5987A00F1B2D8 /* cpBBTree.c in Sources */,
 				759DFD161FF5987A00F1B2D8 /* cpBody.c in Sources */,
 				759DFD171FF5987A00F1B2D8 /* cpCollision.c in Sources */,
@@ -990,6 +1001,7 @@
 				75ADD63E1D035EB20042FC3A /* FSTUFF_Apple.mm in Sources */,
 				75EE9FB820144246004C065B /* imgui.cpp in Sources */,
 				75ADD6231D035B600042FC3A /* cpHashSet.c in Sources */,
+				759E7D4E2191FEE400B679E4 /* FSTUFF_AppleMetal.mm in Sources */,
 				75ADD6241D035B600042FC3A /* cpHastySpace.c in Sources */,
 				75ADD6251D035B600042FC3A /* cpMarch.c in Sources */,
 				75ADD6261D035B600042FC3A /* cpPinJoint.c in Sources */,
@@ -1005,7 +1017,6 @@
 				75ADD62F1D035B600042FC3A /* cpSlideJoint.c in Sources */,
 				75ADD6301D035B600042FC3A /* cpSpace.c in Sources */,
 				75ADD6311D035B600042FC3A /* cpSpaceComponent.c in Sources */,
-				75EE9FC120144258004C065B /* imgui_impl_mtl.mm in Sources */,
 				75ADD6321D035B600042FC3A /* cpSpaceDebug.c in Sources */,
 				75ADD6331D035B600042FC3A /* cpSpaceHash.c in Sources */,
 				75ADD6341D035B600042FC3A /* cpSpaceQuery.c in Sources */,
@@ -1027,6 +1038,7 @@
 				75DE2F4B1CFCCE710052F8C1 /* cpArbiter.c in Sources */,
 				75DE2F4C1CFCCE710052F8C1 /* cpArray.c in Sources */,
 				75DE2F4D1CFCCE710052F8C1 /* cpBBTree.c in Sources */,
+				759E7D4D2191FEE400B679E4 /* FSTUFF_AppleMetal.mm in Sources */,
 				75DE2F4E1CFCCE710052F8C1 /* cpBody.c in Sources */,
 				75DE2F4F1CFCCE710052F8C1 /* cpCollision.c in Sources */,
 				75DE2F501CFCCE710052F8C1 /* cpConstraint.c in Sources */,
