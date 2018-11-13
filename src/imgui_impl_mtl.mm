@@ -547,7 +547,7 @@ void FSTUFF_ImGuiMetal::NewFrame(const FSTUFF_ViewSize & viewSize) // int widthP
 //    this->mtlCurrentDrawable = [this->mtlLayer nextDrawable];
 
     // Setup time step
-    double current_time = this->sim->elapsedTimeS; // glfwGetTime();
+    double current_time = this->timeElapsedS; // glfwGetTime();
     io.DeltaTime = this->timeElapsedS > 0.0 ? (float)(current_time - this->timeElapsedS) : (float)(1.0f/60.0f);
     this->timeElapsedS = current_time;
     //FSTUFF_Log("io.DeltaTime: %f\n", io.DeltaTime);

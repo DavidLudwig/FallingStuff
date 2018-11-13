@@ -215,15 +215,15 @@ const cpFloat kStepTimeS = 1./60.;          // step time, in seconds
 
 
 
-#define SPACE           (this->world.physicsSpace)
+#define SPACE           (this->physicsSpace)
 
 //#define BODY(IDX)       (&this->world.bodies[(IDX)])
 //#define CIRCLE(IDX)     (&(this->world.circles[(IDX)]))
 //#define BOX(IDX)        (&(this->world.boxes[(IDX)]))
 
-//#define BODY_ALLOC()    (BODY(this->world.numBodies++))
-//#define CIRCLE_ALLOC()  (CIRCLE(this->world.numCircles++))
-//#define BOX_ALLOC()     (BOX(this->world.numBoxes++))
+//#define BODY_ALLOC()    (BODY(this->game.numBodies++))
+//#define CIRCLE_ALLOC()  (CIRCLE(this->game.numCircles++))
+//#define BOX_ALLOC()     (BOX(this->game.numBoxes++))
 //
 //#define CIRCLE_IDX(VAL) ((((uintptr_t)(VAL)) - ((uintptr_t)(&this->world.circles[0]))) / sizeof(sim->world.circles[0]))
 //#define BOX_IDX(VAL)    ((((uintptr_t)(VAL)) - ((uintptr_t)(&this->world.boxes[0]))) / sizeof(sim->world.boxes[0]))
@@ -295,13 +295,15 @@ void FSTUFF_Simulation::InitWorld()
     //
     // Physics-world init
     //
-    memset(&this->world, 0, sizeof(FSTUFF_Simulation::World));
-    //sim->world.physicsSpace = (cpSpace *) &(sim->world._physicsSpaceStorage);
-    //cpSpaceInit(sim->world.physicsSpace);
-    this->world.physicsSpace = cpSpaceNew();
+    memset(&circles, 0, sizeof(circles));
+    memset(&circleColors, 0, sizeof(circleColors));
+    memset(&boxes, 0, sizeof(boxes));
+    memset(&boxColors, 0, sizeof(boxColors));
+    memset(&bodies, 0, sizeof(bodies));
+    this->physicsSpace = cpSpaceNew();
     
-    cpSpaceSetIterations(this->world.physicsSpace, 2);
-    cpSpaceSetGravity(this->world.physicsSpace, this->gravity);
+    cpSpaceSetIterations(this->physicsSpace, 2);
+    cpSpaceSetGravity(this->physicsSpace, this->game.gravity);
     // TODO: try resizing cpSpace hashes
     //cpSpaceUseSpatialHash(this->world.physicsSpace, 2, 10);
 
@@ -328,19 +330,19 @@ void FSTUFF_Simulation::InitWorld()
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
-    this->world.boxColors[IndexOfBox(shape)] = FSTUFF_Color(0x000000, 0x00);
+    this->boxColors[IndexOfBox(shape)] = FSTUFF_Color(0x000000, 0x00);
     // Left
     shape = (cpShape*)cpSegmentShapeInit(NewBox(), body, cpv(wallLeft,wallBottom), cpv(wallLeft,wallTop), wallThickness/2.);
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
-    this->world.boxColors[IndexOfBox(shape)] = FSTUFF_Color(0x000000, 0x00);
+    this->boxColors[IndexOfBox(shape)] = FSTUFF_Color(0x000000, 0x00);
     // Right
     shape = (cpShape*)cpSegmentShapeInit(NewBox(), body, cpv(wallRight,wallBottom), cpv(wallRight,wallTop), wallThickness/2.);
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
-    this->world.boxColors[IndexOfBox(shape)] = FSTUFF_Color(0x000000, 0x00);
+    this->boxColors[IndexOfBox(shape)] = FSTUFF_Color(0x000000, 0x00);
 
 
     //
@@ -366,31 +368,31 @@ void FSTUFF_Simulation::InitWorld()
         switch (rand() % 2) {
             case 0:
             {
-                cx = FSTUFF_RandRangeF(this->rng, 0., this->GetWorldWidth());
-                cy = FSTUFF_RandRangeF(this->rng, 0., this->GetWorldHeight());
-                radius = kPegScaleCircle * FSTUFF_RandRangeF(this->rng, 6., 10.);
-                pegColorIndex = FSTUFF_RandRangeI(this->rng, 0, FSTUFF_countof(pegColors)-1);
+                cx = FSTUFF_RandRangeF(this->game.rng, 0., this->GetWorldWidth());
+                cy = FSTUFF_RandRangeF(this->game.rng, 0., this->GetWorldHeight());
+                radius = kPegScaleCircle * FSTUFF_RandRangeF(this->game.rng, 6., 10.);
+                pegColorIndex = FSTUFF_RandRangeI(this->game.rng, 0, FSTUFF_countof(pegColors)-1);
 
                 body = cpBodyInit(NewBody(), 0, 0);
                 cpBodySetType(body, CP_BODY_TYPE_STATIC);
                 cpSpaceAddBody(SPACE, body);
                 cpBodySetPosition(body, cpv(cx, cy));
                 shape = (cpShape*)cpCircleShapeInit(NewCircle(), body, radius, cpvzero);
-                ++this->world.numPegs;
+                ++this->game.numPegs;
                 cpSpaceAddShape(SPACE, shape);
                 cpShapeSetElasticity(shape, 0.8);
                 cpShapeSetFriction(shape, 1);
-                this->world.circleColors[IndexOfCircle(shape)] = FSTUFF_Color(pegColors[pegColorIndex]);
+                this->circleColors[IndexOfCircle(shape)] = FSTUFF_Color(pegColors[pegColorIndex]);
             } break;
             
             case 1:
             {
-                cx = FSTUFF_RandRangeF(this->rng, 0., this->GetWorldWidth());
-                cy = FSTUFF_RandRangeF(this->rng, 0., this->GetWorldHeight());
-                w = kPegScaleBox * FSTUFF_RandRangeF(this->rng, 6., 14.);
-                h = kPegScaleBox * FSTUFF_RandRangeF(this->rng, 1., 2.);
-                angleRad = FSTUFF_RandRangeF(this->rng, 0., M_PI);
-                pegColorIndex = FSTUFF_RandRangeI(this->rng, 0, FSTUFF_countof(pegColors)-1);
+                cx = FSTUFF_RandRangeF(this->game.rng, 0., this->GetWorldWidth());
+                cy = FSTUFF_RandRangeF(this->game.rng, 0., this->GetWorldHeight());
+                w = kPegScaleBox * FSTUFF_RandRangeF(this->game.rng, 6., 14.);
+                h = kPegScaleBox * FSTUFF_RandRangeF(this->game.rng, 1., 2.);
+                angleRad = FSTUFF_RandRangeF(this->game.rng, 0., M_PI);
+                pegColorIndex = FSTUFF_RandRangeI(this->game.rng, 0, FSTUFF_countof(pegColors)-1);
             
                 body = cpBodyInit(NewBody(), 0, 0);
                 cpBodySetType(body, CP_BODY_TYPE_STATIC);
@@ -400,7 +402,7 @@ void FSTUFF_Simulation::InitWorld()
                 shape = (cpShape*)cpSegmentShapeInit(NewBox(), body, cpv(-w/2.,0.), cpv(w/2.,0.), h/2.);
                 cpSpaceAddShape(SPACE, shape);
                 cpShapeSetElasticity(shape, 0.8);
-                this->world.boxColors[IndexOfBox(shape)] = FSTUFF_Color(pegColors[pegColorIndex]);
+                this->boxColors[IndexOfBox(shape)] = FSTUFF_Color(pegColors[pegColorIndex]);
             } break;
         }
     }
@@ -415,15 +417,15 @@ void FSTUFF_Simulation::AddMarble()
     FSTUFF_Simulation * sim = this;
     cpBody * body = cpBodyInit(NewBody(), 0, 0);
     cpSpaceAddBody(SPACE, body);
-    const cpFloat marbleRadius = FSTUFF_RandRangeF(sim->rng, sim->marbleRadius_Range[0], sim->marbleRadius_Range[1]);
-    cpBodySetPosition(body, cpv(FSTUFF_RandRangeF(sim->rng, marbleRadius, sim->GetWorldWidth() - marbleRadius), sim->GetWorldHeight() * 1.1));
+    const cpFloat marbleRadius = FSTUFF_RandRangeF(sim->game.rng, sim->game.marbleRadius_Range[0], sim->game.marbleRadius_Range[1]);
+    cpBodySetPosition(body, cpv(FSTUFF_RandRangeF(sim->game.rng, marbleRadius, sim->GetWorldWidth() - marbleRadius), sim->GetWorldHeight() * 1.1));
     cpShape * shape = (cpShape*)cpCircleShapeInit(NewCircle(), body, marbleRadius, cpvzero);
-    cpSpaceAddShape(sim->world.physicsSpace, shape);
+    cpSpaceAddShape(sim->physicsSpace, shape);
     cpShapeSetDensity(shape, 10);
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
-    sim->world.circleColors[IndexOfCircle(shape)] = FSTUFF_Color(FSTUFF_Colors::White);
-    sim->marblesCount += 1;
+    sim->circleColors[IndexOfCircle(shape)] = FSTUFF_Color(FSTUFF_Colors::White);
+    sim->game.marblesCount += 1;
 }
 
 
@@ -455,23 +457,11 @@ void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
         return;
     }
 
-    // Preserve various things within 'this'
-    auto renderer = this->renderer;
-    auto globalScale = this->globalScale;
-    auto showSettings = this->showSettings;
-    auto configurationMode = this->configurationMode;
-
-    // Reset all variables in 'this'
-    *this = FSTUFF_Simulation();
+    // Reset relevant variables (in 'this->game')
+    game = FSTUFF_Simulation::Resettable();
 
     // Mark simulation as alive
     this->state = FSTUFF_ALIVE;
-
-    // Restore OS-native resource handles, to 'this'
-    this->configurationMode = configurationMode;
-    this->showSettings = showSettings;
-    this->globalScale = globalScale;
-    this->renderer = renderer;
 
     // Initialize 'this'
     this->keysPressed.reset();  // Mark all keys as being down/un-pressed
@@ -483,8 +473,8 @@ void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
 
 void FSTUFF_Simulation::ResetWorld()
 {
-    this->marblesCount = 0;
     this->ShutdownWorld();
+    this->game = FSTUFF_Simulation::Resettable();
     this->InitWorld();
 }
 
@@ -509,44 +499,44 @@ void FSTUFF_Simulation::Update()
     nowS = (cpFloat)nowSys.tv_sec + ((cpFloat)nowSys.tv_usec / 1000000.);
     
     // Initialize simulation time vars, on first tick
-    if (this->lastUpdateUTCTimeS == 0.) {
-        this->lastUpdateUTCTimeS = nowS;
+    if (this->game.lastUpdateUTCTimeS == 0.) {
+        this->game.lastUpdateUTCTimeS = nowS;
     }
     
     // Compute delta-time
-    const double deltaTimeS = nowS - this->lastUpdateUTCTimeS;
-    this->elapsedTimeS += deltaTimeS;
+    const double deltaTimeS = nowS - this->game.lastUpdateUTCTimeS;
+    this->game.elapsedTimeS += deltaTimeS;
     
     // Add marbles, as warranted
-    if (this->marblesCount < this->marblesMax) {
-        if (this->addNumMarblesPerSecond > 0) {
-            this->addMarblesInS -= deltaTimeS;
-            if (this->addMarblesInS <= 0) {
+    if (this->game.marblesCount < this->game.marblesMax) {
+        if (this->game.addNumMarblesPerSecond > 0) {
+            this->game.addMarblesInS -= deltaTimeS;
+            if (this->game.addMarblesInS <= 0) {
                 this->AddMarble();
-                this->addMarblesInS = 1.f / this->addNumMarblesPerSecond;
+                this->game.addMarblesInS = 1.f / this->game.addNumMarblesPerSecond;
             }
         }
     }
 
     // Update physics
     const cpFloat kSubstepTimeS = kStepTimeS / ((cpFloat)kNumSubSteps);
-    while ((this->lastUpdateUTCTimeS + kStepTimeS) <= nowS) {
+    while ((this->game.lastUpdateUTCTimeS + kStepTimeS) <= nowS) {
         for (size_t i = 0; i < kNumSubSteps; ++i) {
-            this->lastUpdateUTCTimeS += kSubstepTimeS;
+            this->game.lastUpdateUTCTimeS += kSubstepTimeS;
             cpSpaceStep(SPACE, kSubstepTimeS);
         }
     }
     
     // Reset world, if warranted
-    if (this->marblesCount >= this->marblesMax) {
-        if (this->resetInS_default > 0) {
-            if (this->resetInS <= 0) {
-                this->resetInS = this->resetInS_default;
+    if (this->game.marblesCount >= this->game.marblesMax) {
+        if (this->game.resetInS_default > 0) {
+            if (this->game.resetInS <= 0) {
+                this->game.resetInS = this->game.resetInS_default;
             } else {
-                this->resetInS -= deltaTimeS;
+                this->game.resetInS -= deltaTimeS;
             }
         }
-        if (this->resetInS <= 0) {
+        if (this->game.resetInS <= 0) {
             this->ResetWorld();
         }
     }
@@ -562,9 +552,9 @@ void FSTUFF_Simulation::Update()
             closeBoxState = &this->showSettings;
         }
         ImGui::Begin("Settings", closeBoxState, ImGuiWindowFlags_AlwaysAutoResize);
-        ImGui::SliderInt("Marbles, Max", &this->marblesMax, 0, 1000);
-        if (ImGui::SliderFloat("Spawn Rate (marbles/second)", &this->addNumMarblesPerSecond, 0, 10, "%.3f", 3.0f)) {
-            this->addMarblesInS = 1.f / this->addNumMarblesPerSecond;
+        ImGui::SliderInt("Marbles, Max", &this->game.marblesMax, 0, 1000);
+        if (ImGui::SliderFloat("Spawn Rate (marbles/second)", &this->game.addNumMarblesPerSecond, 0, 10, "%.3f", 3.0f)) {
+            this->game.addMarblesInS = 1.f / this->game.addNumMarblesPerSecond;
         }
         ImGui::InvisibleButton("padding1", ImVec2(0, 8));
         ImGui::Separator();
@@ -587,7 +577,7 @@ void FSTUFF_Simulation::Update()
 
     // Copy simulation/game data to GPU-accessible buffers
     this->renderer->SetProjectionMatrix(this->projectionMatrix);
-    for (size_t i = 0; i < this->world.numCircles; ++i) {
+    for (size_t i = 0; i < this->game.numCircles; ++i) {
         cpFloat shapeRadius = cpCircleShapeGetRadius((cpShape*)GetCircle(i));
         cpBody * body = cpShapeGetBody((cpShape*)GetCircle(i));
         cpVect bodyCenter = cpBodyGetPosition(body);
@@ -602,9 +592,9 @@ void FSTUFF_Simulation::Update()
         gb_mat4_scale(&tmp, {(float)shapeRadius, (float)shapeRadius, 1});
         dest *= tmp;
 
-        this->renderer->SetShapeProperties(FSTUFF_ShapeCircle, i, dest, this->world.circleColors[i]);
+        this->renderer->SetShapeProperties(FSTUFF_ShapeCircle, i, dest, this->circleColors[i]);
     }
-    for (size_t i = 0; i < this->world.numBoxes; ++i) {
+    for (size_t i = 0; i < this->game.numBoxes; ++i) {
         cpVect a = cpSegmentShapeGetA((cpShape*)GetBox(i));
         cpVect b = cpSegmentShapeGetB((cpShape*)GetBox(i));
         cpVect center = cpvlerp(a, b, 0.5);
@@ -626,7 +616,7 @@ void FSTUFF_Simulation::Update()
         gb_mat4_scale(&tmp, {(float)cpvlength(b-a), (float)(radius*2.), 1.});
         dest *= tmp;
         
-        this->renderer->SetShapeProperties(FSTUFF_ShapeBox, i, dest, this->world.boxColors[i]);
+        this->renderer->SetShapeProperties(FSTUFF_ShapeBox, i, dest, this->boxColors[i]);
     }
     
 /*
@@ -639,11 +629,11 @@ void FSTUFF_Simulation::Update()
 
 void FSTUFF_Simulation::Render()
 {
-    renderer->RenderShapes(&circleFilled, 0,             world.numCircles,                 0.35f);
-    renderer->RenderShapes(&circleDots,   world.numPegs, world.numCircles - world.numPegs, 1.0f);
-    renderer->RenderShapes(&circleEdged,  0,             world.numCircles,                 1.0f);
-    renderer->RenderShapes(&boxFilled,    0,             world.numBoxes,                   0.35f);
-    renderer->RenderShapes(&boxEdged,     0,             world.numBoxes,                   1.0f);
+    renderer->RenderShapes(&circleFilled, 0,            game.numCircles,                0.35f);
+    renderer->RenderShapes(&circleDots,   game.numPegs, game.numCircles - game.numPegs, 1.0f);
+    renderer->RenderShapes(&circleEdged,  0,            game.numCircles,                1.0f);
+    renderer->RenderShapes(&boxFilled,    0,            game.numBoxes,                  0.35f);
+    renderer->RenderShapes(&boxEdged,     0,            game.numBoxes,                  1.0f);
 
 //    renderer->RenderShapes(&debugShape, 0, 1, 1.0f);
 }
@@ -714,17 +704,20 @@ void FSTUFF_Simulation::UpdateCursorInfo(const FSTUFF_CursorInfo & newInfo)
 
 void FSTUFF_Simulation::ShutdownWorld()
 {
-    for (size_t i = 0; i < this->world.numCircles; ++i) {
+    for (size_t i = 0; i < this->game.numCircles; ++i) {
         cpShapeDestroy((cpShape*)GetCircle(i));
     }
-    for (size_t i = 0; i < this->world.numBoxes; ++i) {
+    for (size_t i = 0; i < this->game.numBoxes; ++i) {
         cpShapeDestroy((cpShape*)GetBox(i));
     }
-    for (size_t i = 0; i < this->world.numBodies; ++i) {
+    for (size_t i = 0; i < this->game.numBodies; ++i) {
         cpBodyDestroy(GetBody(i));
     }
-    //cpSpaceDestroy(this->world.physicsSpace);
-    cpSpaceFree(this->world.physicsSpace);
+//    cpSpaceDestroy(this->world.physicsSpace);
+    if (this->physicsSpace) {
+        cpSpaceFree(this->physicsSpace);
+        this->physicsSpace = nullptr;
+    }
 }
 
 void FSTUFF_Simulation::ShutdownGPU()
@@ -829,8 +822,7 @@ void FSTUFF_Simulation::EventReceived(FSTUFF_Event *event)
                         this->showGUIDemo = !this->showGUIDemo;
                     } break;
                     case 'R': {
-                        this->ShutdownWorld();
-                        this->InitWorld();
+                        this->ResetWorld();
                     } break;
                     case 'S': {
                         if ( ! this->configurationMode) {

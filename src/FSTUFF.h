@@ -158,28 +158,36 @@ struct FSTUFF_Simulation {
     FSTUFF_ViewSize viewSize;
     FSTUFF_Renderer * renderer = NULL;
     
-    //
-    // Random Number Generation
-    //
-    std::mt19937 rng;
+    struct Resettable {
+        //
+        // Random Number Generation
+        //
+        std::mt19937 rng;
 
-    //
-    // Timing
-    //
-    cpFloat lastUpdateUTCTimeS = 0.0;       // set on FSTUFF_Update; UTC time in seconds
-    double elapsedTimeS = 0.0;              // elapsed time, in seconds; 0 == no time has passed
+        //
+        // Timing
+        //
+        cpFloat lastUpdateUTCTimeS = 0.0;       // set on FSTUFF_Update; UTC time in seconds
+        double elapsedTimeS = 0.0;              // elapsed time, in seconds; 0 == no time has passed
 
-    //
-    // Misc parameters
-    //
-    float addMarblesInS             = 0.0f;
-    float addNumMarblesPerSecond    = 1.0f;
-    cpVect gravity                  = cpv(0, -196);
-    cpFloat marbleRadius_Range[2]   = {2, 4};
-    int32_t marblesCount            = 0;
-    int32_t marblesMax              = 200;
-    double resetInS_default         = 15;
-    double resetInS                 = 0;
+        //
+        // Misc parameters
+        //
+        float addMarblesInS             = 0.0f;
+        float addNumMarblesPerSecond    = 1.0f;
+        cpVect gravity                  = cpv(0, -196);
+        cpFloat marbleRadius_Range[2]   = {2, 4};
+        int32_t marblesCount            = 0;
+        int32_t marblesMax              = 200;
+        double resetInS_default         = 15;
+        double resetInS                 = 0;
+
+        size_t numPegs      = 0;     // all pegs must be consecutive, starting at circles[0]
+        size_t numCircles   = 0;  // pegs + circlular-marbles (with pegs first, then marbles)
+        size_t numBoxes     = 0;
+        size_t numBodies    = 0;
+    } game;
+    
     
     //
     // User Interface
@@ -193,31 +201,14 @@ struct FSTUFF_Simulation {
     //
     // Physics
     //
-    // All members here will get their memory zero'ed out on world-init.
-    //
-    struct World {
-        // HACK: C++ won't allow us to create a 'cpSpace' directly, due to constructor issues,
-        //   so we'll allocate one ourselves.
-        //
-        //   To note, Chipmunk Physics' cpAlloc() function just calls calloc() anyways,
-        //   and according to its docs, using custom allocation, as is done here, is ok.
-        //
-        //uint8_t _physicsSpaceStorage[sizeof(cpSpace)];
-        cpSpace * physicsSpace = NULL;
-        
-        size_t numPegs = 0;     // all pegs must be consecutive, starting at circles[0]
-        size_t numCircles = 0;  // pegs + circlular-marbles (with pegs first, then marbles)
-        cpCircleShape circles[FSTUFF_MaxCircles] = {0};
-        gbVec4 circleColors[FSTUFF_MaxCircles] = {0};
-        
-        size_t numBoxes = 0;
-        cpSegmentShape boxes[FSTUFF_MaxBoxes] = {0};
-        gbVec4 boxColors[FSTUFF_MaxBoxes] = {0};
-        
-        size_t numBodies = 0;
-        cpBody bodies[FSTUFF_MaxShapes] = {0};
-    } world;
-    
+    cpSpace * physicsSpace = NULL;
+    cpCircleShape circles[FSTUFF_MaxCircles] = {0};
+    gbVec4 circleColors[FSTUFF_MaxCircles] = {0};
+    cpSegmentShape boxes[FSTUFF_MaxBoxes] = {0};
+    gbVec4 boxColors[FSTUFF_MaxBoxes] = {0};
+    cpBody bodies[FSTUFF_MaxShapes] = {0};
+
+
     FSTUFF_Simulation();
     ~FSTUFF_Simulation();
     void    AddMarble();
@@ -244,16 +235,16 @@ public: // public is needed, here, for FSTUFF_Shutdown
     void    ShutdownGPU();
 
 public:
-    cpBody *          GetBody(size_t index)     { return &(this->world.bodies[index]); }
-    cpCircleShape *   GetCircle(size_t index)   { return &(this->world.circles[index]); }
-    cpSegmentShape *  GetBox(size_t index)      { return &(this->world.boxes[index]); }
+    cpBody *          GetBody(size_t index)     { return &(this->bodies[index]); }
+    cpCircleShape *   GetCircle(size_t index)   { return &(this->circles[index]); }
+    cpSegmentShape *  GetBox(size_t index)      { return &(this->boxes[index]); }
 
-    cpBody *          NewBody()     { return GetBody(this->world.numBodies++); }
-    cpCircleShape *   NewCircle()   { return GetCircle(this->world.numCircles++); }
-    cpSegmentShape *  NewBox()      { return GetBox(this->world.numBoxes++); }
+    cpBody *          NewBody()     { return GetBody(this->game.numBodies++); }
+    cpCircleShape *   NewCircle()   { return GetCircle(this->game.numCircles++); }
+    cpSegmentShape *  NewBox()      { return GetBox(this->game.numBoxes++); }
 
-    size_t IndexOfCircle(cpShape * shape)   { return ((((uintptr_t)(shape)) - ((uintptr_t)(&this->world.circles[0]))) / sizeof(this->world.circles[0])); }
-    size_t IndexOfBox(cpShape * shape)      { return ((((uintptr_t)(shape)) - ((uintptr_t)(&this->world.boxes[0]))) / sizeof(this->world.boxes[0])); }
+    size_t IndexOfCircle(cpShape * shape)   { return ((((uintptr_t)(shape)) - ((uintptr_t)(&this->circles[0]))) / sizeof(this->circles[0])); }
+    size_t IndexOfBox(cpShape * shape)      { return ((((uintptr_t)(shape)) - ((uintptr_t)(&this->boxes[0]))) / sizeof(this->boxes[0])); }
 };
 
 #endif /* FSTUFF_Simulation_hpp */
