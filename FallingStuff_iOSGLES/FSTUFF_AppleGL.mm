@@ -10,26 +10,63 @@
 #import "FSTUFF_Apple.h"
 #import "FSTUFF_AppleGL.h"
 #import "FSTUFF_AppleMetalStructs.h"
-#import <OpenGLES/ES2/glext.h>
+//#import <OpenGLES/ES2/glext.h>
+#import <OpenGLES/ES3/glext.h>
 #import <GLKit/GLKit.h>
+#include <array>
+#include <vector>
+
+static const GLbyte FSTUFF_GL_VertexShaderSrc[] = R"(
+    #version 300 es
+    uniform mat4 viewMatrix;
+    layout (location = 0) in vec4 position;
+    layout (location = 1) in vec4 colorRGBX;
+    layout (location = 2) in float alpha;
+    layout (location = 3) in mat4 modelMatrix;
+    out vec4 midColor;
+    void main()
+    {
+        gl_Position = (viewMatrix * modelMatrix) * position;
+        midColor = vec4(colorRGBX.xyz, alpha);
+    }
+)";
+
+static const GLbyte FSTUFF_GL_FragShaderSrc[] = R"(
+    #version 300 es
+    precision mediump float;
+    in vec4 midColor;
+    out vec4 finalColor;
+    void main()
+    {
+        // color is listed in code as (R,G,B,A)
+        finalColor = midColor;
+    }
+)";
+
 
 struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     GLKView * nativeView = nil;
-    FSTUFF_GPUData * appData = NULL;
+    std::unique_ptr<FSTUFF_GPUData> appData;
     GLuint programObject = 0;
     int width = 0;
     int height = 0;
-    GLint vertexShaderAttribute_vPosition = -1;
-    GLint vertexShaderAttribute_mModelMatrix = -1;
+    GLint vertexShaderAttribute_position = -1;
+    GLint vertexShaderAttribute_colorRGBX = -1;
+    GLint vertexShaderAttribute_alpha = -1;
+    GLint vertexShaderAttribute_modelMatrix = -1;
+
+    std::array<GLKMatrix4, 2048> modelMatrices;
+    GLuint modelMatricesBufferID = 0;
+
+    std::array<std::array<float, 4>, 2048> modelColors;
+    GLuint modelColorsBufferID = 0;
 
     FSTUFF_GLESRenderer() {
-        appData = new FSTUFF_GPUData();
+        appData.reset(new FSTUFF_GPUData);
+        glGenBuffers(1, &modelMatricesBufferID);
+        glGenBuffers(1, &modelColorsBufferID);
     }
     
-    ~FSTUFF_GLESRenderer() override {
-        delete appData;
-    }
-
     void    DestroyVertexBuffer(void * gpuVertexBuffer) override {
         GLuint bufferID = (GLuint)(uintptr_t)gpuVertexBuffer;
         if (bufferID != 0) {
@@ -47,8 +84,6 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
         glGenBuffers(1, &newBuffer);
         glBindBuffer(GL_ARRAY_BUFFER, newBuffer);
         glBufferData(GL_ARRAY_BUFFER, size, src, GL_STATIC_DRAW);
-//        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-//        glEnableVertexAttribArray(0);
 
         // Restore previously-current buffer
         glBindBuffer(GL_ARRAY_BUFFER, prevBuffer);
@@ -62,7 +97,7 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     }
 
     FSTUFF_ViewSize GetViewSize() override {
-        return FSTUFF_Apple_GetViewSize(NULL);
+        return FSTUFF_Apple_GetViewSize((__bridge void *)nativeView);
     }
 
     void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) override;
@@ -81,6 +116,10 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
             case FSTUFF_ShapeBox: {
                 FSTUFF_Apple_CopyMatrix(this->appData->boxes[i].model_matrix, matrix);
                 FSTUFF_Apple_CopyVector(this->appData->boxes[i].color, color);
+            } break;
+            case FSTUFF_ShapeDebug: {
+                FSTUFF_Apple_CopyMatrix(this->appData->debugShapes[i].model_matrix, matrix);
+                FSTUFF_Apple_CopyVector(this->appData->debugShapes[i].color, color);
             } break;
         }
     }
@@ -104,98 +143,60 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
 {
     [super viewDidLoad];
     
-    self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-    if (!self.context) {
+    self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3];
+    if ( ! self.context) {
         FSTUFF_Log(@"Failed to create ES context\n");
+        return;
     }
     
     GLKView *view = (GLKView *)self.view;
     view.context = self.context;
     view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
 
+    [EAGLContext setCurrentContext:self.context];
+
     renderer = new FSTUFF_GLESRenderer();
     renderer->nativeView = view;
     _sim.renderer = renderer;
 
-    [EAGLContext setCurrentContext:self.context];
-
-    renderer->programObject = 0;
-    renderer->width = 1536;
-    renderer->height = 2048;
-    
-    GLbyte vShaderStr[] = R"(
-        uniform mat4 mMatrix;
-        attribute vec4 vPosition;
-        attribute mat4 mModelMatrix;
-        void main()
-        {
-            gl_Position = mMatrix * vPosition;
-        }
-    )";
-    
-    GLbyte fShaderStr[] = R"(
-        precision mediump float;
-        void main()
-        {
-            gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
-        }
-    )";
-    GLuint vertexShader;
-    GLuint fragmentShader;
-    GLuint programObject;
-    GLint linked;
+    FSTUFF_ViewSize vs = renderer->GetViewSize();
+    renderer->width = vs.widthPixels;
+    renderer->height = vs.heightPixels;
     
     // Load the vertex/fragment shaders
-    vertexShader = LoadShader(GL_VERTEX_SHADER, vShaderStr);
-    fragmentShader = LoadShader(GL_FRAGMENT_SHADER, fShaderStr);
+    GLuint vertexShader = FSTUFF_GL_CompileShader(GL_VERTEX_SHADER, (const GLbyte *) FSTUFF_GL_VertexShaderSrc);
+    GLuint fragmentShader = FSTUFF_GL_CompileShader(GL_FRAGMENT_SHADER, (const GLbyte *) FSTUFF_GL_FragShaderSrc);
+
     // Create the program object
-    programObject = glCreateProgram();
-    if (programObject == 0) {
+    GLuint program = glCreateProgram();
+    if ( ! program) {
         FSTUFF_Log("glCreateProgram failed!\n");
         return;
     }
-
-    glAttachShader(programObject, vertexShader);
-    glAttachShader(programObject, fragmentShader);
-
-    GLenum err = GL_NO_ERROR;
-
-    // Bind vPosition to attribute 0
-    glBindAttribLocation(programObject, 0, "vPosition");
-    err = glGetError();
-    // Bind mModelMatrix to attribute 1
-    glBindAttribLocation(programObject, 1, "mModelMatrix");
-    err = glGetError();
+    glAttachShader(program, vertexShader);
+    glAttachShader(program, fragmentShader);
 
     // Link the program
-    glLinkProgram(programObject);
-    // Check the link status
-    glGetProgramiv(programObject, GL_LINK_STATUS, &linked);
-    if (!linked) {
-        GLint infoLen = 0;
-        glGetProgramiv(programObject, GL_INFO_LOG_LENGTH, &infoLen);
-        if (infoLen > 1) {
-            char* infoLog = (char *) malloc(sizeof(char) * infoLen);
-            glGetProgramInfoLog(programObject, infoLen, NULL, infoLog);
-            FSTUFF_Log(@"Error linking program:\n%s\n\n", infoLog);
-            free(infoLog);
-        }
-        glDeleteProgram(programObject);
-        FSTUFF_Log("gl program linking failed!\n");
+    glLinkProgram(program);
+    GLint didLink;
+    glGetProgramiv(program, GL_LINK_STATUS, &didLink);
+    if ( ! didLink) {
+        std::string infoLog = FSTUFF_GL_GetInfoLog(program, glGetProgramiv, glGetProgramInfoLog);
+        FSTUFF_Log(@"Error linking program:\n%s\n\n", infoLog.c_str());
+        glDeleteProgram(program);
         return;
     }
 
     // Store the program object
-    renderer->programObject = programObject;
+    renderer->programObject = program;
+    
+    // Make note of shader-attribute positions
+    renderer->vertexShaderAttribute_position = glGetAttribLocation(program, "position");
+    renderer->vertexShaderAttribute_colorRGBX = glGetAttribLocation(program, "colorRGBX");
+    renderer->vertexShaderAttribute_alpha = glGetAttribLocation(program, "alpha");
+    renderer->vertexShaderAttribute_modelMatrix = glGetAttribLocation(program, "modelMatrix");
 
-    renderer->vertexShaderAttribute_vPosition = glGetAttribLocation(programObject, "vPosition");
-    err = glGetError();
-    renderer->vertexShaderAttribute_mModelMatrix = glGetAttribLocation(programObject, "mModelMatrix");
-    err = glGetError();
-
-
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
+    // Init the game/simulation
     _sim.Init();
 }
 
@@ -235,43 +236,51 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     return YES;
 }
 
-GLuint LoadShader(GLenum type, GLbyte *shaderSrc)
+static std::string FSTUFF_GL_GetInfoLog(
+    GLuint src,
+    void (*getLength)(GLuint,GLenum,GLint*),
+    void (*getLog)(GLuint,GLsizei,GLsizei*,GLchar*)
+)
 {
-    GLuint shader;
-    GLint compiled;
-    
+    std::string result;
+    GLint numBytes = 0;
+    glGetShaderiv(src, GL_INFO_LOG_LENGTH, &numBytes);
+    if (numBytes > 0) {
+        result.resize(numBytes);
+        glGetShaderInfoLog(src, numBytes, NULL, &result[0]);
+    }
+    return result;
+}
+
+static GLuint FSTUFF_GL_CompileShader(GLenum type, const GLbyte *shaderSrc)
+{
     // Create the shader object
-    shader = glCreateShader(type);
+    GLuint shader = glCreateShader(type);
     if ( ! shader) {
         return 0;
     }
+
     // Load the shader source
     glShaderSource(shader, 1, (const GLchar* const *)&shaderSrc, NULL);
-    
+
     // Compile the shader
     glCompileShader(shader);
-    // Check the compile status
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
-    
-    if ( ! compiled) {
-        GLint infoLen = 0;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
-        if (infoLen > 1) {
-            char * infoLog = (char *) malloc(sizeof(char) * infoLen);
-            glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
-            FSTUFF_Log(@"Error compiling shader:\n%s\n\n", infoLog);
-            free(infoLog);
-        }
+    GLint didCompile;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &didCompile);
+    if ( ! didCompile) {
+        std::string infoLog = FSTUFF_GL_GetInfoLog(shader, glGetShaderiv, glGetShaderInfoLog);
+        FSTUFF_Log(@"Error compiling shader:\n%s\n\n", infoLog.c_str());
         glDeleteShader(shader);
         return 0;
     }
+
     return shader;
 }
 
 void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha)
 {
-    // Metal can raise a program-crashing assertion, if zero amount of shapes attempts to get
-    // rendered.
+    // Some graphics APIs can raise a program-crashing assertion, if zero amount of shapes attempt
+    // to get rendered.
     if (count == 0) {
         return;
     }
@@ -292,27 +301,73 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
             return;
     }
 
-    NSUInteger shapesOffsetInGpuData;
+    FSTUFF_ShapeGPUInfo * shapeGpuInfo = nullptr;
     switch (shape->type) {
         case FSTUFF_ShapeCircle:
-            shapesOffsetInGpuData = offsetof(FSTUFF_GPUData, circles);
+            shapeGpuInfo = this->appData->circles + offset;
             break;
         case FSTUFF_ShapeBox:
-            shapesOffsetInGpuData = offsetof(FSTUFF_GPUData, boxes);
+            shapeGpuInfo = this->appData->boxes + offset;
             break;
         case FSTUFF_ShapeDebug:
+            shapeGpuInfo = this->appData->debugShapes + offset;
             break;
         default:
             FSTUFF_Log(@"Unknown or unmapped FSTUFF_ShapeType in shape: %u\n", shape->type);
             return;
     }
-    
-    if (shape->type == FSTUFF_ShapeDebug) {
-        glBindBuffer(GL_ARRAY_BUFFER, (GLuint)(uintptr_t) shape->gpuVertexBuffer);
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-        glEnableVertexAttribArray(0);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    //
+    // Copy data to OpenGL
+    //
+
+    for (size_t i = 0; i < count; ++i) {
+        const matrix_float4x4 & m = shapeGpuInfo->model_matrix;
+        this->modelMatrices[i] = GLKMatrix4Make(
+            m.columns[0][0], m.columns[0][1], m.columns[0][2], m.columns[0][3],
+            m.columns[1][0], m.columns[1][1], m.columns[1][2], m.columns[1][3],
+            m.columns[2][0], m.columns[2][1], m.columns[2][2], m.columns[2][3],
+            m.columns[3][0], m.columns[3][1], m.columns[3][2], m.columns[3][3]
+        );
+        this->modelColors[i] = {
+            shapeGpuInfo->color[0],
+            shapeGpuInfo->color[1],
+            shapeGpuInfo->color[2],
+            shapeGpuInfo->color[3]
+        };
+        ++shapeGpuInfo;
     }
+
+    // Send to OpenGL: color
+    glBindBuffer(GL_ARRAY_BUFFER, this->modelColorsBufferID);
+    glBufferData(GL_ARRAY_BUFFER, count * sizeof(float) * 4, &this->modelColors, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(vertexShaderAttribute_colorRGBX, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glEnableVertexAttribArray(vertexShaderAttribute_colorRGBX);
+    glVertexAttribDivisor(vertexShaderAttribute_colorRGBX, 1);
+    
+    // Send to OpenGL: alpha
+    glVertexAttrib1f(vertexShaderAttribute_alpha, alpha);
+
+    // Send to OpenGL: modelMatrix
+    glBindBuffer(GL_ARRAY_BUFFER, this->modelMatricesBufferID);
+    const size_t sz = count * sizeof(GLKMatrix4);
+    glBufferData(GL_ARRAY_BUFFER, sz, &this->modelMatrices, GL_DYNAMIC_DRAW);
+    for (int i = 0; i < 4; ++i) {
+        const int location = vertexShaderAttribute_modelMatrix;
+        glVertexAttribPointer     (location + i, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(sizeof(float) * 4 * i));
+        glEnableVertexAttribArray (location + i);
+        glVertexAttribDivisor     (location + i, 1);
+    }
+
+    // Send to OpenGL: position
+    glBindBuffer(GL_ARRAY_BUFFER, (GLuint)(uintptr_t) shape->gpuVertexBuffer);
+    glVertexAttribPointer(vertexShaderAttribute_position, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(vertexShaderAttribute_position);
+    
+    //
+    // Draw!
+    //
+    glDrawArraysInstanced(gpuPrimitiveType, 0, shape->numVertices, (int)count);
 }
 
 
@@ -326,14 +381,20 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
     // Set the viewport
-    int uniform_mMatrix = glGetUniformLocation(renderer->programObject, "mMatrix");
-    glUniformMatrix4fv(uniform_mMatrix, 1, 0, (const GLfloat *)&(renderer->appData->globals.projection_matrix));
+    const int uniform_viewMatrix = glGetUniformLocation(renderer->programObject, "viewMatrix");
+    glUniformMatrix4fv(uniform_viewMatrix, 1, 0, (const GLfloat *)&(renderer->appData->globals.projection_matrix));
     glViewport(0, 0, renderer->width, renderer->height);
     
     // Clear the color buffer
+    glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
+
     // Use the program object
     glUseProgram(renderer->programObject);
+    
+    // Enable blending
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Render the scene
     _sim.Render();

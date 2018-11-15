@@ -28,6 +28,7 @@ typedef struct
     FSTUFF_GPUGlobals globals;
     FSTUFF_ShapeGPUInfo circles[FSTUFF_MaxCircles];
     FSTUFF_ShapeGPUInfo boxes[FSTUFF_MaxBoxes];
+    FSTUFF_ShapeGPUInfo debugShapes[1];
 } FSTUFF_GPUData;
 
 typedef struct {

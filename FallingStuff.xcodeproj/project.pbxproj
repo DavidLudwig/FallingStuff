@@ -187,6 +187,7 @@
 		75DE2F691CFCCE710052F8C1 /* cpSweep1D.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856151CDFC96F00FC8EA4 /* cpSweep1D.c */; };
 		75DE2F6B1CFCCEFD0052F8C1 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75DE2F411CFCCE3B0052F8C1 /* MetalKit.framework */; };
 		75DE2F781CFCD4590052F8C1 /* libGBDeviceInfo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 75DE2F721CFCD3D60052F8C1 /* libGBDeviceInfo.a */; };
+		75DEDD06219B1A9400628736 /* imgui_impl_mtl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */; };
 		75EE9FB720144245004C065B /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CB1F201121BE00FF086C /* imgui.cpp */; };
 		75EE9FB820144246004C065B /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CB1F201121BE00FF086C /* imgui.cpp */; };
 		75EE9FB920144246004C065B /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CB1F201121BE00FF086C /* imgui.cpp */; };
@@ -196,7 +197,6 @@
 		75EE9FBD20144250004C065B /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA7201121BE00FF086C /* imgui_draw.cpp */; };
 		75EE9FBE20144251004C065B /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA7201121BE00FF086C /* imgui_draw.cpp */; };
 		75EE9FBF20144251004C065B /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA7201121BE00FF086C /* imgui_draw.cpp */; };
-		75EE9FC020144258004C065B /* imgui_impl_mtl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */; };
 		75EE9FC220144259004C065B /* imgui_impl_mtl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */; };
 /* End PBXBuildFile section */
 
@@ -1050,6 +1050,7 @@
 				75DE2F561CFCCE710052F8C1 /* cpHastySpace.c in Sources */,
 				75DE2F571CFCCE710052F8C1 /* cpMarch.c in Sources */,
 				75EE9FB720144245004C065B /* imgui.cpp in Sources */,
+				75DEDD06219B1A9400628736 /* imgui_impl_mtl.mm in Sources */,
 				75DE2F581CFCCE710052F8C1 /* cpPinJoint.c in Sources */,
 				75DE2F591CFCCE710052F8C1 /* cpPivotJoint.c in Sources */,
 				75DE2F5A1CFCCE710052F8C1 /* cpPolyline.c in Sources */,
@@ -1066,7 +1067,6 @@
 				75DE2F631CFCCE710052F8C1 /* cpSpaceComponent.c in Sources */,
 				75DE2F641CFCCE710052F8C1 /* cpSpaceDebug.c in Sources */,
 				75DE2F651CFCCE710052F8C1 /* cpSpaceHash.c in Sources */,
-				75EE9FC020144258004C065B /* imgui_impl_mtl.mm in Sources */,
 				75DE2F661CFCCE710052F8C1 /* cpSpaceQuery.c in Sources */,
 				75DE2F671CFCCE710052F8C1 /* cpSpaceStep.c in Sources */,
 				75ADD63D1D035EB20042FC3A /* FSTUFF_Apple.mm in Sources */,

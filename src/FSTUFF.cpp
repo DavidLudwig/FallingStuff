@@ -14,6 +14,8 @@
 #define GB_MATH_IMPLEMENTATION
 #include "gb_math.h"
 
+//#define FSTUFF_USE_DEBUG_PEGS 1
+
 
 #pragma mark - Random Number Generation
 
@@ -192,11 +194,19 @@ void FSTUFF_ShapeInit(FSTUFF_Shape * shape, FSTUFF_Renderer * renderer)
     }
     else if (shape->type == FSTUFF_ShapeDebug) {
         didSet = true;
-        shape->primitiveType = FSTUFF_PrimitiveTriangles;
-        shape->numVertices = 3;
-        vertices[0] = {10.f, 10.f, 0.f, 1.f};
-        vertices[1] = {30.f, 10.f, 0.f, 1.f};
-        vertices[2] = {30.f, 30.f, 0.f, 1.f};
+
+//        shape->primitiveType = FSTUFF_PrimitiveTriangles;
+//        shape->numVertices = 3;
+//        vertices[0] = {-0.5f, -0.5f, 0.f, 1.f};
+//        vertices[1] = { 0.5f, -0.5f, 0.f, 1.f};
+//        vertices[2] = { 0.5f,  0.5f, 0.f, 1.f};
+
+        shape->primitiveType = FSTUFF_PrimitiveTriangleFan;
+        shape->numVertices = 4;
+        vertices[0] = {-.5f, -.5f, 0, 1};
+        vertices[1] = {-.5f,  .5f, 0, 1};
+        vertices[2] = { .5f, -.5f, 0, 1};
+        vertices[3] = { .5f,  .5f, 0, 1};
     }
 
     if (didSet) {
@@ -325,6 +335,7 @@ void FSTUFF_Simulation::InitWorld()
     static const cpFloat wallBottom = -wallThickness / 2.;
     static const cpFloat wallTop    = this->GetWorldHeight() * 2.;   // use a high ceiling, to make sure off-screen falling things don't go over walls
     
+#if ! FSTUFF_USE_DEBUG_PEGS
     // Bottom
     shape = (cpShape*)cpSegmentShapeInit(NewBox(), body, cpv(wallLeft,wallBottom), cpv(wallRight,wallBottom), wallThickness/2.);
     cpSpaceAddShape(SPACE, shape);
@@ -343,6 +354,7 @@ void FSTUFF_Simulation::InitWorld()
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
     this->boxColors[IndexOfBox(shape)] = FSTUFF_Color(0x000000, 0x00);
+#endif
 
 
     //
@@ -359,19 +371,36 @@ void FSTUFF_Simulation::InitWorld()
         Yellow,
         Cyan,
     };
+#if FSTUFF_USE_DEBUG_PEGS
+//    const int numPegs = 1;
+    const int numPegs = 2;
+#else
     const int numPegs = round((this->GetWorldWidth() * this->GetWorldHeight()) * 0.0005);
+#endif
     const cpFloat kPegScaleCircle = 2.5;
     const cpFloat kPegScaleBox = 4.;
     cpFloat cx, cy, radius, w, h, angleRad;
     int pegColorIndex;
     for (int i = 0; i < numPegs; ++i) {
-        switch (rand() % 2) {
+#if FSTUFF_USE_DEBUG_PEGS
+        const int which_peg_type = 0;
+#else
+        const int which_peg_type = rand() % 2;
+#endif
+        switch (which_peg_type) {
             case 0:
             {
+#if FSTUFF_USE_DEBUG_PEGS
+                cx = (this->GetWorldWidth() / 4.) + (i * (this->GetWorldWidth() / 2));
+                cy = this->GetWorldHeight() / 2.;
+                radius = (this->GetWorldWidth() / 4.) + 10.f;
+                pegColorIndex = 0;
+#else
                 cx = FSTUFF_RandRangeF(this->game.rng, 0., this->GetWorldWidth());
                 cy = FSTUFF_RandRangeF(this->game.rng, 0., this->GetWorldHeight());
                 radius = kPegScaleCircle * FSTUFF_RandRangeF(this->game.rng, 6., 10.);
                 pegColorIndex = FSTUFF_RandRangeI(this->game.rng, 0, FSTUFF_countof(pegColors)-1);
+#endif
 
                 body = cpBodyInit(NewBody(), 0, 0);
                 cpBodySetType(body, CP_BODY_TYPE_STATIC);
@@ -382,18 +411,38 @@ void FSTUFF_Simulation::InitWorld()
                 cpSpaceAddShape(SPACE, shape);
                 cpShapeSetElasticity(shape, 0.8);
                 cpShapeSetFriction(shape, 1);
+#if FSTUFF_USE_DEBUG_PEGS
+                switch (i % 2) {
+                    case 0:
+                        this->circleColors[IndexOfCircle(shape)] = FSTUFF_Color(Blue);
+                        break;
+                    case 1:
+                        this->circleColors[IndexOfCircle(shape)] = FSTUFF_Color(Green);
+                        break;
+                }
+#else
                 this->circleColors[IndexOfCircle(shape)] = FSTUFF_Color(pegColors[pegColorIndex]);
+#endif
             } break;
             
             case 1:
             {
+#if FSTUFF_USE_DEBUG_PEGS
+                cx = this->GetWorldWidth() / 2.;
+                cy = this->GetWorldHeight() / 2.;
+                w = this->GetWorldWidth() * 4.;
+                h = this->GetWorldHeight() * 4.;
+                angleRad = 0.;
+                pegColorIndex = 0;
+#else
                 cx = FSTUFF_RandRangeF(this->game.rng, 0., this->GetWorldWidth());
                 cy = FSTUFF_RandRangeF(this->game.rng, 0., this->GetWorldHeight());
                 w = kPegScaleBox * FSTUFF_RandRangeF(this->game.rng, 6., 14.);
                 h = kPegScaleBox * FSTUFF_RandRangeF(this->game.rng, 1., 2.);
                 angleRad = FSTUFF_RandRangeF(this->game.rng, 0., M_PI);
                 pegColorIndex = FSTUFF_RandRangeI(this->game.rng, 0, FSTUFF_countof(pegColors)-1);
-            
+#endif
+
                 body = cpBodyInit(NewBody(), 0, 0);
                 cpBodySetType(body, CP_BODY_TYPE_STATIC);
                 cpSpaceAddBody(SPACE, body);
@@ -456,7 +505,7 @@ void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
     if (this->state != FSTUFF_DEAD) {
         return;
     }
-
+    
     // Reset relevant variables (in 'this->game')
     game = FSTUFF_Simulation::Resettable();
 
@@ -619,6 +668,21 @@ void FSTUFF_Simulation::Update()
         this->renderer->SetShapeProperties(FSTUFF_ShapeBox, i, dest, this->boxColors[i]);
     }
     
+#if FSTUFF_USE_DEBUG_PEGS
+    {
+        gbMat4 dest, tmp;
+        gb_mat4_identity(&dest);
+        gb_mat4_translate(&tmp, {20., 50., 0.});
+        dest *= tmp;
+        gb_mat4_rotate(&tmp, {0., 0., 1.}, 0.);
+        dest *= tmp;
+        gb_mat4_scale(&tmp, {20., 20., 1.});
+        dest *= tmp;
+
+        this->renderer->SetShapeProperties(FSTUFF_ShapeDebug, 0, dest, FSTUFF_Color(0x00ff00));
+    }
+#endif
+    
 /*
 	self.unlit_peg_fill_alpha_min = 0.25
 	self.unlit_peg_fill_alpha_max = 0.45
@@ -635,7 +699,10 @@ void FSTUFF_Simulation::Render()
     renderer->RenderShapes(&boxFilled,    0,            game.numBoxes,                  0.35f);
     renderer->RenderShapes(&boxEdged,     0,            game.numBoxes,                  1.0f);
 
-//    renderer->RenderShapes(&debugShape, 0, 1, 1.0f);
+#if FSTUFF_USE_DEBUG_PEGS
+    renderer->RenderShapes(&debugShape, 0, 1, 0.5678);
+#endif
+
 }
 
 void FSTUFF_Simulation::ViewChanged(const FSTUFF_ViewSize & viewSize)
@@ -652,6 +719,12 @@ void FSTUFF_Simulation::SetGlobalScale(cpVect scale)
 
 void FSTUFF_Simulation::UpdateProjectionMatrix()
 {
+    FSTUFF_Log("%s: viewSize=%f,%f (mm); globalScale=%f,%f\n",
+        __FUNCTION__,
+        this->viewSize.widthMM, this->viewSize.heightMM,
+        this->globalScale.x, this->globalScale.y
+    );
+
     gbMat4 translation;
     gb_mat4_translate(&translation, {-1, -1, 0});
     
