@@ -27,7 +27,7 @@ static const GLbyte FSTUFF_GL_VertexShaderSrc[] = R"(
     void main()
     {
         gl_Position = (viewMatrix * modelMatrix) * position;
-        midColor = vec4(colorRGBX.xyz, alpha);
+        midColor = vec4(colorRGBX.rgb, alpha);
     }
 )";
 
