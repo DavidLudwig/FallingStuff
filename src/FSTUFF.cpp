@@ -506,6 +506,8 @@ void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
         return;
     }
     
+    srand(time(nullptr));
+
     // Reset relevant variables (in 'this->game')
     game = FSTUFF_Simulation::Resettable();
 
