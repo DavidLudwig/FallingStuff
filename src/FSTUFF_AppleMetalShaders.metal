@@ -128,18 +128,3 @@ samplingShader(RasterizerData in [[stage_in]],
     return float4(destSample);
 }
 
-
-struct Vertex {
-    float4 position [[position]];
-    float4 color;
-};
-
-vertex Vertex vertex_shader(constant Vertex *vertices [[buffer(0)]], uint vid [[vertex_id]]) {
-    // extract corresponding vertex by given index
-    return vertices[vid];
-}
-
-fragment float4 fragment_shader(Vertex vert [[stage_in]]) {
-    return vert.color;
-}
-
