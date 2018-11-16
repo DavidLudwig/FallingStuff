@@ -9,7 +9,6 @@
 #include "FSTUFF.h"
 #import "FSTUFF_Apple.h"
 #import "FSTUFF_AppleGL.h"
-#import "FSTUFF_AppleMetalStructs.h"
 //#import <OpenGLES/ES2/glext.h>
 #import <OpenGLES/ES3/glext.h>
 #import <GLKit/GLKit.h>
@@ -44,9 +43,29 @@ static const GLbyte FSTUFF_GL_FragShaderSrc[] = R"(
 )";
 
 
+typedef struct
+{
+    gbMat4 projection_matrix;
+} FSTUFF_GL_GPUGlobals;
+
+typedef struct
+{
+    gbMat4 model_matrix;
+    gbVec4 color;
+} FSTUFF_GL_ShapeGPUInfo;
+
+typedef struct
+{
+    FSTUFF_GL_GPUGlobals globals;
+    FSTUFF_GL_ShapeGPUInfo circles[FSTUFF_MaxCircles];
+    FSTUFF_GL_ShapeGPUInfo boxes[FSTUFF_MaxBoxes];
+    FSTUFF_GL_ShapeGPUInfo debugShapes[1];
+} FSTUFF_GL_GPUData;
+
+
 struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     void * nativeView = nullptr;
-    std::unique_ptr<FSTUFF_GPUData> appData;
+    std::unique_ptr<FSTUFF_GL_GPUData> appData;
     GLuint programObject = 0;
     int width = 0;
     int height = 0;
@@ -62,7 +81,7 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     GLuint modelColorsBufferID = 0;
 
     FSTUFF_GLESRenderer() {
-        appData.reset(new FSTUFF_GPUData);
+        appData.reset(new FSTUFF_GL_GPUData);
         glGenBuffers(1, &modelMatricesBufferID);
         glGenBuffers(1, &modelColorsBufferID);
     }
@@ -111,23 +130,23 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) override;
 
     void    SetProjectionMatrix(const gbMat4 & matrix) override {
-        FSTUFF_Apple_CopyMatrix(this->appData->globals.projection_matrix, matrix);
+        this->appData->globals.projection_matrix = matrix;
     }
 
     void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) override
     {
         switch (shape) {
             case FSTUFF_ShapeCircle: {
-                FSTUFF_Apple_CopyMatrix(this->appData->circles[i].model_matrix, matrix);
-                FSTUFF_Apple_CopyVector(this->appData->circles[i].color, color);
+                this->appData->circles[i].model_matrix = matrix;
+                this->appData->circles[i].color = color;
             } break;
             case FSTUFF_ShapeBox: {
-                FSTUFF_Apple_CopyMatrix(this->appData->boxes[i].model_matrix, matrix);
-                FSTUFF_Apple_CopyVector(this->appData->boxes[i].color, color);
+                this->appData->boxes[i].model_matrix = matrix;
+                this->appData->boxes[i].color = color;
             } break;
             case FSTUFF_ShapeDebug: {
-                FSTUFF_Apple_CopyMatrix(this->appData->debugShapes[i].model_matrix, matrix);
-                FSTUFF_Apple_CopyVector(this->appData->debugShapes[i].color, color);
+                this->appData->debugShapes[i].model_matrix = matrix;
+                this->appData->debugShapes[i].color = color;
             } break;
         }
     }
@@ -309,7 +328,7 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
             return;
     }
 
-    FSTUFF_ShapeGPUInfo * shapeGpuInfo = nullptr;
+    FSTUFF_GL_ShapeGPUInfo * shapeGpuInfo = nullptr;
     switch (shape->type) {
         case FSTUFF_ShapeCircle:
             shapeGpuInfo = this->appData->circles + offset;
@@ -330,18 +349,12 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
     //
 
     for (size_t i = 0; i < count; ++i) {
-        const matrix_float4x4 & m = shapeGpuInfo->model_matrix;
-        this->modelMatrices[i] = {
-            m.columns[0][0], m.columns[0][1], m.columns[0][2], m.columns[0][3],
-            m.columns[1][0], m.columns[1][1], m.columns[1][2], m.columns[1][3],
-            m.columns[2][0], m.columns[2][1], m.columns[2][2], m.columns[2][3],
-            m.columns[3][0], m.columns[3][1], m.columns[3][2], m.columns[3][3]
-        };
+        this->modelMatrices[i] = shapeGpuInfo->model_matrix;
         this->modelColors[i] = {
-            shapeGpuInfo->color[0],
-            shapeGpuInfo->color[1],
-            shapeGpuInfo->color[2],
-            shapeGpuInfo->color[3]
+            shapeGpuInfo->color.r,
+            shapeGpuInfo->color.g,
+            shapeGpuInfo->color.b,
+            shapeGpuInfo->color.a
         };
         ++shapeGpuInfo;
     }
