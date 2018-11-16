@@ -105,7 +105,6 @@
 		759E7D4F2191FEE400B679E4 /* FSTUFF_AppleMetal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 759E7D4A2191FEE400B679E4 /* FSTUFF_AppleMetal.mm */; };
 		759E7D502191FEE400B679E4 /* FSTUFF_AppleMetal.h in Headers */ = {isa = PBXBuildFile; fileRef = 759E7D4B2191FEE400B679E4 /* FSTUFF_AppleMetal.h */; };
 		75ADD5FF1D035AB10042FC3A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 75ADD5FE1D035AB10042FC3A /* main.m */; };
-		75ADD6091D035AB10042FC3A /* FSTUFF_AppleGL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75ADD6081D035AB10042FC3A /* FSTUFF_AppleGL.mm */; };
 		75ADD60E1D035AB10042FC3A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75ADD60D1D035AB10042FC3A /* Assets.xcassets */; };
 		75ADD6111D035AB10042FC3A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 75ADD60F1D035AB10042FC3A /* LaunchScreen.storyboard */; };
 		75ADD6181D035B600042FC3A /* chipmunk.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855F61CDFC96F00FC8EA4 /* chipmunk.c */; };
@@ -187,6 +186,7 @@
 		75DE2F6B1CFCCEFD0052F8C1 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75DE2F411CFCCE3B0052F8C1 /* MetalKit.framework */; };
 		75DE2F781CFCD4590052F8C1 /* libGBDeviceInfo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 75DE2F721CFCD3D60052F8C1 /* libGBDeviceInfo.a */; };
 		75DEDD06219B1A9400628736 /* imgui_impl_mtl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */; };
+		75E0A083219F0D8D009864D4 /* FSTUFF_AppleGL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75E0A081219F0D8D009864D4 /* FSTUFF_AppleGL.mm */; };
 		75EE9FB720144245004C065B /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CB1F201121BE00FF086C /* imgui.cpp */; };
 		75EE9FB820144246004C065B /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CB1F201121BE00FF086C /* imgui.cpp */; };
 		75EE9FB920144246004C065B /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CB1F201121BE00FF086C /* imgui.cpp */; };
@@ -345,8 +345,6 @@
 		759E7D4B2191FEE400B679E4 /* FSTUFF_AppleMetal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FSTUFF_AppleMetal.h; sourceTree = "<group>"; };
 		75ADD5FB1D035AB10042FC3A /* FallingStuff_iOSGLES.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FallingStuff_iOSGLES.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		75ADD5FE1D035AB10042FC3A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		75ADD6071D035AB10042FC3A /* FSTUFF_AppleGL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FSTUFF_AppleGL.h; sourceTree = "<group>"; };
-		75ADD6081D035AB10042FC3A /* FSTUFF_AppleGL.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FSTUFF_AppleGL.mm; sourceTree = "<group>"; };
 		75ADD60D1D035AB10042FC3A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		75ADD6101D035AB10042FC3A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		75ADD6121D035AB10042FC3A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -362,6 +360,8 @@
 		75DE2F3D1CFCCD4C0052F8C1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		75DE2F411CFCCE3B0052F8C1 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.3.sdk/System/Library/Frameworks/MetalKit.framework; sourceTree = DEVELOPER_DIR; };
 		75DE2F6C1CFCD3D60052F8C1 /* GBDeviceInfo.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GBDeviceInfo.xcodeproj; path = external/GBDeviceInfo/GBDeviceInfo.xcodeproj; sourceTree = "<group>"; };
+		75E0A081219F0D8D009864D4 /* FSTUFF_AppleGL.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FSTUFF_AppleGL.mm; sourceTree = "<group>"; };
+		75E0A082219F0D8D009864D4 /* FSTUFF_AppleGL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FSTUFF_AppleGL.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -432,6 +432,8 @@
 		75036FBE1CD540F10017DC04 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				75E0A082219F0D8D009864D4 /* FSTUFF_AppleGL.h */,
+				75E0A081219F0D8D009864D4 /* FSTUFF_AppleGL.mm */,
 				759E7D4B2191FEE400B679E4 /* FSTUFF_AppleMetal.h */,
 				759E7D4A2191FEE400B679E4 /* FSTUFF_AppleMetal.mm */,
 				7568CBB42012547500FF086C /* AAPLShaderTypes.h */,
@@ -632,8 +634,6 @@
 			isa = PBXGroup;
 			children = (
 				7568CB0C200FEA5900FF086C /* Main.storyboard */,
-				75ADD6071D035AB10042FC3A /* FSTUFF_AppleGL.h */,
-				75ADD6081D035AB10042FC3A /* FSTUFF_AppleGL.mm */,
 				75ADD60D1D035AB10042FC3A /* Assets.xcassets */,
 				75ADD60F1D035AB10042FC3A /* LaunchScreen.storyboard */,
 				75ADD6121D035AB10042FC3A /* Info.plist */,
@@ -988,6 +988,7 @@
 				75ADD61B1D035B600042FC3A /* cpBBTree.c in Sources */,
 				75ADD61C1D035B600042FC3A /* cpBody.c in Sources */,
 				75ADD61D1D035B600042FC3A /* cpCollision.c in Sources */,
+				75E0A083219F0D8D009864D4 /* FSTUFF_AppleGL.mm in Sources */,
 				75ADD61E1D035B600042FC3A /* cpConstraint.c in Sources */,
 				75ADD61F1D035B600042FC3A /* cpDampedRotarySpring.c in Sources */,
 				75ADD6201D035B600042FC3A /* cpDampedSpring.c in Sources */,
@@ -1018,7 +1019,6 @@
 				75ADD6351D035B600042FC3A /* cpSpaceStep.c in Sources */,
 				75ADD6361D035B600042FC3A /* cpSpatialIndex.c in Sources */,
 				75ADD6371D035B600042FC3A /* cpSweep1D.c in Sources */,
-				75ADD6091D035AB10042FC3A /* FSTUFF_AppleGL.mm in Sources */,
 				75EE9FBB2014424C004C065B /* imgui_demo.cpp in Sources */,
 				75ADD5FF1D035AB10042FC3A /* main.m in Sources */,
 			);
