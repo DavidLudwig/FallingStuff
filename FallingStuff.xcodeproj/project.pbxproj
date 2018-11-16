@@ -421,10 +421,10 @@
 		75036FBD1CD540F10017DC04 /* build */ = {
 			isa = PBXGroup;
 			children = (
-				75DE2F6A1CFCCE8D0052F8C1 /* iOS */,
-				7568AAF91CFCCC5B00262462 /* mac */,
 				75ADD5FB1D035AB10042FC3A /* FallingStuff_iOSGLES.app */,
 				759DFD031FF58EEC00F1B2D8 /* FallingStuff_OSXScreenSaver.saver */,
+				75DE2F6A1CFCCE8D0052F8C1 /* iOS */,
+				7568AAF91CFCCC5B00262462 /* mac */,
 			);
 			name = build;
 			sourceTree = "<group>";
@@ -432,21 +432,21 @@
 		75036FBE1CD540F10017DC04 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				7568CBB42012547500FF086C /* AAPLShaderTypes.h */,
+				7568CB05200FD88A00FF086C /* FSTUFF_Apple.h */,
+				75ADD63B1D035EB20042FC3A /* FSTUFF_Apple.mm */,
 				75E0A082219F0D8D009864D4 /* FSTUFF_AppleGL.h */,
 				75E0A081219F0D8D009864D4 /* FSTUFF_AppleGL.mm */,
 				759E7D4B2191FEE400B679E4 /* FSTUFF_AppleMetal.h */,
 				759E7D4A2191FEE400B679E4 /* FSTUFF_AppleMetal.mm */,
-				7568CBB42012547500FF086C /* AAPLShaderTypes.h */,
-				7568CBB2201122E200FF086C /* imgui_impl_mtl.h */,
-				7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */,
-				7568CB05200FD88A00FF086C /* FSTUFF_Apple.h */,
-				75ADD63B1D035EB20042FC3A /* FSTUFF_Apple.mm */,
 				75036FC81CD540F10017DC04 /* FSTUFF_AppleMetalShaders.metal */,
 				75036FCA1CD540F10017DC04 /* FSTUFF_AppleMetalStructs.h */,
 				7568CB03200FD06200FF086C /* FSTUFF_Constants.h */,
 				756C8E4E200DB05C0019EA70 /* FSTUFF.cpp */,
 				752B1A971CFD2C5E00BA2EE9 /* FSTUFF.h */,
 				759DFD48200424EA00F1B2D8 /* gb_math.h */,
+				7568CBB2201122E200FF086C /* imgui_impl_mtl.h */,
+				7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */,
 				75DE2F281CFCCD4C0052F8C1 /* iOS */,
 				75036FC21CD540F10017DC04 /* mac */,
 			);
@@ -555,9 +555,9 @@
 		7568AAF81CFCCBCC00262462 /* external */ = {
 			isa = PBXGroup;
 			children = (
-				7568CB0F201121BE00FF086C /* imgui */,
-				75DE2F6C1CFCD3D60052F8C1 /* GBDeviceInfo.xcodeproj */,
 				755855B41CDFC71800FC8EA4 /* Chipmunk2D */,
+				75DE2F6C1CFCD3D60052F8C1 /* GBDeviceInfo.xcodeproj */,
+				7568CB0F201121BE00FF086C /* imgui */,
 			);
 			name = external;
 			sourceTree = "<group>";
@@ -621,11 +621,11 @@
 		759DFD371FF598E000F1B2D8 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				7568CB09200FE97700FF086C /* MetalKit.framework */,
-				7568CB07200FE97300FF086C /* GLKit.framework */,
-				759DFD3D1FF5998800F1B2D8 /* ScreenSaver.framework */,
 				759DFD3B1FF5997C00F1B2D8 /* AppKit.framework */,
+				7568CB07200FE97300FF086C /* GLKit.framework */,
 				759DFD391FF5996D00F1B2D8 /* Metal.framework */,
+				7568CB09200FE97700FF086C /* MetalKit.framework */,
+				759DFD3D1FF5998800F1B2D8 /* ScreenSaver.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -633,10 +633,10 @@
 		75ADD5FC1D035AB10042FC3A /* FallingStuff_iOSGLES */ = {
 			isa = PBXGroup;
 			children = (
-				7568CB0C200FEA5900FF086C /* Main.storyboard */,
 				75ADD60D1D035AB10042FC3A /* Assets.xcassets */,
-				75ADD60F1D035AB10042FC3A /* LaunchScreen.storyboard */,
 				75ADD6121D035AB10042FC3A /* Info.plist */,
+				75ADD60F1D035AB10042FC3A /* LaunchScreen.storyboard */,
+				7568CB0C200FEA5900FF086C /* Main.storyboard */,
 				75ADD5FD1D035AB10042FC3A /* Supporting Files */,
 			);
 			path = FallingStuff_iOSGLES;
@@ -653,13 +653,13 @@
 		75DE2F281CFCCD4C0052F8C1 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
+				75DE2F381CFCCD4C0052F8C1 /* Assets.xcassets */,
 				75DE2F2C1CFCCD4C0052F8C1 /* FSTUFF_iOSAppDelegate.h */,
 				75DE2F2D1CFCCD4C0052F8C1 /* FSTUFF_iOSAppDelegate.m */,
-				75DE2F351CFCCD4C0052F8C1 /* Main.storyboard */,
-				75DE2F381CFCCD4C0052F8C1 /* Assets.xcassets */,
-				75DE2F3A1CFCCD4C0052F8C1 /* LaunchScreen.storyboard */,
-				75DE2F3D1CFCCD4C0052F8C1 /* Info.plist */,
 				75DE2F2A1CFCCD4C0052F8C1 /* FSTUFF_iOSMain.m */,
+				75DE2F3D1CFCCD4C0052F8C1 /* Info.plist */,
+				75DE2F3A1CFCCD4C0052F8C1 /* LaunchScreen.storyboard */,
+				75DE2F351CFCCD4C0052F8C1 /* Main.storyboard */,
 			);
 			path = iOS;
 			sourceTree = "<group>";
