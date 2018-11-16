@@ -55,7 +55,7 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     GLint vertexShaderAttribute_alpha = -1;
     GLint vertexShaderAttribute_modelMatrix = -1;
 
-    std::array<GLKMatrix4, 2048> modelMatrices;
+    std::array<gbMat4, 2048> modelMatrices;
     GLuint modelMatricesBufferID = 0;
 
     std::array<std::array<float, 4>, 2048> modelColors;
@@ -323,12 +323,12 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
 
     for (size_t i = 0; i < count; ++i) {
         const matrix_float4x4 & m = shapeGpuInfo->model_matrix;
-        this->modelMatrices[i] = GLKMatrix4Make(
+        this->modelMatrices[i] = {
             m.columns[0][0], m.columns[0][1], m.columns[0][2], m.columns[0][3],
             m.columns[1][0], m.columns[1][1], m.columns[1][2], m.columns[1][3],
             m.columns[2][0], m.columns[2][1], m.columns[2][2], m.columns[2][3],
             m.columns[3][0], m.columns[3][1], m.columns[3][2], m.columns[3][3]
-        );
+        };
         this->modelColors[i] = {
             shapeGpuInfo->color[0],
             shapeGpuInfo->color[1],
@@ -350,7 +350,7 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
 
     // Send to OpenGL: modelMatrix
     glBindBuffer(GL_ARRAY_BUFFER, this->modelMatricesBufferID);
-    const size_t sz = count * sizeof(GLKMatrix4);
+    const size_t sz = count * sizeof(gbMat4);
     glBufferData(GL_ARRAY_BUFFER, sz, &this->modelMatrices, GL_DYNAMIC_DRAW);
     for (int i = 0; i < 4; ++i) {
         const int location = vertexShaderAttribute_modelMatrix;
