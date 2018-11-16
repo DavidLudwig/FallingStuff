@@ -45,7 +45,7 @@ static const GLbyte FSTUFF_GL_FragShaderSrc[] = R"(
 
 
 struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
-    GLKView * nativeView = nil;
+    void * nativeView = nullptr;
     std::unique_ptr<FSTUFF_GPUData> appData;
     GLuint programObject = 0;
     int width = 0;
@@ -65,6 +65,14 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
         appData.reset(new FSTUFF_GPUData);
         glGenBuffers(1, &modelMatricesBufferID);
         glGenBuffers(1, &modelColorsBufferID);
+    }
+    
+    ~FSTUFF_GLESRenderer() override {
+#ifdef __APPLE__
+        if (nativeView) {
+            CFRelease(nativeView);
+        }
+#endif
     }
     
     void    DestroyVertexBuffer(void * gpuVertexBuffer) override {
@@ -97,7 +105,7 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     }
 
     FSTUFF_ViewSize GetViewSize() override {
-        return FSTUFF_Apple_GetViewSize((__bridge void *)nativeView);
+        return FSTUFF_Apple_GetViewSize(nativeView);
     }
 
     void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) override;
@@ -156,7 +164,7 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     [EAGLContext setCurrentContext:self.context];
 
     renderer = new FSTUFF_GLESRenderer();
-    renderer->nativeView = view;
+    renderer->nativeView = (__bridge_retained void *) view;
     _sim.renderer = renderer;
 
     FSTUFF_ViewSize vs = renderer->GetViewSize();
