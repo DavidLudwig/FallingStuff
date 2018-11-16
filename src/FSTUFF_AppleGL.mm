@@ -43,24 +43,24 @@ static const GLbyte FSTUFF_GL_FragShaderSrc[] = R"(
 )";
 
 
-typedef struct
-{
-    gbMat4 modelMatrix;
-    gbVec4 color;
-} FSTUFF_GL_ShapeGPUInfo;
-
-typedef struct
-{
-    gbMat4 projectionMatrix;
-    FSTUFF_GL_ShapeGPUInfo circles[FSTUFF_MaxCircles];
-    FSTUFF_GL_ShapeGPUInfo boxes[FSTUFF_MaxBoxes];
-    FSTUFF_GL_ShapeGPUInfo debugShapes[1];
-} FSTUFF_GL_GPUData;
-
-
 struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     void * nativeView = nullptr;
-    std::unique_ptr<FSTUFF_GL_GPUData> appData;
+
+    gbMat4 projectionMatrix;
+    
+    gbMat4 circleMatrices[FSTUFF_MaxCircles];
+    GLuint circleMatricesBufID = -1;
+    gbVec4 circleColors[FSTUFF_MaxCircles];
+    GLuint circleColorsBufID = -1;
+    gbMat4 boxMatrices[FSTUFF_MaxBoxes];
+    GLuint boxMatricesBufID = -1;
+    gbVec4 boxColors[FSTUFF_MaxBoxes];
+    GLuint boxColorsBufID = -1;
+    gbMat4 debugShapeMatrices[1];
+    GLuint debugShapeMatricesBufID = -1;
+    gbVec4 debugShapeColors[1];
+    GLuint debugShapeColorsBufID = -1;
+
     GLuint programObject = 0;
     int width = 0;
     int height = 0;
@@ -69,16 +69,13 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     GLint vertexShaderAttribute_alpha = -1;
     GLint vertexShaderAttribute_modelMatrix = -1;
 
-    std::array<gbMat4, 2048> modelMatrices;
-    GLuint modelMatricesBufferID = 0;
-
-    std::array<gbVec4, 2048> modelColors;
-    GLuint modelColorsBufferID = 0;
-
     FSTUFF_GLESRenderer() {
-        appData.reset(new FSTUFF_GL_GPUData);
-        glGenBuffers(1, &modelMatricesBufferID);
-        glGenBuffers(1, &modelColorsBufferID);
+        glGenBuffers(1, &circleMatricesBufID);
+        glGenBuffers(1, &circleColorsBufID);
+        glGenBuffers(1, &boxMatricesBufID);
+        glGenBuffers(1, &boxColorsBufID);
+        glGenBuffers(1, &debugShapeMatricesBufID);
+        glGenBuffers(1, &debugShapeColorsBufID);
     }
     
     ~FSTUFF_GLESRenderer() override {
@@ -125,23 +122,23 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) override;
 
     void    SetProjectionMatrix(const gbMat4 & matrix) override {
-        this->appData->projectionMatrix = matrix;
+        this->projectionMatrix = matrix;
     }
 
     void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) override
     {
         switch (shape) {
             case FSTUFF_ShapeCircle: {
-                this->appData->circles[i].modelMatrix = matrix;
-                this->appData->circles[i].color = color;
+                this->circleMatrices[i] = matrix;
+                this->circleColors[i] = color;
             } break;
             case FSTUFF_ShapeBox: {
-                this->appData->boxes[i].modelMatrix = matrix;
-                this->appData->boxes[i].color = color;
+                this->boxMatrices[i] = matrix;
+                this->boxColors[i] = color;
             } break;
             case FSTUFF_ShapeDebug: {
-                this->appData->debugShapes[i].modelMatrix = matrix;
-                this->appData->debugShapes[i].color = color;
+                this->debugShapeMatrices[i] = matrix;
+                this->debugShapeColors[i] = color;
             } break;
         }
     }
@@ -322,36 +319,26 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
             FSTUFF_Log(@"Unknown or unmapped FSTUFF_PrimitiveType in shape: %u\n", shape->primitiveType);
             return;
     }
-
-    FSTUFF_GL_ShapeGPUInfo * shapeGpuInfo = nullptr;
-    switch (shape->type) {
-        case FSTUFF_ShapeCircle:
-            shapeGpuInfo = this->appData->circles + offset;
-            break;
-        case FSTUFF_ShapeBox:
-            shapeGpuInfo = this->appData->boxes + offset;
-            break;
-        case FSTUFF_ShapeDebug:
-            shapeGpuInfo = this->appData->debugShapes + offset;
-            break;
-        default:
-            FSTUFF_Log(@"Unknown or unmapped FSTUFF_ShapeType in shape: %u\n", shape->type);
-            return;
-    }
-
+    
     //
     // Copy data to OpenGL
     //
 
-    for (size_t i = 0; i < count; ++i) {
-        this->modelMatrices[i] = shapeGpuInfo->modelMatrix;
-        this->modelColors[i] = shapeGpuInfo->color;
-        ++shapeGpuInfo;
-    }
-
     // Send to OpenGL: color
-    glBindBuffer(GL_ARRAY_BUFFER, this->modelColorsBufferID);
-    glBufferData(GL_ARRAY_BUFFER, count * sizeof(float) * 4, &this->modelColors, GL_DYNAMIC_DRAW);
+    switch (shape->type) {
+        case FSTUFF_ShapeCircle:
+            glBindBuffer(GL_ARRAY_BUFFER, this->circleColorsBufID);
+            glBufferData(GL_ARRAY_BUFFER, count * sizeof(float) * 4, this->circleColors + offset, GL_DYNAMIC_DRAW);
+            break;
+        case FSTUFF_ShapeBox:
+            glBindBuffer(GL_ARRAY_BUFFER, this->boxColorsBufID);
+            glBufferData(GL_ARRAY_BUFFER, count * sizeof(float) * 4, this->boxColors + offset, GL_DYNAMIC_DRAW);
+            break;
+        case FSTUFF_ShapeDebug:
+            glBindBuffer(GL_ARRAY_BUFFER, this->debugShapeColorsBufID);
+            glBufferData(GL_ARRAY_BUFFER, count * sizeof(float) * 4, this->debugShapeColors + offset, GL_DYNAMIC_DRAW);
+            break;
+    }
     glVertexAttribPointer(vertexShaderAttribute_colorRGBX, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(vertexShaderAttribute_colorRGBX);
     glVertexAttribDivisor(vertexShaderAttribute_colorRGBX, 1);
@@ -360,9 +347,20 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
     glVertexAttrib1f(vertexShaderAttribute_alpha, alpha);
 
     // Send to OpenGL: modelMatrix
-    glBindBuffer(GL_ARRAY_BUFFER, this->modelMatricesBufferID);
-    const size_t sz = count * sizeof(gbMat4);
-    glBufferData(GL_ARRAY_BUFFER, sz, &this->modelMatrices, GL_DYNAMIC_DRAW);
+    switch (shape->type) {
+        case FSTUFF_ShapeCircle:
+            glBindBuffer(GL_ARRAY_BUFFER, this->circleMatricesBufID);
+            glBufferData(GL_ARRAY_BUFFER, count * sizeof(gbMat4), this->circleMatrices + offset, GL_DYNAMIC_DRAW);
+            break;
+        case FSTUFF_ShapeBox:
+            glBindBuffer(GL_ARRAY_BUFFER, this->boxMatricesBufID);
+            glBufferData(GL_ARRAY_BUFFER, count * sizeof(gbMat4), this->boxMatrices + offset, GL_DYNAMIC_DRAW);
+            break;
+        case FSTUFF_ShapeDebug:
+            glBindBuffer(GL_ARRAY_BUFFER, this->debugShapeMatricesBufID);
+            glBufferData(GL_ARRAY_BUFFER, count * sizeof(gbMat4), this->debugShapeMatrices + offset, GL_DYNAMIC_DRAW);
+            break;
+    }
     for (int i = 0; i < 4; ++i) {
         const int location = vertexShaderAttribute_modelMatrix;
         glVertexAttribPointer     (location + i, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(sizeof(float) * 4 * i));
@@ -393,7 +391,7 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
 {
     // Set the viewport
     const int uniform_viewMatrix = glGetUniformLocation(renderer->programObject, "viewMatrix");
-    glUniformMatrix4fv(uniform_viewMatrix, 1, 0, (const GLfloat *)&(renderer->appData->projectionMatrix));
+    glUniformMatrix4fv(uniform_viewMatrix, 1, 0, (const GLfloat *)&(renderer->projectionMatrix));
     glViewport(0, 0, renderer->width, renderer->height);
     
     // Clear the color buffer
