@@ -43,11 +43,53 @@ static const GLbyte FSTUFF_GL_FragShaderSrc[] = R"(
 )";
 
 
+static std::string FSTUFF_GL_GetInfoLog(
+    GLuint src,
+    void (*getLength)(GLuint,GLenum,GLint*),
+    void (*getLog)(GLuint,GLsizei,GLsizei*,GLchar*)
+)
+{
+    std::string result;
+    GLint numBytes = 0;
+    glGetShaderiv(src, GL_INFO_LOG_LENGTH, &numBytes);
+    if (numBytes > 0) {
+        result.resize(numBytes);
+        glGetShaderInfoLog(src, numBytes, NULL, &result[0]);
+    }
+    return result;
+}
+
+static GLuint FSTUFF_GL_CompileShader(GLenum type, const GLbyte *shaderSrc)
+{
+    // Create the shader object
+    GLuint shader = glCreateShader(type);
+    if ( ! shader) {
+        return 0;
+    }
+
+    // Load the shader source
+    glShaderSource(shader, 1, (const GLchar* const *)&shaderSrc, NULL);
+
+    // Compile the shader
+    glCompileShader(shader);
+    GLint didCompile;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &didCompile);
+    if ( ! didCompile) {
+        std::string infoLog = FSTUFF_GL_GetInfoLog(shader, glGetShaderiv, glGetShaderInfoLog);
+        FSTUFF_Log(@"Error compiling shader:\n%s\n\n", infoLog.c_str());
+        glDeleteShader(shader);
+        return 0;
+    }
+
+    return shader;
+}
+
+
 struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     void * nativeView = nullptr;
 
     gbMat4 projectionMatrix;
-    
+
     gbMat4 circleMatrices[FSTUFF_MaxCircles];
     GLuint circleMatricesBufID = -1;
     gbVec4 circleColors[FSTUFF_MaxCircles];
@@ -76,6 +118,63 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
         glGenBuffers(1, &boxColorsBufID);
         glGenBuffers(1, &debugShapeMatricesBufID);
         glGenBuffers(1, &debugShapeColorsBufID);
+    }
+    
+    void Init() {
+        FSTUFF_ViewSize vs = this->GetViewSize();
+        this->width = vs.widthPixels;
+        this->height = vs.heightPixels;
+        
+        // Load the vertex/fragment shaders
+        GLuint vertexShader = FSTUFF_GL_CompileShader(GL_VERTEX_SHADER, (const GLbyte *) FSTUFF_GL_VertexShaderSrc);
+        GLuint fragmentShader = FSTUFF_GL_CompileShader(GL_FRAGMENT_SHADER, (const GLbyte *) FSTUFF_GL_FragShaderSrc);
+
+        // Create the program object
+        GLuint program = glCreateProgram();
+        if ( ! program) {
+            FSTUFF_Log("glCreateProgram failed!\n");
+            return;
+        }
+        glAttachShader(program, vertexShader);
+        glAttachShader(program, fragmentShader);
+
+        // Link the program
+        glLinkProgram(program);
+        GLint didLink;
+        glGetProgramiv(program, GL_LINK_STATUS, &didLink);
+        if ( ! didLink) {
+            std::string infoLog = FSTUFF_GL_GetInfoLog(program, glGetProgramiv, glGetProgramInfoLog);
+            FSTUFF_Log(@"Error linking program:\n%s\n\n", infoLog.c_str());
+            glDeleteProgram(program);
+            return;
+        }
+
+        // Store the program object
+        this->programObject = program;
+        
+        // Make note of shader-attribute positions
+        this->vertexShaderAttribute_position = glGetAttribLocation(program, "position");
+        this->vertexShaderAttribute_colorRGBX = glGetAttribLocation(program, "colorRGBX");
+        this->vertexShaderAttribute_alpha = glGetAttribLocation(program, "alpha");
+        this->vertexShaderAttribute_modelMatrix = glGetAttribLocation(program, "modelMatrix");
+    }
+    
+    void BeginFrame() {
+        // Set the viewport
+        const int uniform_viewMatrix = glGetUniformLocation(this->programObject, "viewMatrix");
+        glUniformMatrix4fv(uniform_viewMatrix, 1, 0, (const GLfloat *)&(this->projectionMatrix));
+        glViewport(0, 0, this->width, this->height);
+        
+        // Clear the color buffer
+        glClearColor(0, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // Use the program object
+        glUseProgram(this->programObject);
+        
+        // Enable blending
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
     
     ~FSTUFF_GLESRenderer() override {
@@ -176,44 +275,8 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
 
     renderer = new FSTUFF_GLESRenderer();
     renderer->nativeView = (__bridge_retained void *) view;
+    renderer->Init();
     _sim.renderer = renderer;
-
-    FSTUFF_ViewSize vs = renderer->GetViewSize();
-    renderer->width = vs.widthPixels;
-    renderer->height = vs.heightPixels;
-    
-    // Load the vertex/fragment shaders
-    GLuint vertexShader = FSTUFF_GL_CompileShader(GL_VERTEX_SHADER, (const GLbyte *) FSTUFF_GL_VertexShaderSrc);
-    GLuint fragmentShader = FSTUFF_GL_CompileShader(GL_FRAGMENT_SHADER, (const GLbyte *) FSTUFF_GL_FragShaderSrc);
-
-    // Create the program object
-    GLuint program = glCreateProgram();
-    if ( ! program) {
-        FSTUFF_Log("glCreateProgram failed!\n");
-        return;
-    }
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-
-    // Link the program
-    glLinkProgram(program);
-    GLint didLink;
-    glGetProgramiv(program, GL_LINK_STATUS, &didLink);
-    if ( ! didLink) {
-        std::string infoLog = FSTUFF_GL_GetInfoLog(program, glGetProgramiv, glGetProgramInfoLog);
-        FSTUFF_Log(@"Error linking program:\n%s\n\n", infoLog.c_str());
-        glDeleteProgram(program);
-        return;
-    }
-
-    // Store the program object
-    renderer->programObject = program;
-    
-    // Make note of shader-attribute positions
-    renderer->vertexShaderAttribute_position = glGetAttribLocation(program, "position");
-    renderer->vertexShaderAttribute_colorRGBX = glGetAttribLocation(program, "colorRGBX");
-    renderer->vertexShaderAttribute_alpha = glGetAttribLocation(program, "alpha");
-    renderer->vertexShaderAttribute_modelMatrix = glGetAttribLocation(program, "modelMatrix");
 
     // Init the game/simulation
     _sim.Init();
@@ -253,47 +316,6 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
 
 - (BOOL)prefersStatusBarHidden {
     return YES;
-}
-
-static std::string FSTUFF_GL_GetInfoLog(
-    GLuint src,
-    void (*getLength)(GLuint,GLenum,GLint*),
-    void (*getLog)(GLuint,GLsizei,GLsizei*,GLchar*)
-)
-{
-    std::string result;
-    GLint numBytes = 0;
-    glGetShaderiv(src, GL_INFO_LOG_LENGTH, &numBytes);
-    if (numBytes > 0) {
-        result.resize(numBytes);
-        glGetShaderInfoLog(src, numBytes, NULL, &result[0]);
-    }
-    return result;
-}
-
-static GLuint FSTUFF_GL_CompileShader(GLenum type, const GLbyte *shaderSrc)
-{
-    // Create the shader object
-    GLuint shader = glCreateShader(type);
-    if ( ! shader) {
-        return 0;
-    }
-
-    // Load the shader source
-    glShaderSource(shader, 1, (const GLchar* const *)&shaderSrc, NULL);
-
-    // Compile the shader
-    glCompileShader(shader);
-    GLint didCompile;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &didCompile);
-    if ( ! didCompile) {
-        std::string infoLog = FSTUFF_GL_GetInfoLog(shader, glGetShaderiv, glGetShaderInfoLog);
-        FSTUFF_Log(@"Error compiling shader:\n%s\n\n", infoLog.c_str());
-        glDeleteShader(shader);
-        return 0;
-    }
-
-    return shader;
 }
 
 void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha)
@@ -389,23 +411,7 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
-    // Set the viewport
-    const int uniform_viewMatrix = glGetUniformLocation(renderer->programObject, "viewMatrix");
-    glUniformMatrix4fv(uniform_viewMatrix, 1, 0, (const GLfloat *)&(renderer->projectionMatrix));
-    glViewport(0, 0, renderer->width, renderer->height);
-    
-    // Clear the color buffer
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    // Use the program object
-    glUseProgram(renderer->programObject);
-    
-    // Enable blending
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Render the scene
+    renderer->BeginFrame();
     _sim.Render();
 }
 
