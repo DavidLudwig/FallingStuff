@@ -8,12 +8,14 @@
 
 #include "FSTUFF.h"
 #import "FSTUFF_Apple.h"
-#import "FSTUFF_AppleGL.h"
 //#import <OpenGLES/ES2/glext.h>
 #import <OpenGLES/ES3/glext.h>
 #import <GLKit/GLKit.h>
 #include <array>
 #include <vector>
+#import <UIKit/UIKit.h>
+#import <GLKit/GLKit.h>
+
 
 static const GLbyte FSTUFF_GL_VertexShaderSrc[] = R"(
     #version 300 es
@@ -247,6 +249,9 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
         return FSTUFF_CursorInfo();
     }
 };
+
+@interface FSTUFF_AppleGLViewController : GLKViewController
+@end
 
 @interface FSTUFF_AppleGLViewController () {
     FSTUFF_Simulation _sim;

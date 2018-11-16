@@ -361,7 +361,6 @@
 		75DE2F411CFCCE3B0052F8C1 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.3.sdk/System/Library/Frameworks/MetalKit.framework; sourceTree = DEVELOPER_DIR; };
 		75DE2F6C1CFCD3D60052F8C1 /* GBDeviceInfo.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GBDeviceInfo.xcodeproj; path = external/GBDeviceInfo/GBDeviceInfo.xcodeproj; sourceTree = "<group>"; };
 		75E0A081219F0D8D009864D4 /* FSTUFF_AppleGL.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FSTUFF_AppleGL.mm; sourceTree = "<group>"; };
-		75E0A082219F0D8D009864D4 /* FSTUFF_AppleGL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FSTUFF_AppleGL.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -435,7 +434,6 @@
 				7568CBB42012547500FF086C /* AAPLShaderTypes.h */,
 				7568CB05200FD88A00FF086C /* FSTUFF_Apple.h */,
 				75ADD63B1D035EB20042FC3A /* FSTUFF_Apple.mm */,
-				75E0A082219F0D8D009864D4 /* FSTUFF_AppleGL.h */,
 				75E0A081219F0D8D009864D4 /* FSTUFF_AppleGL.mm */,
 				759E7D4B2191FEE400B679E4 /* FSTUFF_AppleMetal.h */,
 				759E7D4A2191FEE400B679E4 /* FSTUFF_AppleMetal.mm */,
