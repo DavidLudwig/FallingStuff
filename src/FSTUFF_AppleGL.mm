@@ -45,18 +45,13 @@ static const GLbyte FSTUFF_GL_FragShaderSrc[] = R"(
 
 typedef struct
 {
-    gbMat4 projection_matrix;
-} FSTUFF_GL_GPUGlobals;
-
-typedef struct
-{
-    gbMat4 model_matrix;
+    gbMat4 modelMatrix;
     gbVec4 color;
 } FSTUFF_GL_ShapeGPUInfo;
 
 typedef struct
 {
-    FSTUFF_GL_GPUGlobals globals;
+    gbMat4 projectionMatrix;
     FSTUFF_GL_ShapeGPUInfo circles[FSTUFF_MaxCircles];
     FSTUFF_GL_ShapeGPUInfo boxes[FSTUFF_MaxBoxes];
     FSTUFF_GL_ShapeGPUInfo debugShapes[1];
@@ -77,7 +72,7 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     std::array<gbMat4, 2048> modelMatrices;
     GLuint modelMatricesBufferID = 0;
 
-    std::array<std::array<float, 4>, 2048> modelColors;
+    std::array<gbVec4, 2048> modelColors;
     GLuint modelColorsBufferID = 0;
 
     FSTUFF_GLESRenderer() {
@@ -130,22 +125,22 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) override;
 
     void    SetProjectionMatrix(const gbMat4 & matrix) override {
-        this->appData->globals.projection_matrix = matrix;
+        this->appData->projectionMatrix = matrix;
     }
 
     void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) override
     {
         switch (shape) {
             case FSTUFF_ShapeCircle: {
-                this->appData->circles[i].model_matrix = matrix;
+                this->appData->circles[i].modelMatrix = matrix;
                 this->appData->circles[i].color = color;
             } break;
             case FSTUFF_ShapeBox: {
-                this->appData->boxes[i].model_matrix = matrix;
+                this->appData->boxes[i].modelMatrix = matrix;
                 this->appData->boxes[i].color = color;
             } break;
             case FSTUFF_ShapeDebug: {
-                this->appData->debugShapes[i].model_matrix = matrix;
+                this->appData->debugShapes[i].modelMatrix = matrix;
                 this->appData->debugShapes[i].color = color;
             } break;
         }
@@ -349,13 +344,8 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
     //
 
     for (size_t i = 0; i < count; ++i) {
-        this->modelMatrices[i] = shapeGpuInfo->model_matrix;
-        this->modelColors[i] = {
-            shapeGpuInfo->color.r,
-            shapeGpuInfo->color.g,
-            shapeGpuInfo->color.b,
-            shapeGpuInfo->color.a
-        };
+        this->modelMatrices[i] = shapeGpuInfo->modelMatrix;
+        this->modelColors[i] = shapeGpuInfo->color;
         ++shapeGpuInfo;
     }
 
@@ -403,7 +393,7 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
 {
     // Set the viewport
     const int uniform_viewMatrix = glGetUniformLocation(renderer->programObject, "viewMatrix");
-    glUniformMatrix4fv(uniform_viewMatrix, 1, 0, (const GLfloat *)&(renderer->appData->globals.projection_matrix));
+    glUniformMatrix4fv(uniform_viewMatrix, 1, 0, (const GLfloat *)&(renderer->appData->projectionMatrix));
     glViewport(0, 0, renderer->width, renderer->height);
     
     // Clear the color buffer
