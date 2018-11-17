@@ -10,16 +10,6 @@
 #include "FSTUFF.h"
 #include "FSTUFF_Apple.h"
 
-#if __APPLE__
-    #include <OpenGLES/ES3/glext.h>
-#else
-    // TODO: verify that these are correct for non-Apple platforms!
-    // The below are from https://www.khronos.org/registry/OpenGL/index_es.php#headers3
-    #include <GLES3/gl3.h>
-    #include <GLES2/gl2ext.h>
-    #include <GLES3/gl3platform.h>
-#endif
-
 
 static const GLbyte FSTUFF_GL_VertexShaderSrc[] = R"(
     #version 300 es

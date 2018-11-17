@@ -12,7 +12,17 @@
 #include "FSTUFF.h"
 #include "FSTUFF_Constants.h"
 #include "gb_math.h"
-#include <OpenGLES/ES3/glext.h>
+
+#if __APPLE__
+    #include <OpenGLES/ES3/glext.h>
+#else
+    // TODO: verify that these are correct for non-Apple platforms!
+    // The below are from https://www.khronos.org/registry/OpenGL/index_es.php#headers3
+    #include <GLES3/gl3.h>
+    #include <GLES2/gl2ext.h>
+    #include <GLES3/gl3platform.h>
+#endif
+
 
 struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     void * nativeView = nullptr;
