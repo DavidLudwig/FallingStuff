@@ -41,9 +41,9 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     GLint vertexShaderAttribute_modelMatrix = -1;
 
     FSTUFF_GLESRenderer();
-    void Init();
-    void BeginFrame();
     ~FSTUFF_GLESRenderer() override;
+    void    Init();
+    void    BeginFrame();
     void    DestroyVertexBuffer(void * gpuVertexBuffer) override;
     void *  NewVertexBuffer(void * src, size_t size) override;
     void    ViewChanged() override;
