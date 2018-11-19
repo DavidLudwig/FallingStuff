@@ -33,6 +33,8 @@ extern "C" {
 
 #include "FSTUFF_Constants.h"   // Miscellaneous constants
 
+#define FSTUFF_countof(arr) (sizeof(arr) / sizeof(arr[0]))
+
 #if __GNUC__ || __clang__
     #define FSTUFF_FormatGuard(FUNCTION_TYPE, STRING_INDEX, FIRST_TO_CHECK) __attribute__((format(FUNCTION_TYPE, STRING_INDEX, FIRST_TO_CHECK)))
 #else

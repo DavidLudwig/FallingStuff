@@ -22,6 +22,17 @@
 //#define FSTUFF_USE_DEBUG_PEGS 1
 
 
+#ifndef __APPLE__
+void FSTUFF_Log(const char * fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    char buffer[2048];
+    vsnprintf(buffer, FSTUFF_countof(buffer), fmt, args);
+    va_end(args);
+}
+#endif
+
+
 #pragma mark - Random Number Generation
 
 cpFloat FSTUFF_RandRangeF(std::mt19937 & rng, cpFloat a, cpFloat b)
@@ -62,8 +73,6 @@ constexpr gbVec4 FSTUFF_Color(uint32_t rgb)
 #pragma mark - Shapes, Circle
 
 static const unsigned kNumCircleParts = 64; //32;
-
-#define FSTUFF_countof(arr) (sizeof(arr) / sizeof(arr[0]))
 
 #define RAD_IDX(I) (((float)I) * kRadianStep)
 #define COS_IDX(I) ((float)cos(RAD_IDX(I)))
