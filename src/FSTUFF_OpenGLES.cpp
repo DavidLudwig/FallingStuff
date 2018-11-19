@@ -172,19 +172,17 @@ void FSTUFF_GLESRenderer::Init() {
 }
 
 void FSTUFF_GLESRenderer::BeginFrame() {
+    // Use the program object
+    glUseProgram(this->programObject);
+
     // Set the viewport
     const int uniform_viewMatrix = glGetUniformLocation(this->programObject, "viewMatrix");
-    FSTUFF_GLCheck();
     glUniformMatrix4fv(uniform_viewMatrix, 1, 0, (const GLfloat *)&(this->projectionMatrix));
-    FSTUFF_GLCheck();
     glViewport(0, 0, this->width, this->height);
 
     // Clear the color buffer
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
-    
-    // Use the program object
-    glUseProgram(this->programObject);
     
     // Enable blending
     glEnable(GL_BLEND);
