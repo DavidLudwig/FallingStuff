@@ -159,4 +159,10 @@ namespace FSTUFF_Colors {
     };
 }
 
+enum class FSTUFF_NativeViewType {
+    Unknown = 0,
+    Apple,
+    SDL
+};
+
 #endif

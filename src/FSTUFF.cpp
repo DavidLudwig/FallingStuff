@@ -10,6 +10,7 @@
 #include "FSTUFF.h"
 #include <sys/time.h>   // for gettimeofday()
 #include <random>
+#include <cstdarg>
 
 #define GB_MATH_IMPLEMENTATION
 #include "gb_math.h"
@@ -492,10 +493,36 @@ FSTUFF_Simulation::~FSTUFF_Simulation() {
 }
 
 
+static void FSTUFF_DefaultFatalErrorHandler(const char * formattedMessage, void *) {
+    fprintf(stderr, "%s\n", formattedMessage);
+    std::abort();
+}
+
+void FSTUFF_FatalError_Inner(FSTUFF_CodeLocation codeLocation, const char * fmt, ...) {
+    va_list arg;
+    va_start(arg, fmt);
+    char intermediateFormat[2048];
+    snprintf(
+        intermediateFormat,
+        FSTUFF_countof(intermediateFormat),
+        "\nFATAL ERROR:\n   Function: %s\n       Line: %d\n       File: %s:%d\n    Message: \%s\n",
+        (codeLocation.functionName ? codeLocation.functionName : ""),
+        codeLocation.line,
+        (codeLocation.fileName ? codeLocation.fileName : ""),
+        codeLocation.line,
+        (fmt ? fmt : ""));
+    char finalMessage[2048];
+    vsnprintf(finalMessage, FSTUFF_countof(finalMessage), intermediateFormat, arg);
+    FSTUFF_DefaultFatalErrorHandler(finalMessage, nullptr);
+    va_end(arg);
+}
+
 void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
 {
     FSTUFF_Log("%s, this:%p, state:%d, renderer:%p\n",
         __FUNCTION__, this, this->state, this->renderer);
+
+    // FSTUFF_FatalError("uh oh: %d", 123);
     
     if ( ! this->renderer) {
         throw std::runtime_error("FSTUFF_Simulation's 'renderer' field must be set, before calling its Init() method!");

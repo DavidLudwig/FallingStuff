@@ -48,6 +48,7 @@
 
     renderer = new FSTUFF_GLESRenderer();
     renderer->nativeView = (__bridge_retained void *) view;
+    renderer->nativeViewType = FSTUFF_NativeViewType::Apple;
     renderer->Init();
     _sim.renderer = renderer;
 

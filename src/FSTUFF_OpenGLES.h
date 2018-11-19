@@ -12,8 +12,13 @@
 #include "FSTUFF.h"
 #include "FSTUFF_Constants.h"
 #include "gb_math.h"
+// #include <SDL_opengles.h>
 
-#if __APPLE__
+#if __has_include(<SDL_opengl.h>)
+    #define GL_GLEXT_PROTOTYPES
+    #include <SDL_opengl.h>
+    #include <SDL_opengl_glext.h>
+#elif __APPLE__
     #include <OpenGLES/ES3/glext.h>
 #else
     // TODO: verify that these are correct for non-Apple platforms!
@@ -23,9 +28,9 @@
     #include <GLES3/gl3platform.h>
 #endif
 
-
 struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     void * nativeView = nullptr;
+    FSTUFF_NativeViewType nativeViewType = FSTUFF_NativeViewType::Unknown;
 
     gbMat4 projectionMatrix;
 

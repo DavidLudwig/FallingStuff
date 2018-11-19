@@ -10,9 +10,14 @@
 #include "FSTUFF.h"
 #include "FSTUFF_Apple.h"
 
+#if __has_include(<OpenGL/glu.h>)
+    #include <OpenGL/glu.h>
+    #define FSTUFF_HAS_GLU 1
+#endif
+
 
 static const GLbyte FSTUFF_GL_VertexShaderSrc[] = R"(
-    #version 300 es
+#version 330 core
     uniform mat4 viewMatrix;
     layout (location = 0) in vec4 position;
     layout (location = 1) in vec4 colorRGBX;
@@ -27,7 +32,7 @@ static const GLbyte FSTUFF_GL_VertexShaderSrc[] = R"(
 )";
 
 static const GLbyte FSTUFF_GL_FragShaderSrc[] = R"(
-    #version 300 es
+#version 330 core
     precision mediump float;
     in vec4 midColor;
     out vec4 finalColor;
@@ -38,12 +43,37 @@ static const GLbyte FSTUFF_GL_FragShaderSrc[] = R"(
     }
 )";
 
+static void FSTUFF_GLCheck_Inner(FSTUFF_CodeLocation location)
+{
+    const GLenum rawError = glGetError();
+    if (rawError == GL_NO_ERROR) {
+        return;
+    }
 
-static std::string FSTUFF_GL_GetInfoLog(
+#if FSTUFF_HAS_GLU
+    const char * strError = (const char *) gluErrorString(rawError);
+    FSTUFF_FatalError_Inner(
+        location,
+        "glGetError() failed with result, 0x%x (%s)",
+        (unsigned int) rawError,
+        (strError ? strError : "(null)")
+    );
+#else
+    FSTUFF_FatalError_Inner(
+        location,
+        "glGetError() failed with result, 0x%x",
+        (unsigned int) rawError
+    );
+#endif
+}
+
+#define FSTUFF_GLCheck() FSTUFF_GLCheck_Inner(FSTUFF_CODELOC)
+
+static std::string
+FSTUFF_GL_GetInfoLog(
     GLuint src,
-    void (*getLength)(GLuint,GLenum,GLint*),
-    void (*getLog)(GLuint,GLsizei,GLsizei*,GLchar*)
-)
+    void (*getLength)(GLuint, GLenum, GLint *),
+    void (*getLog)(GLuint, GLsizei, GLsizei *, GLchar *))
 {
     std::string result;
     GLint numBytes = 0;
@@ -81,15 +111,22 @@ static GLuint FSTUFF_GL_CompileShader(GLenum type, const GLbyte *shaderSrc)
 }
 
 FSTUFF_GLESRenderer::FSTUFF_GLESRenderer() {
+}
+
+void FSTUFF_GLESRenderer::Init() {
+    const char * glVersion = (const char *) glGetString(GL_VERSION);
+    FSTUFF_Log("GL version: \"%s\"\n", (glVersion ? glVersion : ""));
+
+    const char * glslVersion = (const char *) glGetString(GL_SHADING_LANGUAGE_VERSION);
+    FSTUFF_Log("GLSL version: \"%s\"\n", (glslVersion ? glslVersion : ""));
+
     glGenBuffers(1, &circleMatricesBufID);
     glGenBuffers(1, &circleColorsBufID);
     glGenBuffers(1, &boxMatricesBufID);
     glGenBuffers(1, &boxColorsBufID);
     glGenBuffers(1, &debugShapeMatricesBufID);
     glGenBuffers(1, &debugShapeColorsBufID);
-}
 
-void FSTUFF_GLESRenderer::Init() {
     FSTUFF_ViewSize vs = this->GetViewSize();
     this->width = vs.widthPixels;
     this->height = vs.heightPixels;
@@ -109,7 +146,7 @@ void FSTUFF_GLESRenderer::Init() {
 
     // Link the program
     glLinkProgram(program);
-    GLint didLink;
+    GLint didLink = 0;
     glGetProgramiv(program, GL_LINK_STATUS, &didLink);
     if ( ! didLink) {
         std::string infoLog = FSTUFF_GL_GetInfoLog(program, glGetProgramiv, glGetProgramInfoLog);
@@ -131,9 +168,11 @@ void FSTUFF_GLESRenderer::Init() {
 void FSTUFF_GLESRenderer::BeginFrame() {
     // Set the viewport
     const int uniform_viewMatrix = glGetUniformLocation(this->programObject, "viewMatrix");
+    FSTUFF_GLCheck();
     glUniformMatrix4fv(uniform_viewMatrix, 1, 0, (const GLfloat *)&(this->projectionMatrix));
+    FSTUFF_GLCheck();
     glViewport(0, 0, this->width, this->height);
-    
+
     // Clear the color buffer
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -148,7 +187,7 @@ void FSTUFF_GLESRenderer::BeginFrame() {
 
 FSTUFF_GLESRenderer::~FSTUFF_GLESRenderer() {
 #ifdef __APPLE__
-    if (nativeView) {
+    if ((nativeViewType == FSTUFF_NativeViewType::Apple) && nativeView) {
         CFRelease(nativeView);
     }
 #endif

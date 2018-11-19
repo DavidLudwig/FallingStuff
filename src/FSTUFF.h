@@ -31,18 +31,29 @@ extern "C" {
 
 void FSTUFF_Log(const char * fmt, ...) __attribute__((format(printf, 1, 2)));
 
+struct FSTUFF_CodeLocation {
+    const char * functionName = nullptr;
+    const char * fileName = nullptr;
+    int line = 0;
+};
+
+#define FSTUFF_CODELOC { __PRETTY_FUNCTION__, __FILE__, __LINE__ }
+
+void FSTUFF_FatalError_Inner(FSTUFF_CodeLocation location, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+
+#define FSTUFF_FatalError(...) FSTUFF_FatalError_Inner(FSTUFF_CODELOC, __VA_ARGS__)
+
 #if 0
     #define FSTUFF_LOG_IMPLEMENT_ME(EXTRA) FSTUFF_Log("%s: %s%s\n", "IMPLEMENT ME", __FUNCTION__, EXTRA)
 #else
     #define FSTUFF_LOG_IMPLEMENT_ME(EXTRA)
 #endif
 
-
-enum FSTUFF_ShapeType : uint8_t {
-    FSTUFF_ShapeCircle = 0,
-    FSTUFF_ShapeBox,
-    FSTUFF_ShapeDebug
-};
+    enum FSTUFF_ShapeType : uint8_t {
+        FSTUFF_ShapeCircle = 0,
+        FSTUFF_ShapeBox,
+        FSTUFF_ShapeDebug
+    };
 
 enum FSTUFF_ShapeAppearance : uint8_t {
     FSTUFF_ShapeAppearanceFilled = 0,
