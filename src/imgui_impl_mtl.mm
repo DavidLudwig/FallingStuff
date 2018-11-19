@@ -6,9 +6,11 @@
 // If you are new to ImGui, see examples/README.txt and documentation at the top of imgui.cpp.
 // https://github.com/ocornut/imgui
 
+#include "FSTUFF.h"
+#if __APPLE__
+
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
-#include "FSTUFF.h"
 #include "FSTUFF_Apple.h"
 
 #include <imgui.h>
@@ -605,3 +607,5 @@ IMGUI_API id          FSTUFF_ImGuiMetal::MainTexture()
 {
     return this->metalTexture;
 }
+
+#endif	// __APPLE__

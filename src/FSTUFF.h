@@ -9,13 +9,17 @@
 #ifndef FSTUFF_Simulation_hpp
 #define FSTUFF_Simulation_hpp
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include <array>    // C++ std library, fixed-size arrays
+#include <bitset>	// C++ std library, bit-sets
 #include <random>   // C++ std library, random numbers
+#include <chipmunk/chipmunk.h>  // Physics library
 extern "C" {
     //#include <chipmunk/chipmunk_structs.h>
     #include <chipmunk/chipmunk_private.h>  // #include'd for allowing static cp* structs (cpSpace, cpBody, etc.)
 }
-#include <chipmunk/chipmunk.h>  // Physics library
 #include "gb_math.h"            // Vector and Matrix math
 #include "imgui.h"
 
@@ -29,17 +33,32 @@ extern "C" {
 
 #include "FSTUFF_Constants.h"   // Miscellaneous constants
 
-void FSTUFF_Log(const char * fmt, ...) __attribute__((format(printf, 1, 2)));
+#if __GNUC__ || __clang__
+    #define FSTUFF_FormatGuard(FUNCTION_TYPE, STRING_INDEX, FIRST_TO_CHECK) __attribute__((format(FUNCTION_TYPE, STRING_INDEX, FIRST_TO_CHECK)))
+#else
+    #define FSTUFF_FormatGuard(FUNCTION_TYPE, STRING_INDEX, FIRST_TO_CHECK)
+#endif
+
+void FSTUFF_Log(const char * fmt, ...) FSTUFF_FormatGuard(printf, 1, 2);
+
+#if _MSC_VER
+	#define FSTUFF_CurrentFunction __FUNCSIG__
+#elif __GCC__ || __clang__
+	#define FSTUFF_CurrentFunction __PRETTY_FUNCTION__
+#else
+	#define FSTUFF_CurrentFunction __FUNCTION__
+#endif
 
 struct FSTUFF_CodeLocation {
-    const char * functionName = nullptr;
-    const char * fileName = nullptr;
-    int line = 0;
+    const char * functionName;
+    const char * fileName;
+    int line;
 };
 
-#define FSTUFF_CODELOC { __PRETTY_FUNCTION__, __FILE__, __LINE__ }
 
-void FSTUFF_FatalError_Inner(FSTUFF_CodeLocation location, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+#define FSTUFF_CODELOC { FSTUFF_CurrentFunction, __FILE__, __LINE__ }
+
+void FSTUFF_FatalError_Inner(FSTUFF_CodeLocation location, const char *fmt, ...) FSTUFF_FormatGuard(printf, 2, 3);
 
 #define FSTUFF_FatalError(...) FSTUFF_FatalError_Inner(FSTUFF_CODELOC, __VA_ARGS__)
 
@@ -49,11 +68,11 @@ void FSTUFF_FatalError_Inner(FSTUFF_CodeLocation location, const char *fmt, ...)
     #define FSTUFF_LOG_IMPLEMENT_ME(EXTRA)
 #endif
 
-    enum FSTUFF_ShapeType : uint8_t {
-        FSTUFF_ShapeCircle = 0,
-        FSTUFF_ShapeBox,
-        FSTUFF_ShapeDebug
-    };
+enum FSTUFF_ShapeType : uint8_t {
+    FSTUFF_ShapeCircle = 0,
+    FSTUFF_ShapeBox,
+    FSTUFF_ShapeDebug
+};
 
 enum FSTUFF_ShapeAppearance : uint8_t {
     FSTUFF_ShapeAppearanceFilled = 0,

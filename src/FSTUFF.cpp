@@ -7,10 +7,14 @@
 //
 
 //#import "FSTUFF_AppleMetalStructs.h"
+
 #include "FSTUFF.h"
-#include <sys/time.h>   // for gettimeofday()
+
 #include <random>
 #include <cstdarg>
+#include <ctime>
+#include <chrono>
+#include <cctype>
 
 #define GB_MATH_IMPLEMENTATION
 #include "gb_math.h"
@@ -571,11 +575,12 @@ void FSTUFF_Simulation::Update()
     }
 
     // Compute current time
-    cpFloat nowS;           // current time, in seconds since UNIX epoch
-    struct timeval nowSys;  // used to get current time from OS
-    gettimeofday(&nowSys, NULL);
-    nowS = (cpFloat)nowSys.tv_sec + ((cpFloat)nowSys.tv_usec / 1000000.);
-    
+    //
+    // nowS == current time, in seconds since UNIX epoch
+    const cpFloat nowS =
+        static_cast<cpFloat>(std::chrono::high_resolution_clock::now().time_since_epoch().count()) *
+        ((cpFloat) std::chrono::high_resolution_clock::period::num / (cpFloat) std::chrono::high_resolution_clock::period::den);
+
     // Initialize simulation time vars, on first tick
     if (this->game.lastUpdateUTCTimeS == 0.) {
         this->game.lastUpdateUTCTimeS = nowS;
@@ -859,7 +864,12 @@ FSTUFF_Event FSTUFF_Event::NewKeyEvent(FSTUFF_EventType eventType, const char * 
     event.type = eventType;
     const size_t srcSize = strlen(utf8Char) + 1;
     const size_t copySize = std::min(sizeof(event.data.key.utf8), srcSize);
+#if _MSC_VER
+	strncpy_s(const_cast<char *>(event.data.key.utf8), copySize, utf8Char, _TRUNCATE);
+	const_cast<char *>(event.data.key.utf8)[sizeof(event.data.key.utf8)-1] = '\0';
+#else
     strlcpy(const_cast<char *>(event.data.key.utf8), utf8Char, copySize);
+#endif
     return event;
 }
 

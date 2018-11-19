@@ -69,11 +69,17 @@ static void FSTUFF_GLCheck_Inner(FSTUFF_CodeLocation location)
 
 #define FSTUFF_GLCheck() FSTUFF_GLCheck_Inner(FSTUFF_CODELOC)
 
+#if _MSC_VER
+	#define FSTUFF_stdcall __stdcall
+#else
+	#define FSTUFF_stdcall
+#endif
+
 static std::string
 FSTUFF_GL_GetInfoLog(
     GLuint src,
-    void (*getLength)(GLuint, GLenum, GLint *),
-    void (*getLog)(GLuint, GLsizei, GLsizei *, GLchar *))
+    void (FSTUFF_stdcall *getLength)(GLuint, GLenum, GLint *),
+    void (FSTUFF_stdcall *getLog)(GLuint, GLsizei, GLsizei *, GLchar *))
 {
     std::string result;
     GLint numBytes = 0;
@@ -176,7 +182,7 @@ void FSTUFF_GLESRenderer::BeginFrame() {
     // Clear the color buffer
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
-
+    
     // Use the program object
     glUseProgram(this->programObject);
     
@@ -219,14 +225,14 @@ void * FSTUFF_GLESRenderer::NewVertexBuffer(void * src, size_t size) {
 }
 
 void FSTUFF_GLESRenderer::ViewChanged() {
-    FSTUFF_Log("IMPLEMENT ME: %s\n", __PRETTY_FUNCTION__);
+    FSTUFF_Log("IMPLEMENT ME: %s\n", FSTUFF_CurrentFunction);
 }
 
 FSTUFF_ViewSize FSTUFF_GLESRenderer::GetViewSize() {
 #if __APPLE__
     return FSTUFF_Apple_GetViewSize(nativeView);
 #else
-    FSTUFF_Log("IMPLEMENT ME: %s\n", __PRETTY_FUNCTION__);
+    FSTUFF_Log("IMPLEMENT ME: %s\n", FSTUFF_CurrentFunction);
     return FSTUFF_ViewSize();
 #endif
 }
@@ -253,7 +259,7 @@ void FSTUFF_GLESRenderer::SetShapeProperties(FSTUFF_ShapeType shape, size_t i, c
 }
 
 FSTUFF_CursorInfo FSTUFF_GLESRenderer::GetCursorInfo() {
-    FSTUFF_Log("IMPLEMENT ME: %s\n", __PRETTY_FUNCTION__);
+    FSTUFF_Log("IMPLEMENT ME: %s\n", FSTUFF_CurrentFunction);
     return FSTUFF_CursorInfo();
 }
 
