@@ -50,12 +50,10 @@ add_executable(FallingStuff
     external/Chipmunk2D/src/cpGearJoint.c
     external/Chipmunk2D/src/cpGrooveJoint.c
     external/Chipmunk2D/src/cpHashSet.c
-    external/Chipmunk2D/src/cpHastySpace.c
     external/Chipmunk2D/src/cpMarch.c
     external/Chipmunk2D/src/cpPinJoint.c
     external/Chipmunk2D/src/cpPivotJoint.c
     external/Chipmunk2D/src/cpPolyShape.c
-    external/Chipmunk2D/src/cpPolyline.c
     external/Chipmunk2D/src/cpRatchetJoint.c
     external/Chipmunk2D/src/cpRobust.c
     external/Chipmunk2D/src/cpRotaryLimitJoint.c
@@ -71,6 +69,13 @@ add_executable(FallingStuff
     external/Chipmunk2D/src/cpSpatialIndex.c
     external/Chipmunk2D/src/cpSweep1D.c
 )
+
+# dludwig@pobox.com: the following don't build on MSVC, and appear to be
+# exclude-able.  Are they needed elsewhere?
+#
+# external/Chipmunk2D/src/cpHastySpace.c
+# external/Chipmunk2D/src/cpPolyline.c
+
 target_include_directories(FallingStuff
     PRIVATE
         ./external/Chipmunk2D/include 
