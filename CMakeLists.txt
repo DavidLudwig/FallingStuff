@@ -31,6 +31,7 @@ add_executable(FallingStuff
     src/FSTUFF_OpenGLES.cpp
     src/FSTUFF_Apple.mm
     src/FSTUFF_AppleMetal.mm
+    src/FSTUFF_Log.cpp
     src/FSTUFF_SDLMain.cpp
     src/imgui_impl_mtl.mm
     external/imgui/imgui.cpp

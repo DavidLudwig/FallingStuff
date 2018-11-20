@@ -22,16 +22,6 @@
 //#define FSTUFF_USE_DEBUG_PEGS 1
 
 
-#ifndef __APPLE__
-void FSTUFF_Log(const char * fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    char buffer[2048];
-    vsnprintf(buffer, FSTUFF_countof(buffer), fmt, args);
-    va_end(args);
-}
-#endif
-
 
 #pragma mark - Random Number Generation
 
