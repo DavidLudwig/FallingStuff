@@ -12,7 +12,7 @@
 #define FSTUFF_USE_IMGUI 1
 
 #include "imgui.h"
-#ifdef __OBJC__
+#ifdef __APPLE__
 #include "imgui_impl_mtl.h"
 
 #include "AAPLShaderTypes.h"
@@ -195,5 +195,5 @@ void FSTUFF_Log(NSString * fmt, ...) {
     va_end(args);
 }
 
-#endif  // __OBJC__
+#endif  // __APPLE__
 

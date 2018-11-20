@@ -32,7 +32,7 @@ int main(int, char **) {
 	SDL_SetHint(SDL_HINT_VIDEO_WIN_D3DCOMPILER, "none");
 
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-		fprintf(stderr, "SDL_Init failed with error: \"%s\"\n", SDL_GetError());
+		FSTUFF_Log("SDL_Init failed with error: \"%s\"\n", SDL_GetError());
 		return 1;
 	}
 
@@ -46,18 +46,18 @@ int main(int, char **) {
         1024, 768,
         SDL_WINDOW_OPENGL);
     if (!renderer.window) {
-		fprintf(stderr, "SDL_CreateWindow failed with error: \"%s\"\n", SDL_GetError());
+		FSTUFF_Log("SDL_CreateWindow failed with error: \"%s\"\n", SDL_GetError());
         return 1;
     }
 
     renderer.gl = SDL_GL_CreateContext(renderer.window);
     if (!renderer.gl) {
-		fprintf(stderr, "SDL_GL_CreateContext failed with error: \"%s\"\n", SDL_GetError());
+		FSTUFF_Log("SDL_GL_CreateContext failed with error: \"%s\"\n", SDL_GetError());
         return 1;
     }
 
 	if (SDL_GL_MakeCurrent(renderer.window, renderer.gl) != 0) {
-		fprintf(stderr, "SDL_GL_MakeCurrent failed with error: \"%s\"\n", SDL_GetError());
+		FSTUFF_Log("SDL_GL_MakeCurrent failed with error: \"%s\"\n", SDL_GetError());
 		return 1;
 	}
 

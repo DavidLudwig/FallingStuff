@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.12)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 project(FallingStuff)
 
-find_package(SDL2 REQUIRED)
+if (NOT EMSCRIPTEN)
+    find_package(SDL2 REQUIRED)
+endif()
 
 if (WIN32)
     find_package(unofficial-angle CONFIG REQUIRED)
@@ -86,12 +88,24 @@ target_link_libraries(FallingStuff
     ${SDL2_LIBRARY}
 )
 
+if (EMSCRIPTEN)
+    target_compile_options(FallingStuff
+        PRIVATE
+            -s USE_SDL=2
+    )
+    set_target_properties(FallingStuff
+        PROPERTIES
+            LINK_FLAGS "-s USE_SDL=2"
+            SUFFIX ".html"
+    )
+endif()
+
 if (WIN32)
     target_link_libraries(FallingStuff
         unofficial::angle::libEGL
         unofficial::angle::libGLESv2
     )
-else ()
+elseif (NOT EMSCRIPTEN)
     target_link_libraries(FallingStuff
         OpenGL::GL
     )
