@@ -12,16 +12,10 @@
 #include "FSTUFF.h"
 #include "FSTUFF_Constants.h"
 #include "gb_math.h"
-// #include <SDL_opengles.h>
 
-#if __has_include(<SDL_opengl.h>)
-    #define GL_GLEXT_PROTOTYPES
-    #include <SDL_opengl.h>
-    #include <SDL_opengl_glext.h>
-#elif __APPLE__
+#if __APPLE__
     #include <OpenGLES/ES3/glext.h>
 #else
-    // TODO: verify that these are correct for non-Apple platforms!
     // The below are from https://www.khronos.org/registry/OpenGL/index_es.php#headers3
     #include <GLES3/gl3.h>
     #include <GLES2/gl2ext.h>

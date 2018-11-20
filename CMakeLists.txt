@@ -2,11 +2,13 @@ cmake_minimum_required(VERSION 3.12)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 project(FallingStuff)
 
-# add_subdirectory(external/Chipmunk2D)
-
-
 find_package(SDL2 REQUIRED)
-find_package(OpenGL 2 REQUIRED COMPONENTS OpenGL)
+
+if (WIN32)
+    find_package(unofficial-angle CONFIG REQUIRED)
+else()
+    find_package(OpenGL REQUIRED)
+endif()
 
 if (APPLE)
     find_library(METAL_FRAMEWORK Metal)
@@ -23,7 +25,6 @@ if (APPLE)
     if (NOT COREGRAPHICS_FRAMEWORK)
         message(FATAL_ERROR "CoreGraphics.framework not found!")
     endif()
-
 endif()
 
 add_executable(FallingStuff
@@ -78,8 +79,19 @@ target_include_directories(FallingStuff
 )
 target_link_libraries(FallingStuff
     ${SDL2_LIBRARY}
-    OpenGL::GL
 )
+
+if (WIN32)
+    target_link_libraries(FallingStuff
+        unofficial::angle::libEGL
+        unofficial::angle::libGLESv2
+    )
+else ()
+    target_link_libraries(FallingStuff
+        OpenGL::GL
+    )
+endif()
+
 if (APPLE)
     target_link_libraries(FallingStuff
         ${METAL_FRAMEWORK}

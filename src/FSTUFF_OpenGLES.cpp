@@ -16,8 +16,8 @@
 #endif
 
 
-static const GLbyte FSTUFF_GL_VertexShaderSrc[] = R"(
-#version 330 core
+static const GLbyte FSTUFF_GL_VertexShaderSrc[] = \
+R"(#version 300 es
     uniform mat4 viewMatrix;
     layout (location = 0) in vec4 position;
     layout (location = 1) in vec4 colorRGBX;
@@ -31,8 +31,8 @@ static const GLbyte FSTUFF_GL_VertexShaderSrc[] = R"(
     }
 )";
 
-static const GLbyte FSTUFF_GL_FragShaderSrc[] = R"(
-#version 330 core
+static const GLbyte FSTUFF_GL_FragShaderSrc[] = \
+R"(#version 300 es
     precision mediump float;
     in vec4 midColor;
     out vec4 finalColor;
