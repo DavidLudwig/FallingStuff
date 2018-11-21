@@ -16,6 +16,13 @@
 #include <vector>
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
+#include <dlfcn.h>
+
+
+void * FSTUFF_AppleGL_GetProcAddress(const char * name)
+{
+    return dlsym(RTLD_DEFAULT, name);
+}
 
 
 @interface FSTUFF_AppleGLViewController : GLKViewController
@@ -34,7 +41,18 @@
 {
     [super viewDidLoad];
     
-    self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3];
+    const FSTUFF_GLVersion glVersion = FSTUFF_GLVersion::GLESv2;
+
+    EAGLRenderingAPI macGLVersion = kEAGLRenderingAPIOpenGLES2;
+    switch (glVersion) {
+        case FSTUFF_GLVersion::GLESv2:
+            macGLVersion = kEAGLRenderingAPIOpenGLES2;
+            break;
+        case FSTUFF_GLVersion::GLESv3:
+            macGLVersion = kEAGLRenderingAPIOpenGLES3;
+            break;
+    }
+    self.context = [[EAGLContext alloc] initWithAPI:macGLVersion];
     if ( ! self.context) {
         FSTUFF_Log(@"Failed to create ES context\n");
         return;
@@ -47,8 +65,10 @@
     [EAGLContext setCurrentContext:self.context];
 
     renderer = new FSTUFF_GLESRenderer();
+    renderer->glVersion = glVersion;
     renderer->nativeView = (__bridge_retained void *) view;
     renderer->nativeViewType = FSTUFF_NativeViewType::Apple;
+    renderer->getProcAddress = FSTUFF_AppleGL_GetProcAddress;
     renderer->Init();
     _sim.renderer = renderer;
 

@@ -64,6 +64,9 @@ void FSTUFF_FatalError_Inner(FSTUFF_CodeLocation location, const char *fmt, ...)
 
 #define FSTUFF_FatalError(...) FSTUFF_FatalError_Inner(FSTUFF_CODELOC, __VA_ARGS__)
 
+#define FSTUFF_Assert(CONDITION) if (!(CONDITION)) { FSTUFF_FatalError("Assertion failed: %s", #CONDITION); }
+
+
 #if 0
     #define FSTUFF_LOG_IMPLEMENT_ME(EXTRA) FSTUFF_Log("%s: %s%s\n", "IMPLEMENT ME", __FUNCTION__, EXTRA)
 #else

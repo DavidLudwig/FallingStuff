@@ -12,6 +12,7 @@
 #include "FSTUFF.h"
 #include "FSTUFF_Constants.h"
 #include "gb_math.h"
+#include <unordered_set>
 
 #if __APPLE__
     #include <OpenGLES/ES3/glext.h>
@@ -22,9 +23,29 @@
     #include <GLES3/gl3platform.h>
 #endif
 
+#if _MSC_VER
+	#define FSTUFF_stdcall __stdcall
+#else
+	#define FSTUFF_stdcall
+#endif
+
+enum class FSTUFF_GLVersion {
+    GLESv2,
+    GLESv3
+};
+
 struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
+    FSTUFF_GLVersion glVersion = FSTUFF_GLVersion::GLESv3;
+    
     void * nativeView = nullptr;
     FSTUFF_NativeViewType nativeViewType = FSTUFF_NativeViewType::Unknown;
+    
+    std::function<void *(const char *)> getProcAddress;
+    
+    void (FSTUFF_stdcall * glVertexAttribDivisor)(GLuint, GLuint) = nullptr;
+    void (FSTUFF_stdcall * glDrawArraysInstanced)(GLenum, GLint, GLsizei, GLsizei) = nullptr;
+    
+    std::unordered_set<std::string> glExtensionsCache;
 
     gbMat4 projectionMatrix;
 

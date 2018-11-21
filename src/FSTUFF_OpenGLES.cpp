@@ -15,8 +15,33 @@
     #define FSTUFF_HAS_GLU 1
 #endif
 
+static const GLbyte FSTUFF_GL_VertexShaderSrcGLESv2[] = \
+R"(
+    uniform mat4 viewMatrix;
+    attribute vec4 position;
+    attribute vec4 colorRGBX;
+    attribute float alpha;
+    attribute mat4 modelMatrix;
+    varying vec4 midColor;
+    void main()
+    {
+        gl_Position = (viewMatrix * modelMatrix) * position;
+        midColor = vec4(colorRGBX.rgb, alpha);
+    }
+)";
 
-static const GLbyte FSTUFF_GL_VertexShaderSrc[] = \
+static const GLbyte FSTUFF_GL_FragmentShaderSrcGLESv2[] = \
+R"(
+    precision mediump float;
+    varying vec4 midColor;
+    void main()
+    {
+        // color is listed in code as (R,G,B,A)
+        gl_FragColor = midColor;
+    }
+)";
+
+static const GLbyte FSTUFF_GL_VertexShaderSrcGLESv3[] = \
 R"(#version 300 es
     uniform mat4 viewMatrix;
     layout (location = 0) in vec4 position;
@@ -31,7 +56,7 @@ R"(#version 300 es
     }
 )";
 
-static const GLbyte FSTUFF_GL_FragShaderSrc[] = \
+static const GLbyte FSTUFF_GL_FragmentShaderSrcGLESv3[] = \
 R"(#version 300 es
     precision mediump float;
     in vec4 midColor;
@@ -68,12 +93,6 @@ static void FSTUFF_GLCheck_Inner(FSTUFF_CodeLocation location)
 }
 
 #define FSTUFF_GLCheck() FSTUFF_GLCheck_Inner(FSTUFF_CODELOC)
-
-#if _MSC_VER
-	#define FSTUFF_stdcall __stdcall
-#else
-	#define FSTUFF_stdcall
-#endif
 
 static std::string
 FSTUFF_GL_GetInfoLog(
@@ -120,12 +139,54 @@ FSTUFF_GLESRenderer::FSTUFF_GLESRenderer() {
 }
 
 void FSTUFF_GLESRenderer::Init() {
-    const char * glVersion = (const char *) glGetString(GL_VERSION);
-    FSTUFF_Log("GL version: \"%s\"\n", (glVersion ? glVersion : ""));
+    const char * info = nullptr;
 
-    const char * glslVersion = (const char *) glGetString(GL_SHADING_LANGUAGE_VERSION);
-    FSTUFF_Log("GLSL version: \"%s\"\n", (glslVersion ? glslVersion : ""));
+    info = (const char *) glGetString(GL_VERSION);
+    FSTUFF_Log("GL version: \"%s\"\n", (info ? info : ""));
 
+    info = (const char *) glGetString(GL_SHADING_LANGUAGE_VERSION);
+    FSTUFF_Log("GLSL version: \"%s\"\n", (info ? info : ""));
+
+    info = (const char *) glGetString(GL_EXTENSIONS);
+    FSTUFF_Log("GL extensions: \"%s\"\n", (info ? info : ""));
+    if (info) {
+        // Copy the list of extensions into an indexed collection
+        const char * start = info;
+        const char * current = info;
+        while (*current != '\0') {
+            if (*current == ' ') {
+                if (current != start) {
+                    this->glExtensionsCache.emplace(start, current - start);
+                    start = current + 1;
+                }
+            }
+            ++current;
+        }
+    }
+    
+    FSTUFF_Assert((bool)this->getProcAddress);
+    
+    switch (glVersion) {
+        case FSTUFF_GLVersion::GLESv2:
+            if (this->glExtensionsCache.find("GL_ANGLE_instanced_arrays") != this->glExtensionsCache.end()) {
+                this->glDrawArraysInstanced = (decltype(this->glDrawArraysInstanced)) this->getProcAddress("glDrawArraysInstancedANGLE");
+                this->glVertexAttribDivisor = (decltype(this->glVertexAttribDivisor)) this->getProcAddress("glVertexAttribDivisorANGLE");
+            }
+            else if ((this->glExtensionsCache.find("GL_EXT_instanced_arrays") != this->glExtensionsCache.end()) &&
+                     (this->glExtensionsCache.find("GL_EXT_draw_instanced")   != this->glExtensionsCache.end()))
+            {
+                this->glDrawArraysInstanced = (decltype(this->glDrawArraysInstanced)) this->getProcAddress("glDrawArraysInstancedEXT");
+                this->glVertexAttribDivisor = (decltype(this->glVertexAttribDivisor)) this->getProcAddress("glVertexAttribDivisorEXT");
+            }
+            break;
+        case FSTUFF_GLVersion::GLESv3:
+            this->glDrawArraysInstanced = (decltype(this->glDrawArraysInstanced)) this->getProcAddress("glDrawArraysInstanced");
+            this->glVertexAttribDivisor = (decltype(this->glVertexAttribDivisor)) this->getProcAddress("glVertexAttribDivisor");
+            break;
+    }
+    FSTUFF_Assert(this->glDrawArraysInstanced != nullptr);
+    FSTUFF_Assert(this->glVertexAttribDivisor != nullptr);
+    
     glGenBuffers(1, &circleMatricesBufID);
     glGenBuffers(1, &circleColorsBufID);
     glGenBuffers(1, &boxMatricesBufID);
@@ -138,8 +199,24 @@ void FSTUFF_GLESRenderer::Init() {
     this->height = vs.heightPixels;
     
     // Load the vertex/fragment shaders
-    GLuint vertexShader = FSTUFF_GL_CompileShader(GL_VERTEX_SHADER, (const GLbyte *) FSTUFF_GL_VertexShaderSrc);
-    GLuint fragmentShader = FSTUFF_GL_CompileShader(GL_FRAGMENT_SHADER, (const GLbyte *) FSTUFF_GL_FragShaderSrc);
+    const GLbyte * vertexShaderSrc = nullptr;
+    const GLbyte * fragmentShaderSrc = nullptr;
+    switch (this->glVersion) {
+        case FSTUFF_GLVersion::GLESv2:
+            vertexShaderSrc = FSTUFF_GL_VertexShaderSrcGLESv2;
+            fragmentShaderSrc = FSTUFF_GL_FragmentShaderSrcGLESv2;
+            break;
+        case FSTUFF_GLVersion::GLESv3:
+            vertexShaderSrc = FSTUFF_GL_VertexShaderSrcGLESv3;
+            fragmentShaderSrc = FSTUFF_GL_FragmentShaderSrcGLESv3;
+            break;
+    }
+    
+    FSTUFF_Assert(vertexShaderSrc != nullptr);
+    FSTUFF_Assert(fragmentShaderSrc != nullptr);
+
+    GLuint vertexShader = FSTUFF_GL_CompileShader(GL_VERTEX_SHADER, vertexShaderSrc);
+    GLuint fragmentShader = FSTUFF_GL_CompileShader(GL_FRAGMENT_SHADER, fragmentShaderSrc);
 
     // Create the program object
     GLuint program = glCreateProgram();
@@ -183,7 +260,7 @@ void FSTUFF_GLESRenderer::BeginFrame() {
     // Clear the color buffer
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
-    
+
     // Enable blending
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -306,8 +383,8 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
     }
     glVertexAttribPointer(vertexShaderAttribute_colorRGBX, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(vertexShaderAttribute_colorRGBX);
-    glVertexAttribDivisor(vertexShaderAttribute_colorRGBX, 1);
-    
+    this->glVertexAttribDivisor(vertexShaderAttribute_colorRGBX, 1);
+
     // Send to OpenGL: alpha
     glVertexAttrib1f(vertexShaderAttribute_alpha, alpha);
 
@@ -328,18 +405,18 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
     }
     for (int i = 0; i < 4; ++i) {
         const int location = vertexShaderAttribute_modelMatrix;
-        glVertexAttribPointer     (location + i, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(sizeof(float) * 4 * i));
-        glEnableVertexAttribArray (location + i);
-        glVertexAttribDivisor     (location + i, 1);
+        glVertexAttribPointer       (location + i, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(sizeof(float) * 4 * i));
+        glEnableVertexAttribArray   (location + i);
+        this->glVertexAttribDivisor (location + i, 1);
     }
 
     // Send to OpenGL: position
     glBindBuffer(GL_ARRAY_BUFFER, (GLuint)(uintptr_t) shape->gpuVertexBuffer);
     glVertexAttribPointer(vertexShaderAttribute_position, 4, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(vertexShaderAttribute_position);
-    
+
     //
     // Draw!
     //
-    glDrawArraysInstanced(gpuPrimitiveType, 0, shape->numVertices, (int)count);
+    this->glDrawArraysInstanced(gpuPrimitiveType, 0, shape->numVertices, (int)count);
 }
