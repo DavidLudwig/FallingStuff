@@ -85,6 +85,11 @@ void * FSTUFF_AppleGL_GetProcAddress(const char * name)
         sim = nullptr;
     }
     
+    if (renderer) {
+        delete renderer;
+        renderer = nullptr;
+    }
+    
     [EAGLContext setCurrentContext:self.context];
     if ([EAGLContext currentContext] == self.context) {
         [EAGLContext setCurrentContext:nil];
