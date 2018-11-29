@@ -65,6 +65,7 @@ void * FSTUFF_AppleGL_GetProcAddress(const char * name)
     [EAGLContext setCurrentContext:self.context];
 
     renderer = new FSTUFF_GLESRenderer();
+    renderer->sim = &_sim;
     renderer->glVersion = glVersion;
     renderer->nativeView = (__bridge_retained void *) view;
     renderer->nativeViewType = FSTUFF_NativeViewType::Apple;

@@ -127,7 +127,11 @@ struct FSTUFF_CursorInfo {
     //bool contained;
 };
 
+struct FSTUFF_Simulation;
+
 struct FSTUFF_Renderer {
+    FSTUFF_Simulation * sim = nullptr;
+
     virtual         ~FSTUFF_Renderer();
     virtual void    DestroyVertexBuffer(void * gpuVertexBuffer) = 0;
     virtual void *  NewVertexBuffer(void * src, size_t size) = 0;

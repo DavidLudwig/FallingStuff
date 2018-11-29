@@ -363,6 +363,7 @@ return;
     
     sim = new FSTUFF_Simulation();
     renderer = new FSTUFF_AppleMetalRenderer();
+    renderer->sim = sim;
 
     const FSTUFF_ViewSize viewSize = FSTUFF_Apple_GetViewSize((__bridge void *)_metalView);
     self.sim->ViewChanged(viewSize);

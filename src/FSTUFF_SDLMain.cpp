@@ -56,6 +56,7 @@ int main(int, char **) {
     renderer->getProcAddress = SDL_GL_GetProcAddress;
 	sim = new FSTUFF_Simulation();
 	sim->renderer = renderer;
+    renderer->sim = sim;
 
 	SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
 	SDL_SetHint(SDL_HINT_VIDEO_WIN_D3DCOMPILER, "none");
