@@ -77,13 +77,6 @@ void * FSTUFF_AppleGL_GetProcAddress(const char * name)
     _sim.Init();
 }
 
-- (void)_reshape
-{
-    // When reshape is called, update the view and projection matricies since this means the view orientation or size changed
-    const FSTUFF_ViewSize viewSize = _sim.renderer->GetViewSize();
-    _sim.ViewChanged(viewSize);
-}
-
 - (void)dealloc
 {
     [EAGLContext setCurrentContext:self.context];
