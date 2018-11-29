@@ -136,7 +136,6 @@ struct FSTUFF_Renderer {
     virtual void    DestroyVertexBuffer(void * gpuVertexBuffer) = 0;
     virtual void *  NewVertexBuffer(void * src, size_t size) = 0;
     virtual void    ViewChanged() = 0;
-    virtual FSTUFF_ViewSize GetViewSize() = 0;
     virtual void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) = 0;
     virtual void    SetProjectionMatrix(const gbMat4 & matrix) = 0;
     virtual void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) = 0;

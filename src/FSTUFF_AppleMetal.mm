@@ -98,7 +98,8 @@ void * FSTUFF_AppleMetalRenderer::NewVertexBuffer(void * src, size_t size)
 
 void FSTUFF_AppleMetalRenderer::ViewChanged()
 {
-    const FSTUFF_ViewSize viewSize = this->GetViewSize();
+    FSTUFF_Assert(this->sim);
+    const FSTUFF_ViewSize & viewSize = this->sim->viewSize;
 
     // If the view is zero-sized, don't try creating a texture for it, yet.  Metal
     // can crash, if an attempt to create a zero-sized texture is performed.
@@ -113,14 +114,10 @@ void FSTUFF_AppleMetalRenderer::ViewChanged()
                                                                                                     height:viewSize.heightPixels
                                                                                                  mipmapped:NO];
     simTextureDescriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
+    FSTUFF_Assert(this->device);
     this->simTexture = [this->device newTextureWithDescriptor:simTextureDescriptor];
     this->simTexture.label = @"FSTUFF Simulation Texture";
     FSTUFF_Log(@"%s, renderer->simTexture = %@\n", __FUNCTION__, this->simTexture);
-}
-
-FSTUFF_ViewSize FSTUFF_AppleMetalRenderer::GetViewSize()
-{
-    return FSTUFF_Apple_GetViewSize((__bridge void *)(this->nativeView));
 }
 
 void FSTUFF_AppleMetalRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha)
@@ -345,10 +342,10 @@ return;
     FSTUFF_Log(@"%s, view:<%@>, view.size:{%.0f,%.0f}, drawableSize:{%.0f,%.0f}\n", __PRETTY_FUNCTION__, _metalView, _metalView.frame.size.width, _metalView.frame.size.height, _metalView.drawableSize.width, _metalView.drawableSize.height);
     [super viewWillAppear];
     
-    // Setup a texture to draw the simulation to
-    if (sim->DidInit()) {
-        renderer->ViewChanged();
-    }
+//    // Setup a texture to draw the simulation to
+//    if (sim->DidInit()) {
+//        renderer->ViewChanged();
+//    }
 }
 
 - (void)viewDidLoad
@@ -364,10 +361,6 @@ return;
     sim = new FSTUFF_Simulation();
     renderer = new FSTUFF_AppleMetalRenderer();
     renderer->sim = sim;
-
-    const FSTUFF_ViewSize viewSize = FSTUFF_Apple_GetViewSize((__bridge void *)_metalView);
-    self.sim->ViewChanged(viewSize);
-
     renderer->constantDataBufferIndex = 0;
     renderer->_inflight_semaphore = dispatch_semaphore_create(3);
 
@@ -376,7 +369,7 @@ return;
 
     // Create a new, Metal command queue
     renderer->commandQueue = [renderer->device newCommandQueue];
-    
+
     // Load all the shader files with a metal file extension in the project
     //
     // Get the path to the bundle, in a manner that works with macOS's ScreenSaverEngine.app.
@@ -479,6 +472,9 @@ return;
             renderer->gpuConstants[i] = [renderer->device newBufferWithLength:FSTUFF_MaxBytesPerFrame options:0];
             renderer->gpuConstants[i].label = [NSString stringWithFormat:@"FSTUFF_ConstantBuffer%i", i];
         }
+        
+        const FSTUFF_ViewSize viewSize = FSTUFF_Apple_GetViewSize((__bridge void *)_metalView);
+        self.sim->ViewChanged(viewSize);    // this should set sim->viewSize (among other things)
         
         fstuff_gui.Init(self.sim, true);
 
@@ -612,10 +608,11 @@ return;
     @autoreleasepool {
         if (sim->DidInit()) {
             renderer->nativeView = (MTKView *) self.view;
-            renderer->ViewChanged();
-            [self updateTrackingArea];
-            const FSTUFF_ViewSize viewSize = renderer->GetViewSize();
+            FSTUFF_Assert(renderer);
+            FSTUFF_Assert(renderer->nativeView);
+            const FSTUFF_ViewSize viewSize = FSTUFF_Apple_GetViewSize((__bridge void *)(renderer->nativeView));
             self.sim->ViewChanged(viewSize);
+            [self updateTrackingArea];
         }
     }
 }
@@ -658,6 +655,8 @@ return;
         MTLRenderPassDescriptor* mainRenderPass = renderer->nativeView.currentRenderPassDescriptor;
 
         if (mainRenderPass) { // If we have a valid drawable, begin the commands to render into it
+
+            FSTUFF_Assert(renderer->simTexture);
 
             // Create a render pass, for the simulation
             MTLRenderPassDescriptor *simRenderPass = [MTLRenderPassDescriptor renderPassDescriptor];

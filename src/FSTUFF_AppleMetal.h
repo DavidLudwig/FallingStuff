@@ -43,7 +43,6 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
     void    DestroyVertexBuffer(void * _gpuVertexBuffer) override;
     void *  NewVertexBuffer(void * src, size_t size) override;
     void    ViewChanged() override;
-    FSTUFF_ViewSize GetViewSize() override;
     void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) override;
     void    SetProjectionMatrix(const gbMat4 & matrix) override;
     void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) override;

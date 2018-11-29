@@ -15,7 +15,7 @@ struct FSTUFF_SDLGLRenderer : public FSTUFF_GLESRenderer {
     SDL_Window * window = nullptr;
     SDL_GLContext gl = nullptr;
 
-    FSTUFF_ViewSize GetViewSize() override
+    FSTUFF_ViewSize GetViewSize()
     {
         FSTUFF_ViewSize vs;
         SDL_GetWindowSize(window, &vs.widthOS, &vs.heightOS);
@@ -31,20 +31,27 @@ FSTUFF_SDLGLRenderer * renderer = nullptr;
 FSTUFF_Simulation * sim = nullptr;
 
 void tick() {
-    if (SDL_GL_MakeCurrent(renderer->window, renderer->gl) != 0) {
-        FSTUFF_FatalError("SDL_GL_MakeCurrent failed: %s\n", SDL_GetError());
-    }
-    renderer->BeginFrame();
-
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         switch (e.type) {
             case SDL_QUIT:
                 std::exit(0);
                 break;
+            case SDL_WINDOWEVENT:
+                switch (e.window.event) {
+                    case SDL_WINDOWEVENT_SIZE_CHANGED: {
+                        const FSTUFF_ViewSize viewSize = renderer->GetViewSize();
+                        sim->ViewChanged(viewSize);
+                    } break;
+                }
+                break;
         }
     }
 
+    if (SDL_GL_MakeCurrent(renderer->window, renderer->gl) != 0) {
+        FSTUFF_FatalError("SDL_GL_MakeCurrent failed: %s\n", SDL_GetError());
+    }
+    renderer->BeginFrame();
     sim->Update();
     sim->Render();
     SDL_GL_SwapWindow(renderer->window);
@@ -83,7 +90,7 @@ int main(int, char **) {
         "Falling Stuff",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         1024, 768,
-        SDL_WINDOW_OPENGL);
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (!renderer->window) {
 		FSTUFF_Log("SDL_CreateWindow failed with error: \"%s\"\n", SDL_GetError());
         return 1;
@@ -100,6 +107,10 @@ int main(int, char **) {
 		return 1;
 	}
 
+    {
+        const FSTUFF_ViewSize viewSize = renderer->GetViewSize();
+        sim->ViewChanged(viewSize);
+    }
     renderer->Init();
     sim->Init();
 

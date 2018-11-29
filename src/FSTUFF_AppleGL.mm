@@ -67,12 +67,15 @@ void * FSTUFF_AppleGL_GetProcAddress(const char * name)
     sim = new FSTUFF_Simulation();
     renderer = new FSTUFF_GLESRenderer();
     renderer->sim = sim;
+    sim->renderer = renderer;
+
     renderer->glVersion = glVersion;
     renderer->nativeView = (__bridge_retained void *) view;
     renderer->nativeViewType = FSTUFF_NativeViewType::Apple;
     renderer->getProcAddress = FSTUFF_AppleGL_GetProcAddress;
+    const FSTUFF_ViewSize viewSize = FSTUFF_Apple_GetViewSize(renderer->nativeView);
+    sim->ViewChanged(viewSize);
     renderer->Init();
-    sim->renderer = renderer;
 
     // Init the game/simulation
     sim->Init();

@@ -546,8 +546,8 @@ void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
 
     // Initialize 'this'
     this->keysPressed.reset();  // Mark all keys as being down/un-pressed
-    const FSTUFF_ViewSize viewSize = this->renderer->GetViewSize();
-    this->ViewChanged(viewSize);
+    FSTUFF_Assert(this->viewSize.widthPixels > 0);
+    FSTUFF_Assert(this->viewSize.heightPixels > 0);
     this->InitGPUShapes();
     this->InitWorld();
 }
@@ -569,7 +569,7 @@ void FSTUFF_Simulation::Update()
 
     // Initialize the simulation, if need be.
     if (this->state == FSTUFF_DEAD) {
-        this->renderer->ViewChanged();
+//        this->renderer->ViewChanged();
         this->Init();
     }
 
@@ -742,6 +742,8 @@ void FSTUFF_Simulation::ViewChanged(const FSTUFF_ViewSize & viewSize)
 {
     this->viewSize = viewSize;
     this->UpdateProjectionMatrix();
+    FSTUFF_Assert(this->renderer);
+    this->renderer->ViewChanged();
 }
 
 void FSTUFF_Simulation::SetGlobalScale(cpVect scale)

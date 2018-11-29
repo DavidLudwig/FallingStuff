@@ -249,7 +249,10 @@ bool FSTUFF_ImGuiMetal::CreateDeviceObjects()
     }
     
     FSTUFF_LOG_IMPLEMENT_ME(", set appropriate size for main texture");
-    const FSTUFF_ViewSize viewSize = this->renderer->GetViewSize();
+    FSTUFF_Assert(this->sim);
+    FSTUFF_Assert(this->sim->viewSize.widthPixels > 0);
+    FSTUFF_Assert(this->sim->viewSize.heightPixels > 0);
+    const FSTUFF_ViewSize & viewSize = this->sim->viewSize;
     MTLTextureDescriptor *mainTextureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
                                                                                                      width:viewSize.widthPixels
                                                                                                     height:viewSize.heightPixels

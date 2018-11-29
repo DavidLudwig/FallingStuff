@@ -63,8 +63,6 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     GLuint debugShapeColorsBufID = -1;
 
     GLuint programObject = 0;
-    int width = 0;
-    int height = 0;
     GLint vertexShaderAttribute_position = -1;
     GLint vertexShaderAttribute_colorRGBX = -1;
     GLint vertexShaderAttribute_alpha = -1;
@@ -77,7 +75,6 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     void    DestroyVertexBuffer(void * gpuVertexBuffer) override;
     void *  NewVertexBuffer(void * src, size_t size) override;
     void    ViewChanged() override;
-    FSTUFF_ViewSize GetViewSize() override;
     void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) override;
     void    SetProjectionMatrix(const gbMat4 & matrix) override;
     void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) override;

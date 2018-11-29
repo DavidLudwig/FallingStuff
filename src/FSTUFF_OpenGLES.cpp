@@ -163,7 +163,11 @@ void FSTUFF_GLESRenderer::Init() {
             ++current;
         }
     }
-    
+
+    FSTUFF_Assert(sim);
+    FSTUFF_Assert(sim->viewSize.widthPixels > 0);
+    FSTUFF_Assert(sim->viewSize.heightPixels > 0);
+
     FSTUFF_Assert((bool)this->getProcAddress);
     
     switch (glVersion) {
@@ -193,10 +197,6 @@ void FSTUFF_GLESRenderer::Init() {
     glGenBuffers(1, &boxColorsBufID);
     glGenBuffers(1, &debugShapeMatricesBufID);
     glGenBuffers(1, &debugShapeColorsBufID);
-
-    FSTUFF_ViewSize vs = this->GetViewSize();
-    this->width = vs.widthPixels;
-    this->height = vs.heightPixels;
     
     // Load the vertex/fragment shaders
     const GLbyte * vertexShaderSrc = nullptr;
@@ -249,13 +249,17 @@ void FSTUFF_GLESRenderer::Init() {
 }
 
 void FSTUFF_GLESRenderer::BeginFrame() {
+    FSTUFF_Assert(sim);
+    FSTUFF_Assert(sim->viewSize.widthPixels > 0);
+    FSTUFF_Assert(sim->viewSize.heightPixels > 0);
+
     // Use the program object
     glUseProgram(this->programObject);
 
     // Set the viewport
     const int uniform_viewMatrix = glGetUniformLocation(this->programObject, "viewMatrix");
     glUniformMatrix4fv(uniform_viewMatrix, 1, 0, (const GLfloat *)&(this->projectionMatrix));
-    glViewport(0, 0, this->width, this->height);
+    glViewport(0, 0, sim->viewSize.widthPixels, sim->viewSize.heightPixels);
 
     // Clear the color buffer
     glClearColor(0, 0, 0, 1);
@@ -300,16 +304,6 @@ void * FSTUFF_GLESRenderer::NewVertexBuffer(void * src, size_t size) {
 }
 
 void FSTUFF_GLESRenderer::ViewChanged() {
-    FSTUFF_Log("IMPLEMENT ME: %s\n", FSTUFF_CurrentFunction);
-}
-
-FSTUFF_ViewSize FSTUFF_GLESRenderer::GetViewSize() {
-#if __APPLE__
-    return FSTUFF_Apple_GetViewSize(nativeView);
-#else
-    FSTUFF_Log("IMPLEMENT ME: %s\n", FSTUFF_CurrentFunction);
-    return FSTUFF_ViewSize();
-#endif
 }
 
 void FSTUFF_GLESRenderer::SetProjectionMatrix(const gbMat4 & matrix) {
