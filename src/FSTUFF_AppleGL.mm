@@ -29,7 +29,7 @@ void * FSTUFF_AppleGL_GetProcAddress(const char * name)
 @end
 
 @interface FSTUFF_AppleGLViewController () {
-    FSTUFF_Simulation _sim;
+    FSTUFF_Simulation * sim;
     FSTUFF_GLESRenderer * renderer;
 }
 @property (strong, nonatomic) EAGLContext *context;
@@ -64,21 +64,27 @@ void * FSTUFF_AppleGL_GetProcAddress(const char * name)
 
     [EAGLContext setCurrentContext:self.context];
 
+    sim = new FSTUFF_Simulation();
     renderer = new FSTUFF_GLESRenderer();
-    renderer->sim = &_sim;
+    renderer->sim = sim;
     renderer->glVersion = glVersion;
     renderer->nativeView = (__bridge_retained void *) view;
     renderer->nativeViewType = FSTUFF_NativeViewType::Apple;
     renderer->getProcAddress = FSTUFF_AppleGL_GetProcAddress;
     renderer->Init();
-    _sim.renderer = renderer;
+    sim->renderer = renderer;
 
     // Init the game/simulation
-    _sim.Init();
+    sim->Init();
 }
 
 - (void)dealloc
 {
+    if (sim) {
+        delete sim;
+        sim = nullptr;
+    }
+    
     [EAGLContext setCurrentContext:self.context];
     if ([EAGLContext currentContext] == self.context) {
         [EAGLContext setCurrentContext:nil];
@@ -111,13 +117,15 @@ void * FSTUFF_AppleGL_GetProcAddress(const char * name)
 
 - (void)update
 {
-    _sim.Update();
+    FSTUFF_Assert(sim);
+    sim->Update();
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
+    FSTUFF_Assert(sim);
     renderer->BeginFrame();
-    _sim.Render();
+    sim->Render();
 }
 
 @end
