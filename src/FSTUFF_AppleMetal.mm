@@ -276,9 +276,7 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
 - (FSTUFF_Simulation *) sim
 {
     @synchronized(self) {
-        if ( ! sim) {
-            sim = new FSTUFF_Simulation();
-        }
+        FSTUFF_Assert(sim != nullptr);  // sim is probably created in, mabybe before, viewDidLoad
         return sim;
     }
 }
@@ -363,7 +361,7 @@ return;
         self.label = @"Unlabelled";
     }
     
-    //_sim = new FSTUFF_Simulation();
+    sim = new FSTUFF_Simulation();
     renderer = new FSTUFF_AppleMetalRenderer();
 
     const FSTUFF_ViewSize viewSize = FSTUFF_Apple_GetViewSize((__bridge void *)_metalView);
