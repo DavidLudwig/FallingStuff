@@ -37,17 +37,8 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
     uint8_t constantDataBufferIndex;
     id <MTLBuffer> gpuConstants[FSTUFF_MaxInflightBuffers];
     
-    
-    // The Metal texture object
-//    id<MTLTexture> _texture;
-    // The Metal buffer in which we store our vertex data
-    id<MTLBuffer> _vertices = nil;
-    // The number of vertices in our vertex buffer
-    NSUInteger _numVertices = 0;
-    
-    // Projection matrix for main drawing
-    matrix_float4x4 _projectionMatrix;
-
+    id<MTLBuffer> rectVBO = nil;  // VBO for a single, full-screen (in normalized coords), rectangle
+    NSUInteger rectVBOCount = 0;  // number of vertices in rectVBO
 
     void    DestroyVertexBuffer(void * _gpuVertexBuffer) override;
     void *  NewVertexBuffer(void * src, size_t size) override;

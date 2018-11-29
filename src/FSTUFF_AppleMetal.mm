@@ -615,12 +615,12 @@ return;
         };
 
         // Create our vertex buffer, and initialize it with our quadVertices array
-        renderer->_vertices = [renderer->device newBufferWithBytes:quadVertices
+        renderer->rectVBO = [renderer->device newBufferWithBytes:quadVertices
                                          length:sizeof(quadVertices)
                                         options:MTLResourceStorageModeShared];
 
         // Calculate the number of vertices by dividing the byte length by the size of each vertex
-        renderer->_numVertices = sizeof(quadVertices) / sizeof(AAPLVertex);
+        renderer->rectVBOCount = sizeof(quadVertices) / sizeof(AAPLVertex);
 
 
         // allocate a number of buffers in memory that matches the sempahore count so that
@@ -837,7 +837,7 @@ return;
             renderer->mainRenderCommandEncoder = mainRenderCommandEncoder;
             mainRenderCommandEncoder.label = @"FSTUFF_MainRenderEncoder";
             [mainRenderCommandEncoder setRenderPipelineState:renderer->mainPipelineState];
-            [mainRenderCommandEncoder setVertexBuffer:renderer->_vertices
+            [mainRenderCommandEncoder setVertexBuffer:renderer->rectVBO
                                                offset:0
                                               atIndex:AAPLVertexInputIndexVertices];
             [mainRenderCommandEncoder setFragmentTexture:renderer->simTexture
@@ -846,7 +846,7 @@ return;
                                                  atIndex:AAPLTextureIndexOverlayColor];
             [mainRenderCommandEncoder drawPrimitives:MTLPrimitiveTypeTriangle
                                          vertexStart:0
-                                         vertexCount:renderer->_numVertices];
+                                         vertexCount:renderer->rectVBOCount];
             [mainRenderCommandEncoder endEncoding];
             renderer->mainRenderCommandEncoder = nil;
 
