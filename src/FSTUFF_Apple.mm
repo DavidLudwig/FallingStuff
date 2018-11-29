@@ -177,7 +177,6 @@ NSWindow * FSTUFF_CreateConfigureSheet()
         viewController.sim->showSettings = true;
         viewController.sim->configurationMode = true;
         viewController.sim->SetGlobalScale(cpv(0.5,0.5));
-//            FSTUFF_MetalDebugViewController * viewController = [[FSTUFF_MetalDebugViewController alloc] init];
         configSheet.contentViewController = viewController;
         MTKView * view = (MTKView *) viewController.view;
         if ([view isKindOfClass:[MTKView class]]) {
