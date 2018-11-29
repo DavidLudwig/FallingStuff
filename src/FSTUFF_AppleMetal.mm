@@ -366,6 +366,9 @@ return;
     //_sim = new FSTUFF_Simulation();
     renderer = new FSTUFF_AppleMetalRenderer();
 
+    const FSTUFF_ViewSize viewSize = FSTUFF_Apple_GetViewSize((__bridge void *)_metalView);
+    self.sim->ViewChanged(viewSize);
+
     renderer->constantDataBufferIndex = 0;
     renderer->_inflight_semaphore = dispatch_semaphore_create(3);
 
