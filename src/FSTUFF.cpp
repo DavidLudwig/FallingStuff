@@ -224,9 +224,7 @@ void FSTUFF_ShapeInit(FSTUFF_Shape * shape, FSTUFF_Renderer * renderer)
 
 #pragma mark - Simulation
 
-static const size_t kNumSubSteps = 10;
-const cpFloat kStepTimeS = 1./60.;          // step time, in seconds
-
+static const cpFloat kPhysicsStepTimeS = 1./600.;
 
 
 #define SPACE           (this->physicsSpace)
@@ -584,7 +582,7 @@ void FSTUFF_Simulation::Update()
     if (this->game.lastUpdateUTCTimeS == 0.) {
         this->game.lastUpdateUTCTimeS = nowS;
     }
-    
+
     // Compute delta-time
     const double deltaTimeS = nowS - this->game.lastUpdateUTCTimeS;
     this->game.elapsedTimeS += deltaTimeS;
@@ -601,14 +599,11 @@ void FSTUFF_Simulation::Update()
     }
 
     // Update physics
-    const cpFloat kSubstepTimeS = kStepTimeS / ((cpFloat)kNumSubSteps);
-    while ((this->game.lastUpdateUTCTimeS + kStepTimeS) <= nowS) {
-        for (size_t i = 0; i < kNumSubSteps; ++i) {
-            this->game.lastUpdateUTCTimeS += kSubstepTimeS;
-            cpSpaceStep(SPACE, kSubstepTimeS);
-        }
+    while ((this->game.lastUpdateUTCTimeS + kPhysicsStepTimeS) <= nowS) {
+        cpSpaceStep(SPACE, kPhysicsStepTimeS);
+        this->game.lastUpdateUTCTimeS += kPhysicsStepTimeS;
     }
-    
+
     // Reset world, if warranted
     if (this->game.marblesCount >= this->game.marblesMax) {
         if (this->game.resetInS_default > 0) {
