@@ -1,12 +1,12 @@
 //
-//  FSTUFF_OpenGLES.cpp
+//  FSTUFF_OpenGL.cpp
 //  FallingStuff
 //
 //  Created by David Ludwig on 11/16/18.
 //  Copyright © 2018 David Ludwig. All rights reserved.
 //
 
-#include "FSTUFF_OpenGLES.h"
+#include "FSTUFF_OpenGL.h"
 #include "FSTUFF.h"
 #include "FSTUFF_Apple.h"
 
@@ -14,6 +14,34 @@
     #include <OpenGL/glu.h>
     #define FSTUFF_HAS_GLU 1
 #endif
+
+static const GLbyte FSTUFF_GL_VertexShaderSrcGLCorev3[] = \
+R"(#version 330 core
+    uniform mat4 viewMatrix;
+    layout (location = 0) in vec4 position;
+    layout (location = 1) in vec4 colorRGBX;
+    layout (location = 2) in float alpha;
+    layout (location = 3) in mat4 modelMatrix;
+    out vec4 midColor;
+    void main()
+    {
+        gl_Position = (viewMatrix * modelMatrix) * position;
+        midColor = vec4(colorRGBX.rgb, alpha);
+    }
+)";
+
+static const GLbyte FSTUFF_GL_FragmentShaderSrcGLCorev3[] = \
+R"(#version 330 core
+    precision mediump float;
+    in vec4 midColor;
+    out vec4 finalColor;
+    void main()
+    {
+        // color is listed in code as (R,G,B,A)
+        finalColor = midColor;
+    }
+)";
+
 
 static const GLbyte FSTUFF_GL_VertexShaderSrcGLESv2[] = \
 R"(
@@ -68,7 +96,7 @@ R"(#version 300 es
     }
 )";
 
-static void FSTUFF_GLCheck_Inner(FSTUFF_CodeLocation location)
+void FSTUFF_GLCheck_Inner(FSTUFF_CodeLocation location)
 {
     const GLenum rawError = glGetError();
     if (rawError == GL_NO_ERROR) {
@@ -91,8 +119,6 @@ static void FSTUFF_GLCheck_Inner(FSTUFF_CodeLocation location)
     );
 #endif
 }
-
-#define FSTUFF_GLCheck() FSTUFF_GLCheck_Inner(FSTUFF_CODELOC)
 
 static std::string
 FSTUFF_GL_GetInfoLog(
@@ -146,29 +172,49 @@ void FSTUFF_GLESRenderer::Init() {
 
     info = (const char *) glGetString(GL_SHADING_LANGUAGE_VERSION);
     FSTUFF_Log("GLSL version: \"%s\"\n", (info ? info : ""));
-
-    info = (const char *) glGetString(GL_EXTENSIONS);
-    FSTUFF_Log("GL extensions: \"%s\"\n", (info ? info : ""));
-    if (info) {
-        // Copy the list of extensions into an indexed collection
-        const char * start = info;
-        const char * current = info;
-        while (*current != '\0') {
-            if (*current == ' ') {
-                if (current != start) {
-                    this->glExtensionsCache.emplace(start, current - start);
-                    start = current + 1;
-                }
+    FSTUFF_GLCheck();
+    
+    FSTUFF_Assert((bool)this->getProcAddress);
+    this->glGetStringi = (decltype(this->glGetStringi)) this->getProcAddress("glGetStringi");
+    if ((this->glVersion != FSTUFF_GLVersion::GLESv2) &&
+        (this->glGetStringi != nullptr))
+    {
+        int numExtensions = 0;
+        glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
+        FSTUFF_Log("GL num extensions: %d\n", numExtensions);
+        FSTUFF_Log("GL extensions: ");
+        for (int i = 0; i < numExtensions; ++i) {
+            info = (const char *) this->glGetStringi(GL_EXTENSIONS, i);
+            FSTUFF_Log("%s ", (info ? info : ""));
+            if (info) {
+                this->glExtensionsCache.emplace(info);
             }
-            ++current;
+        }
+        FSTUFF_Log("\n");
+    } else {
+        info = (const char *) glGetString(GL_EXTENSIONS);
+        FSTUFF_Log("GL extensions: \"%s\"\n", (info ? info : ""));
+        if (info) {
+            // Copy the list of extensions into an indexed collection
+            const char * start = info;
+            const char * current = info;
+            while (*current != '\0') {
+                if (*current == ' ') {
+                    if (current != start) {
+                        this->glExtensionsCache.emplace(start, current - start);
+                        start = current + 1;
+                    }
+                }
+                ++current;
+            }
         }
     }
 
     FSTUFF_Assert(sim);
     FSTUFF_Assert(sim->viewSize.widthPixels > 0);
     FSTUFF_Assert(sim->viewSize.heightPixels > 0);
-
-    FSTUFF_Assert((bool)this->getProcAddress);
+    
+    FSTUFF_GLCheck();
     
     switch (glVersion) {
         case FSTUFF_GLVersion::GLESv2:
@@ -184,12 +230,23 @@ void FSTUFF_GLESRenderer::Init() {
             }
             break;
         case FSTUFF_GLVersion::GLESv3:
+        case FSTUFF_GLVersion::GLCorev3:
             this->glDrawArraysInstanced = (decltype(this->glDrawArraysInstanced)) this->getProcAddress("glDrawArraysInstanced");
             this->glVertexAttribDivisor = (decltype(this->glVertexAttribDivisor)) this->getProcAddress("glVertexAttribDivisor");
             break;
     }
     FSTUFF_Assert(this->glDrawArraysInstanced != nullptr);
     FSTUFF_Assert(this->glVertexAttribDivisor != nullptr);
+
+    switch (this->glVersion) {
+        case FSTUFF_GLVersion::GLESv2:
+            break;
+        case FSTUFF_GLVersion::GLESv3:
+        case FSTUFF_GLVersion::GLCorev3:
+            glGenVertexArrays(1, &mainVAO);
+            FSTUFF_GLCheck();
+            break;
+    }
     
     glGenBuffers(1, &circleMatricesBufID);
     glGenBuffers(1, &circleColorsBufID);
@@ -197,11 +254,16 @@ void FSTUFF_GLESRenderer::Init() {
     glGenBuffers(1, &boxColorsBufID);
     glGenBuffers(1, &debugShapeMatricesBufID);
     glGenBuffers(1, &debugShapeColorsBufID);
+    FSTUFF_GLCheck();
     
     // Load the vertex/fragment shaders
     const GLbyte * vertexShaderSrc = nullptr;
     const GLbyte * fragmentShaderSrc = nullptr;
     switch (this->glVersion) {
+        case FSTUFF_GLVersion::GLCorev3:
+            vertexShaderSrc = FSTUFF_GL_VertexShaderSrcGLCorev3;
+            fragmentShaderSrc = FSTUFF_GL_FragmentShaderSrcGLCorev3;
+            break;
         case FSTUFF_GLVersion::GLESv2:
             vertexShaderSrc = FSTUFF_GL_VertexShaderSrcGLESv2;
             fragmentShaderSrc = FSTUFF_GL_FragmentShaderSrcGLESv2;
@@ -246,12 +308,25 @@ void FSTUFF_GLESRenderer::Init() {
     this->vertexShaderAttribute_colorRGBX = glGetAttribLocation(program, "colorRGBX");
     this->vertexShaderAttribute_alpha = glGetAttribLocation(program, "alpha");
     this->vertexShaderAttribute_modelMatrix = glGetAttribLocation(program, "modelMatrix");
+    
+    FSTUFF_GLCheck();
 }
 
 void FSTUFF_GLESRenderer::BeginFrame() {
     FSTUFF_Assert(sim);
     FSTUFF_Assert(sim->viewSize.widthPixels > 0);
     FSTUFF_Assert(sim->viewSize.heightPixels > 0);
+    FSTUFF_GLCheck();
+    
+    // Use the vertex array object
+    switch (this->glVersion) {
+        case FSTUFF_GLVersion::GLESv2:
+            break;
+        case FSTUFF_GLVersion::GLESv3:
+        case FSTUFF_GLVersion::GLCorev3:
+            glBindVertexArray(this->mainVAO);
+            break;
+    }
 
     // Use the program object
     glUseProgram(this->programObject);
@@ -268,6 +343,8 @@ void FSTUFF_GLESRenderer::BeginFrame() {
     // Enable blending
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    FSTUFF_GLCheck();
 }
 
 FSTUFF_GLESRenderer::~FSTUFF_GLESRenderer() {
@@ -339,6 +416,7 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
     if (count == 0) {
         return;
     }
+    FSTUFF_GLCheck();
     
     GLenum gpuPrimitiveType;
     switch (shape->primitiveType) {
@@ -359,6 +437,7 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
     //
     // Copy data to OpenGL
     //
+    FSTUFF_GLCheck();
 
     // Send to OpenGL: color
     switch (shape->type) {
@@ -412,5 +491,7 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
     //
     // Draw!
     //
+    FSTUFF_GLCheck();
     this->glDrawArraysInstanced(gpuPrimitiveType, 0, shape->numVertices, (int)count);
+    FSTUFF_GLCheck();
 }

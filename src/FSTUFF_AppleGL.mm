@@ -7,7 +7,7 @@
 //
 
 #include "FSTUFF.h"
-#include "FSTUFF_OpenGLES.h"
+#include "FSTUFF_OpenGL.h"
 #import "FSTUFF_Apple.h"
 //#import <OpenGLES/ES2/glext.h>
 #import <OpenGLES/ES3/glext.h>

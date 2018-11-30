@@ -1,6 +1,6 @@
 
 #include "FSTUFF.h"
-#include "FSTUFF_OpenGLES.h"
+#include "FSTUFF_OpenGL.h"
 #include <cstdio>
 
 #define SDL_MAIN_HANDLED
@@ -59,7 +59,11 @@ void tick() {
 
 int main(int, char **) {
     renderer = new FSTUFF_SDLGLRenderer;
+#if TARGET_OS_OSX
+    renderer->glVersion = FSTUFF_GLVersion::GLCorev3;
+#else
     renderer->glVersion = FSTUFF_GLVersion::GLESv2;
+#endif
     renderer->getProcAddress = SDL_GL_GetProcAddress;
 	sim = new FSTUFF_Simulation();
 	sim->renderer = renderer;
@@ -74,6 +78,11 @@ int main(int, char **) {
 	}
 
     switch (renderer->glVersion) {
+        case FSTUFF_GLVersion::GLCorev3:
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+            break;
         case FSTUFF_GLVersion::GLESv2:
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);

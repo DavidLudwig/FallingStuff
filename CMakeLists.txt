@@ -31,7 +31,7 @@ endif()
 
 add_executable(FallingStuff
     src/FSTUFF.cpp
-    src/FSTUFF_OpenGLES.cpp
+    src/FSTUFF_OpenGL.cpp
     src/FSTUFF_Apple.mm
     src/FSTUFF_AppleMetal.mm
     src/FSTUFF_Log.cpp
