@@ -99,7 +99,7 @@ int main(int, char **) {
         "Falling Stuff",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         1024, 768,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     if (!renderer->window) {
 		FSTUFF_Log("SDL_CreateWindow failed with error: \"%s\"\n", SDL_GetError());
         return 1;
