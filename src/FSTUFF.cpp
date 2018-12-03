@@ -561,9 +561,11 @@ void FSTUFF_Simulation::Update()
 {
     ImGui::StyleColorsDark(&ImGui::GetStyle());
 
+#if FSTUFF_ENABLE_IMGUI_DEMO
     if (this->showGUIDemo) {
         ImGui::ShowDemoWindow();
     }
+#endif
 
     // Initialize the simulation, if need be.
     if (this->state == FSTUFF_DEAD) {

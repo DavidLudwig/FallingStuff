@@ -23,6 +23,12 @@ extern "C" {
 #include "gb_math.h"            // Vector and Matrix math
 #include "imgui.h"
 
+#ifndef FSTUFF_ENABLE_IMGUI_DEMO
+    // If 1, allow the ImGUI demo window to be shown.  This can increase
+    // compiled app-size by over 100 KB (measured with Emscripten)
+    #define FSTUFF_ENABLE_IMGUI_DEMO 0
+#endif
+
 #ifndef FSTUFF_USE_METAL
     #if __APPLE__
         #define FSTUFF_USE_METAL 1
@@ -231,7 +237,7 @@ struct FSTUFF_Simulation {
     // User Interface
     //
     std::bitset<128> keysPressed;  // key-press state: 0|false for up, 1|true for pressed-down; indexed by 7-bit ASCII codes
-    bool showGUIDemo = false;
+    bool showGUIDemo = false;           // only works if '#define FSTUFF_ENABLE_IMGUI_DEMO 1' is set (increases app-size!)
     bool showSettings = false;
     bool configurationMode = false;
     bool doEndConfiguration = false;
