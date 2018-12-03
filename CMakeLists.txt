@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.12)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 project(FallingStuff)
 
+if (EMSCRIPTEN)
+    set(CMAKE_C_FLAGS_MINSIZEREL "-DNDEBUG -Oz")
+    set(CMAKE_CXX_FLAGS_MINSIZEREL "-DNDEBUG -Oz")
+    set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-Oz")
+endif()
+
 if (NOT EMSCRIPTEN)
     find_package(SDL2 REQUIRED)
 endif()
@@ -89,14 +95,12 @@ target_link_libraries(FallingStuff
 )
 
 if (EMSCRIPTEN)
-    target_compile_options(FallingStuff
-        PRIVATE
-            -s USE_SDL=2
-    )
+    set(SHARED_EMSCRIPTEN_FLAGS "--llvm-lto 3 -s MALLOC=emmalloc -s NO_FILESYSTEM=1 -s DISABLE_EXCEPTION_CATCHING=1 -s USE_SDL=2")
     set_target_properties(FallingStuff
         PROPERTIES
-            LINK_FLAGS "-s USE_SDL=2 --shell-file ${CMAKE_CURRENT_SOURCE_DIR}/emscripten_template_page.html"
+            LINK_FLAGS "${SHARED_EMSCRIPTEN_FLAGS} --shell-file ${CMAKE_CURRENT_SOURCE_DIR}/emscripten_template_page.html "
             SUFFIX ".html"
+            COMPILE_FLAGS "${SHARED_EMSCRIPTEN_FLAGS} -fno-rtti -fno-exceptions"
     )
 endif()
 
