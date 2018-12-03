@@ -43,7 +43,7 @@ enum class FSTUFF_GLVersion {
     GLESv3,
 };
 
-struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
+struct FSTUFF_GLESRenderer : public FSTUFF_Renderer<FSTUFF_GLESRenderer> {
     FSTUFF_GLVersion glVersion = FSTUFF_GLVersion::GLESv3;
     
     void * nativeView = nullptr;
@@ -81,16 +81,16 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     GLint vertexShaderAttribute_modelMatrix = -1;
 
     FSTUFF_GLESRenderer();
-    ~FSTUFF_GLESRenderer() override;
+    ~FSTUFF_GLESRenderer() FSTUFF_OVERRIDE;
     void    Init();
     void    BeginFrame();
-    void    DestroyVertexBuffer(void * gpuVertexBuffer) override;
-    void *  NewVertexBuffer(void * src, size_t size) override;
-    void    ViewChanged() override;
-    void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) override;
-    void    SetProjectionMatrix(const gbMat4 & matrix) override;
-    void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) override;
-    FSTUFF_CursorInfo GetCursorInfo() override;
+    void    DestroyVertexBuffer(void * gpuVertexBuffer) FSTUFF_OVERRIDE;
+    void *  NewVertexBuffer(void * src, size_t size) FSTUFF_OVERRIDE;
+    void    ViewChanged() FSTUFF_OVERRIDE;
+    void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) FSTUFF_OVERRIDE;
+    void    SetProjectionMatrix(const gbMat4 & matrix) FSTUFF_OVERRIDE;
+    void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) FSTUFF_OVERRIDE;
+    FSTUFF_CursorInfo GetCursorInfo() FSTUFF_OVERRIDE;
 };
 
 

@@ -10,25 +10,22 @@
 #include <emscripten.h>
 #endif
 
+SDL_Window * window = nullptr;
+SDL_GLContext glContext = nullptr;
+FSTUFF_GLESRenderer * renderer = nullptr;
+FSTUFF_Simulation<FSTUFF_GLESRenderer> * sim = nullptr;
 
-struct FSTUFF_SDLGLRenderer : public FSTUFF_GLESRenderer {
-    SDL_Window * window = nullptr;
-    SDL_GLContext gl = nullptr;
+FSTUFF_ViewSize FSTUFF_SDLGL_GetViewSize()
+{
+    FSTUFF_ViewSize vs;
+    SDL_GetWindowSize(window, &vs.widthOS, &vs.heightOS);
+    SDL_GL_GetDrawableSize(window, &vs.widthPixels, &vs.heightPixels);
+    const float osToMMApproximate = 1.f/4.f;
+    vs.widthMM = vs.widthOS * osToMMApproximate;
+    vs.heightMM = vs.heightOS * osToMMApproximate;
+    return vs;
+}
 
-    FSTUFF_ViewSize GetViewSize()
-    {
-        FSTUFF_ViewSize vs;
-        SDL_GetWindowSize(window, &vs.widthOS, &vs.heightOS);
-        SDL_GL_GetDrawableSize(window, &vs.widthPixels, &vs.heightPixels);
-        const float osToMMApproximate = 1.f/8.f;
-        vs.widthMM = vs.widthOS * osToMMApproximate;
-        vs.heightMM = vs.heightOS * osToMMApproximate;
-        return vs;
-    }
-};
-
-FSTUFF_SDLGLRenderer * renderer = nullptr;
-FSTUFF_Simulation * sim = nullptr;
 
 void tick() {
     SDL_Event e;
@@ -40,7 +37,7 @@ void tick() {
             case SDL_WINDOWEVENT:
                 switch (e.window.event) {
                     case SDL_WINDOWEVENT_SIZE_CHANGED: {
-                        const FSTUFF_ViewSize viewSize = renderer->GetViewSize();
+                        const FSTUFF_ViewSize viewSize = FSTUFF_SDLGL_GetViewSize();
                         sim->ViewChanged(viewSize);
                     } break;
                 }
@@ -48,25 +45,25 @@ void tick() {
         }
     }
 
-    if (SDL_GL_MakeCurrent(renderer->window, renderer->gl) != 0) {
+    if (SDL_GL_MakeCurrent(window, glContext) != 0) {
         FSTUFF_FatalError("SDL_GL_MakeCurrent failed: %s\n", SDL_GetError());
     }
     renderer->BeginFrame();
     sim->Update();
     sim->Render();
-    SDL_GL_SwapWindow(renderer->window);
+    SDL_GL_SwapWindow(window);
 }
 
 int main(int, char **) {
-    renderer = new FSTUFF_SDLGLRenderer;
+    renderer = new FSTUFF_GLESRenderer;
 #if TARGET_OS_OSX
     renderer->glVersion = FSTUFF_GLVersion::GLCorev3;
 #else
     renderer->glVersion = FSTUFF_GLVersion::GLESv2;
 #endif
     renderer->getProcAddress = SDL_GL_GetProcAddress;
-	sim = new FSTUFF_Simulation();
-	sim->renderer = renderer;
+    sim = new FSTUFF_Simulation<FSTUFF_GLESRenderer>();
+    sim->renderer = renderer;
     renderer->sim = sim;
 
 	SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
@@ -95,29 +92,29 @@ int main(int, char **) {
             break;
     }
 	
-	renderer->window = SDL_CreateWindow(
+	window = SDL_CreateWindow(
         "Falling Stuff",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         1024, 768,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    if (!renderer->window) {
+    if (!window) {
 		FSTUFF_Log("SDL_CreateWindow failed with error: \"%s\"\n", SDL_GetError());
         return 1;
     }
 
-    renderer->gl = SDL_GL_CreateContext(renderer->window);
-    if (!renderer->gl) {
+    glContext = SDL_GL_CreateContext(window);
+    if (!glContext) {
 		FSTUFF_Log("SDL_GL_CreateContext failed with error: \"%s\"\n", SDL_GetError());
         return 1;
     }
 
-	if (SDL_GL_MakeCurrent(renderer->window, renderer->gl) != 0) {
+	if (SDL_GL_MakeCurrent(window, glContext) != 0) {
 		FSTUFF_Log("SDL_GL_MakeCurrent failed with error: \"%s\"\n", SDL_GetError());
 		return 1;
 	}
 
     {
-        const FSTUFF_ViewSize viewSize = renderer->GetViewSize();
+        const FSTUFF_ViewSize viewSize = FSTUFF_SDLGL_GetViewSize();
         sim->ViewChanged(viewSize);
     }
     renderer->Init();

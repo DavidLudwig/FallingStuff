@@ -260,7 +260,7 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
     FSTUFF_AppleMetalRenderer * renderer;
 
     // game
-    FSTUFF_Simulation * sim;
+    FSTUFF_Simulation<FSTUFF_AppleMetalRenderer> * sim;
     
 #if ! TARGET_OS_IOS
     // Cursor tracking area
@@ -270,7 +270,7 @@ FSTUFF_CursorInfo FSTUFF_AppleMetalRenderer::GetCursorInfo()
     FSTUFF_ImGuiMetal fstuff_gui;
 }
 
-- (FSTUFF_Simulation *) sim
+- (FSTUFF_Simulation<FSTUFF_AppleMetalRenderer> *) sim
 {
     @synchronized(self) {
         FSTUFF_Assert(sim != nullptr);  // sim is probably created in, mabybe before, viewDidLoad
@@ -358,7 +358,7 @@ return;
         self.label = @"Unlabelled";
     }
     
-    sim = new FSTUFF_Simulation();
+    sim = new FSTUFF_Simulation<FSTUFF_AppleMetalRenderer>();
     renderer = new FSTUFF_AppleMetalRenderer();
     renderer->sim = sim;
     renderer->constantDataBufferIndex = 0;

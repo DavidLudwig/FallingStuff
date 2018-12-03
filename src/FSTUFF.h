@@ -111,6 +111,8 @@ struct FSTUFF_Shape {
     void * gpuVertexBuffer = NULL;
 };
 
+static const unsigned kNumCircleParts = 64; //32;
+
 struct FSTUFF_ViewSize {
     float widthMM       = 0.f;
     float heightMM      = 0.f;
@@ -127,20 +129,48 @@ struct FSTUFF_CursorInfo {
     //bool contained;
 };
 
-struct FSTUFF_Simulation;
+constexpr gbVec4 FSTUFF_Color(uint32_t rgb, uint8_t a)
+{
+    return {
+        ((((uint32_t)rgb) >> 16) & 0xFF) / 255.0f,
+        ((((uint32_t)rgb) >> 8) & 0xFF) / 255.0f,
+        (rgb & 0xFF) / 255.0f,
+        (a) / 255.0f
+    };
+}
 
-struct FSTUFF_Renderer {
-    FSTUFF_Simulation * sim = nullptr;
+constexpr gbVec4 FSTUFF_Color(uint32_t rgb)
+{
+    return FSTUFF_Color(rgb, 0xff);
+}
 
-    virtual         ~FSTUFF_Renderer();
-    virtual void    DestroyVertexBuffer(void * gpuVertexBuffer) = 0;
-    virtual void *  NewVertexBuffer(void * src, size_t size) = 0;
-    virtual void    ViewChanged() = 0;
-    virtual void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) = 0;
-    virtual void    SetProjectionMatrix(const gbMat4 & matrix) = 0;
-    virtual void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) = 0;
-    virtual FSTUFF_CursorInfo GetCursorInfo() = 0;
-};
+void FSTUFF_MakeCircleLineStrip(gbVec4 * vertices, int maxVertices, int * numVertices, int numPartsToGenerate,
+                                float radius);
+void FSTUFF_MakeCircleTriangleStrip(gbVec4 * vertices, int maxVertices, int * numVertices, int numPartsToGenerate,
+                                    float innerRadius, float outerRadius);
+void FSTUFF_MakeCircleFilledTriangles(gbVec4 * vertices,
+                                      int maxVertices,
+                                      int * numVertices,
+                                      int numPartsToGenerate,
+                                      float radius,
+                                      float offsetX,
+                                      float offsetY);
+
+int FSTUFF_RandRangeI(std::mt19937 & rng, int a, int b);
+cpFloat FSTUFF_RandRangeF(std::mt19937 & rng, cpFloat a, cpFloat b);
+
+
+// struct FSTUFF_Simulation;
+
+#if 0
+    #define FSTUFF_VIRTUAL virtual
+    #define FSTUFF_OVERRIDE override
+    #define FSTUFF_PURE_VIRTUAL = 0
+#else
+    #define FSTUFF_VIRTUAL
+    #define FSTUFF_OVERRIDE
+    #define FSTUFF_PURE_VIRTUAL
+#endif
 
 enum FSTUFF_EventType : uint8_t {
     FSTUFF_EventNone = 0,
@@ -179,110 +209,20 @@ struct FSTUFF_Event {
 //    static FSTUFF_Event NewCursorContainedEvent(bool contained);
 };
 
-struct FSTUFF_Simulation {
-    FSTUFF_SimulationState state = FSTUFF_DEAD;
+#include "FSTUFF_Simulation.h"
 
-    //
-    // Geometry + GPU
-    //
-    FSTUFF_Shape circleFilled;
-    FSTUFF_Shape circleDots;
-    FSTUFF_Shape circleEdged;
-    FSTUFF_Shape boxFilled;
-    FSTUFF_Shape boxEdged;
-    FSTUFF_Shape debugShape;
-    gbMat4 projectionMatrix;
-    //cpVect viewSizeMM = {0, 0};
-    FSTUFF_ViewSize viewSize;
-    FSTUFF_Renderer * renderer = NULL;
-    
-    struct Resettable {
-        //
-        // Random Number Generation
-        //
-        std::mt19937 rng;
+template <typename FSTUFF_RendererType>
+struct FSTUFF_Renderer {
+    FSTUFF_Simulation<FSTUFF_RendererType> * sim = nullptr;
 
-        //
-        // Timing
-        //
-        cpFloat lastUpdateUTCTimeS = 0.0;       // set on FSTUFF_Update; UTC time in seconds
-        double elapsedTimeS = 0.0;              // elapsed time, in seconds; 0 == no time has passed
-
-        //
-        // Misc parameters
-        //
-        float addMarblesInS             = 0.0f;
-        float addNumMarblesPerSecond    = 1.0f;
-        cpVect gravity                  = cpv(0, -196);
-        cpFloat marbleRadius_Range[2]   = {2, 4};
-        int32_t marblesCount            = 0;
-        int32_t marblesMax              = 200;
-        double resetInS_default         = 15;
-        double resetInS                 = 0;
-
-        size_t numPegs      = 0;     // all pegs must be consecutive, starting at circles[0]
-        size_t numCircles   = 0;  // pegs + circlular-marbles (with pegs first, then marbles)
-        size_t numBoxes     = 0;
-        size_t numBodies    = 0;
-    } game;
-    
-    
-    //
-    // User Interface
-    //
-    std::bitset<128> keysPressed;  // key-press state: 0|false for up, 1|true for pressed-down; indexed by 7-bit ASCII codes
-    bool showGUIDemo = false;
-    bool showSettings = false;
-    bool configurationMode = false;
-    bool doEndConfiguration = false;
-
-    //
-    // Physics
-    //
-    cpSpace * physicsSpace = NULL;
-    cpCircleShape circles[FSTUFF_MaxCircles] = {0};
-    gbVec4 circleColors[FSTUFF_MaxCircles] = {0};
-    cpSegmentShape boxes[FSTUFF_MaxBoxes] = {0};
-    gbVec4 boxColors[FSTUFF_MaxBoxes] = {0};
-    cpBody bodies[FSTUFF_MaxShapes] = {0};
-
-
-    FSTUFF_Simulation();
-    ~FSTUFF_Simulation();
-    void    AddMarble();
-    void    EventReceived(FSTUFF_Event * event);
-    void    Render();
-    void    Update();
-    void    ViewChanged(const FSTUFF_ViewSize & viewSize);
-    void    Init();
-    bool    DidInit() const;
-    void    ResetWorld();
-    cpVect  globalScale = {1., 1.};
-    void    SetGlobalScale(cpVect scale);
-    cpFloat GetWorldWidth() const { return viewSize.widthMM * (1. / globalScale.x); }
-    cpFloat GetWorldHeight() const { return viewSize.heightMM * (1. / globalScale.y); }
-    void    UpdateProjectionMatrix();
-    FSTUFF_CursorInfo cursorInfo;
-    void    UpdateCursorInfo(const FSTUFF_CursorInfo & newInfo);
-    
-private:
-    void    InitWorld();
-    void    InitGPUShapes();
-public: // public is needed, here, for FSTUFF_Shutdown
-    void    ShutdownWorld();
-    void    ShutdownGPU();
-
-public:
-    cpBody *          GetBody(size_t index)     { return &(this->bodies[index]); }
-    cpCircleShape *   GetCircle(size_t index)   { return &(this->circles[index]); }
-    cpSegmentShape *  GetBox(size_t index)      { return &(this->boxes[index]); }
-
-    cpBody *          NewBody()     { return GetBody(this->game.numBodies++); }
-    cpCircleShape *   NewCircle()   { return GetCircle(this->game.numCircles++); }
-    cpSegmentShape *  NewBox()      { return GetBox(this->game.numBoxes++); }
-
-    size_t IndexOfCircle(cpShape * shape)   { return ((((uintptr_t)(shape)) - ((uintptr_t)(&this->circles[0]))) / sizeof(this->circles[0])); }
-    size_t IndexOfBox(cpShape * shape)      { return ((((uintptr_t)(shape)) - ((uintptr_t)(&this->boxes[0]))) / sizeof(this->boxes[0])); }
+    FSTUFF_VIRTUAL         ~FSTUFF_Renderer();
+    FSTUFF_VIRTUAL void    DestroyVertexBuffer(void * gpuVertexBuffer) FSTUFF_PURE_VIRTUAL;
+    FSTUFF_VIRTUAL void *  NewVertexBuffer(void * src, size_t size) FSTUFF_PURE_VIRTUAL;
+    FSTUFF_VIRTUAL void    ViewChanged() FSTUFF_PURE_VIRTUAL;
+    FSTUFF_VIRTUAL void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) FSTUFF_PURE_VIRTUAL;
+    FSTUFF_VIRTUAL void    SetProjectionMatrix(const gbMat4 & matrix) FSTUFF_PURE_VIRTUAL;
+    FSTUFF_VIRTUAL void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) FSTUFF_PURE_VIRTUAL;
+    FSTUFF_VIRTUAL FSTUFF_CursorInfo GetCursorInfo() FSTUFF_PURE_VIRTUAL;
 };
 
 #endif /* FSTUFF_Simulation_hpp */

@@ -15,7 +15,7 @@ struct GLFWwindow;
 
 struct FSTUFF_ImGuiMetal {
     ImGuiContext * imGuiContext = NULL;
-    FSTUFF_Simulation * sim = NULL;
+    FSTUFF_Simulation<FSTUFF_AppleMetalRenderer> * sim = NULL;
     FSTUFF_AppleMetalRenderer * renderer = NULL;
     id <MTLTexture> metalTexture = nil;
     //GLFWwindow*  g_Window = NULL;

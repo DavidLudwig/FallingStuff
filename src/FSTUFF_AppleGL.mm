@@ -29,7 +29,7 @@ void * FSTUFF_AppleGL_GetProcAddress(const char * name)
 @end
 
 @interface FSTUFF_AppleGLViewController () {
-    FSTUFF_Simulation * sim;
+    FSTUFF_Simulation<FSTUFF_GLESRenderer> * sim;
     FSTUFF_GLESRenderer * renderer;
 }
 @property (strong, nonatomic) EAGLContext *context;
@@ -64,7 +64,7 @@ void * FSTUFF_AppleGL_GetProcAddress(const char * name)
 
     [EAGLContext setCurrentContext:self.context];
 
-    sim = new FSTUFF_Simulation();
+    sim = new FSTUFF_Simulation<FSTUFF_GLESRenderer>();
     renderer = new FSTUFF_GLESRenderer();
     renderer->sim = sim;
     sim->renderer = renderer;

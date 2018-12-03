@@ -17,7 +17,7 @@ static const NSUInteger FSTUFF_MaxInflightBuffers = 3;
 // Max API memory buffer size.
 static const size_t FSTUFF_MaxBytesPerFrame = 1024 * 1024; //64; //sizeof(vector_float4) * 3; //*1024;
 
-struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
+struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer<FSTUFF_AppleMetalRenderer>
 {
     // controller
     dispatch_semaphore_t _inflight_semaphore;
@@ -40,18 +40,18 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
     id<MTLBuffer> rectVBO = nil;  // VBO for a single, full-screen (in normalized coords), rectangle
     NSUInteger rectVBOCount = 0;  // number of vertices in rectVBO
 
-    void    DestroyVertexBuffer(void * _gpuVertexBuffer) override;
-    void *  NewVertexBuffer(void * src, size_t size) override;
-    void    ViewChanged() override;
-    void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) override;
-    void    SetProjectionMatrix(const gbMat4 & matrix) override;
-    void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) override;
-    FSTUFF_CursorInfo GetCursorInfo() override;
+    void    DestroyVertexBuffer(void * _gpuVertexBuffer) FSTUFF_OVERRIDE;
+    void *  NewVertexBuffer(void * src, size_t size) FSTUFF_OVERRIDE;
+    void    ViewChanged() FSTUFF_OVERRIDE;
+    void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) FSTUFF_OVERRIDE;
+    void    SetProjectionMatrix(const gbMat4 & matrix) FSTUFF_OVERRIDE;
+    void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) FSTUFF_OVERRIDE;
+    FSTUFF_CursorInfo GetCursorInfo() FSTUFF_OVERRIDE;
 };
 
 
 @interface FSTUFF_MetalViewController : AppleViewController<MTKViewDelegate>
-@property (readonly) FSTUFF_Simulation * sim;
+@property (readonly) FSTUFF_Simulation<FSTUFF_AppleMetalRenderer> * sim;
 @property (readonly) FSTUFF_AppleMetalRenderer * renderer;
 @property (assign) NSRect initialViewFrame;
 @property (strong) NSString * label;

@@ -433,7 +433,7 @@ FSTUFF_ImGuiMetal::~FSTUFF_ImGuiMetal()
 
 bool FSTUFF_ImGuiMetal::Init(void * _nativeView, bool install_callbacks)
 {
-    this->sim = (FSTUFF_Simulation *)_nativeView;
+    this->sim = (FSTUFF_Simulation<FSTUFF_AppleMetalRenderer> *)_nativeView;
     this->renderer = (FSTUFF_AppleMetalRenderer *)this->sim->renderer;
 
 //    this->g_Window = window;
