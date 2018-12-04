@@ -10,6 +10,10 @@ if (EMSCRIPTEN)
 endif()
 
 if (NOT EMSCRIPTEN)
+    # SDL2 -is- used on Emscripten, however, the compiler + linker
+    # flags for such are often unusual, due to use of '-s USE_SDL=2',
+    # rather than specific, library files.  FindSDL2.cmake does not
+    # (yet) support this ('-s USE_SDL=2').
     find_package(SDL2 REQUIRED)
 endif()
 
