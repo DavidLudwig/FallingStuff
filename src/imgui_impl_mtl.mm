@@ -422,7 +422,7 @@ FSTUFF_ImGuiMetal::~FSTUFF_ImGuiMetal()
             ImGui::SetCurrentContext(NULL);
         }
         
-        FSTUFF_Log(@"TODO, %s: destroy ImGui content, without causing a crash.\n");
+        FSTUFF_Log(@"TODO, %s: destroy ImGui content, without causing a crash.\n", __FUNCTION__);
 //        if (this->imGuiContext->IO.Fonts) {
 //            delete this->imGuiContext->IO.Fonts;
 //            this->imGuiContext->IO.Fonts = NULL;
