@@ -97,11 +97,15 @@ target_link_libraries(FallingStuff
 )
 
 if (EMSCRIPTEN)
+    # EMSCRIPTEN_OPTIONS is for '-s KEY=VALUE' options, some of which are
+    # needed when compiling, and others when linking.
+    set(EMSCRIPTEN_OPTIONS "-s USE_SDL=2")
+
     set_target_properties(FallingStuff
         PROPERTIES
-            LINK_FLAGS "-s USE_SDL=2 --shell-file ${CMAKE_CURRENT_SOURCE_DIR}/emscripten_template_page.html"
+            LINK_FLAGS "${EMSCRIPTEN_OPTIONS} --shell-file ${CMAKE_CURRENT_SOURCE_DIR}/emscripten_template_page.html"
             SUFFIX ".html"
-            COMPILE_FLAGS "-s USE_SDL=2 -fno-rtti -fno-exceptions"
+            COMPILE_FLAGS "${EMSCRIPTEN_OPTIONS} -fno-rtti -fno-exceptions"
     )
 endif()
 
