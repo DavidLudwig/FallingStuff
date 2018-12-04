@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 3.12)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 project(FallingStuff)
 
+# Use -Oz on Emscripten-made MinSizeRel builds
+if (EMSCRIPTEN)
+    set(CMAKE_C_FLAGS_MINSIZEREL "-DNDEBUG -Oz")
+    set(CMAKE_CXX_FLAGS_MINSIZEREL "-DNDEBUG -Oz")
+    set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-Oz")
+endif()
+
 if (NOT EMSCRIPTEN)
     find_package(SDL2 REQUIRED)
 endif()
