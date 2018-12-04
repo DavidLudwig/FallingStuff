@@ -959,11 +959,11 @@ void FSTUFF_Simulation::EventReceived(FSTUFF_Event *event)
         } break;
         
         case FSTUFF_CursorButton: {
-//            FSTUFF_Log("FSTUFF_CursorButton: os position = {%f,%f}, down?=%s\n", event->data.cursorButton.xOS, event->data.cursorButton.yOS, (event->data.cursorButton.down ? "YES" : "NO"));
+            // FSTUFF_Log("FSTUFF_CursorButton: os position = {%f,%f}, down?=%s\n", event->data.cursorButton.xOS, event->data.cursorButton.yOS, (event->data.cursorButton.down ? "YES" : "NO"));
         } break;
 
         case FSTUFF_CursorMotion: {
-//            FSTUFF_Log("FSTUFF_CursorMotion: os position = {%f,%f}\n", event->data.cursorMotion.xOS, event->data.cursorMotion.yOS);
+            // FSTUFF_Log("FSTUFF_CursorMotion: os position = {%f,%f}\n", event->data.cursorMotion.xOS, event->data.cursorMotion.yOS);
         } break;
         
         case FSTUFF_CursorContained: {

@@ -27,6 +27,17 @@ struct FSTUFF_SDLGLRenderer : public FSTUFF_GLESRenderer {
     }
 };
 
+static FSTUFF_CursorInfo FSTUFF_SDL_GetCursorInfo() {
+    int x = 0.f;
+    int y = 0.f;
+    const Uint32 sdlButtons = SDL_GetMouseState(&x, &y);
+    FSTUFF_CursorInfo cur;
+    cur.xOS = (int) x;
+    cur.yOS = (int) y;
+    cur.pressed = (sdlButtons != 0);
+    return cur;
+}
+
 FSTUFF_SDLGLRenderer * renderer = nullptr;
 FSTUFF_Simulation * sim = nullptr;
 
@@ -34,6 +45,24 @@ void tick() {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         switch (e.type) {
+            case SDL_KEYDOWN:
+            case SDL_KEYUP: {
+                const char * keyName = SDL_GetKeyName(e.key.keysym.sym);
+                const FSTUFF_EventType eventType = \
+                    (e.type == SDL_KEYDOWN) ?
+                        FSTUFF_EventKeyDown :
+                        FSTUFF_EventKeyUp;
+                FSTUFF_Event fstuffEvent = FSTUFF_Event::NewKeyEvent(eventType, keyName);
+                sim->EventReceived(&fstuffEvent);
+            } break;
+
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP:
+            case SDL_MOUSEMOTION: {
+                const FSTUFF_CursorInfo cursorInfo = FSTUFF_SDL_GetCursorInfo();
+                sim->UpdateCursorInfo(cursorInfo);
+            } break;
+
             case SDL_QUIT:
                 std::exit(0);
                 break;
