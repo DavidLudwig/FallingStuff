@@ -121,5 +121,14 @@ if (APPLE)
                 COMPILE_FLAGS "-fobjc-arc")
 endif()
 set_property(TARGET FallingStuff PROPERTY CXX_STANDARD 17)
-install (TARGETS FallingStuff RUNTIME DESTINATION bin)
 
+install (TARGETS FallingStuff RUNTIME DESTINATION bin)
+if (EMSCRIPTEN)
+    install(
+        FILES
+            ${CMAKE_BINARY_DIR}/FallingStuff.js
+            ${CMAKE_BINARY_DIR}/FallingStuff.wasm
+        DESTINATION
+            bin
+    ) 
+endif()

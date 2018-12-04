@@ -3,5 +3,8 @@
 xcuserdata
 *.xccheckout
 *.xcscmblueprint
+
+# Misc
 build
 .vagrant
+build-*
