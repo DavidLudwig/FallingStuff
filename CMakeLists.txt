@@ -101,6 +101,7 @@ if (EMSCRIPTEN)
         PRIVATE
             -s USE_SDL=2
             -fno-rtti
+            -fno-exceptions
     )
     set_target_properties(FallingStuff
         PROPERTIES
