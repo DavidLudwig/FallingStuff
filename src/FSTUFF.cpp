@@ -922,7 +922,7 @@ void FSTUFF_Simulation::EventReceived(FSTUFF_Event *event)
         } break;
 
         case FSTUFF_EventKeyDown: {
-            if (event->data.key.utf8[0] <= 127) {
+            if (event->data.key.utf8[0] >= 0 && event->data.key.utf8[0] <= 127) {
                 const auto key = event->data.key.utf8[0];
                 this->keysPressed[key] = 1;
                 guiIO.KeysDown[key] = 1;
@@ -951,7 +951,7 @@ void FSTUFF_Simulation::EventReceived(FSTUFF_Event *event)
         } break;
         
         case FSTUFF_EventKeyUp: {
-            if (event->data.key.utf8[0] <= 127) {
+            if (event->data.key.utf8[0] >= 0 && event->data.key.utf8[0] <= 127) {
                 const auto key = event->data.key.utf8[0];
                 this->keysPressed[key] = 0;
                 guiIO.KeysDown[key] = 0;
