@@ -526,7 +526,7 @@ void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
     // FSTUFF_FatalError("uh oh: %d", 123);
     
     if ( ! this->renderer) {
-        throw std::runtime_error("FSTUFF_Simulation's 'renderer' field must be set, before calling its Init() method!");
+        FSTUFF_FatalError("FSTUFF_Simulation's 'renderer' field must be set, before calling its Init() method!");
     }
     
     // Don't re-initialize simulations that are already alive
