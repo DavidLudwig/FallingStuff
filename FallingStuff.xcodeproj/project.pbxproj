@@ -198,6 +198,10 @@
 		75EE9FBE20144251004C065B /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA7201121BE00FF086C /* imgui_draw.cpp */; };
 		75EE9FBF20144251004C065B /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA7201121BE00FF086C /* imgui_draw.cpp */; };
 		75EE9FC220144259004C065B /* imgui_impl_mtl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */; };
+		75F6FD5F21B7063600F95C29 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 75F6FD5C21B7063600F95C29 /* imgui_widgets.cpp */; };
+		75F6FD6021B7064700F95C29 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 75F6FD5C21B7063600F95C29 /* imgui_widgets.cpp */; };
+		75F6FD6121B7064800F95C29 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 75F6FD5C21B7063600F95C29 /* imgui_widgets.cpp */; };
+		75F6FD6221B7064800F95C29 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 75F6FD5C21B7063600F95C29 /* imgui_widgets.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -364,6 +368,7 @@
 		75E0A081219F0D8D009864D4 /* FSTUFF_AppleGL.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FSTUFF_AppleGL.mm; sourceTree = "<group>"; };
 		75E0B2AF219F8F8A005C572B /* FSTUFF_OpenGL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FSTUFF_OpenGL.cpp; sourceTree = "<group>"; };
 		75E0B2B0219F8F8A005C572B /* FSTUFF_OpenGL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FSTUFF_OpenGL.h; sourceTree = "<group>"; };
+		75F6FD5C21B7063600F95C29 /* imgui_widgets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_widgets.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -591,6 +596,7 @@
 				7568CBA5201121BE00FF086C /* .travis.yml */,
 				7568CBA6201121BE00FF086C /* imgui_demo.cpp */,
 				7568CBA7201121BE00FF086C /* imgui_draw.cpp */,
+				75F6FD5C21B7063600F95C29 /* imgui_widgets.cpp */,
 			);
 			name = imgui;
 			path = external/imgui;
@@ -904,6 +910,7 @@
 				75036FC41CD540F10017DC04 /* FSTUFF_MacMain.m in Sources */,
 				759E7D4C2191FEE400B679E4 /* FSTUFF_AppleMetal.mm in Sources */,
 				755856291CDFC96F00FC8EA4 /* cpRobust.c in Sources */,
+				75F6FD5F21B7063600F95C29 /* imgui_widgets.cpp in Sources */,
 				7558561A1CDFC96F00FC8EA4 /* cpBody.c in Sources */,
 				7558561F1CDFC96F00FC8EA4 /* cpGearJoint.c in Sources */,
 				7558561E1CDFC96F00FC8EA4 /* cpDampedSpring.c in Sources */,
@@ -948,6 +955,7 @@
 				759DFD181FF5987A00F1B2D8 /* cpConstraint.c in Sources */,
 				75EE9FB920144246004C065B /* imgui.cpp in Sources */,
 				759DFD191FF5987A00F1B2D8 /* cpDampedRotarySpring.c in Sources */,
+				75F6FD6221B7064800F95C29 /* imgui_widgets.cpp in Sources */,
 				759DFD1A1FF5987A00F1B2D8 /* cpDampedSpring.c in Sources */,
 				759DFD1B1FF5987A00F1B2D8 /* cpGearJoint.c in Sources */,
 				759DFD1C1FF5987A00F1B2D8 /* cpGrooveJoint.c in Sources */,
@@ -1001,6 +1009,7 @@
 				75EE9FB820144246004C065B /* imgui.cpp in Sources */,
 				75ADD6231D035B600042FC3A /* cpHashSet.c in Sources */,
 				759E7D4E2191FEE400B679E4 /* FSTUFF_AppleMetal.mm in Sources */,
+				75F6FD6121B7064800F95C29 /* imgui_widgets.cpp in Sources */,
 				75ADD6241D035B600042FC3A /* cpHastySpace.c in Sources */,
 				75ADD6251D035B600042FC3A /* cpMarch.c in Sources */,
 				75ADD6261D035B600042FC3A /* cpPinJoint.c in Sources */,
@@ -1043,6 +1052,7 @@
 				75DE2F511CFCCE710052F8C1 /* cpDampedRotarySpring.c in Sources */,
 				75DE2F521CFCCE710052F8C1 /* cpDampedSpring.c in Sources */,
 				75DE2F531CFCCE710052F8C1 /* cpGearJoint.c in Sources */,
+				75F6FD6021B7064700F95C29 /* imgui_widgets.cpp in Sources */,
 				75DE2F541CFCCE710052F8C1 /* cpGrooveJoint.c in Sources */,
 				75DE2F551CFCCE710052F8C1 /* cpHashSet.c in Sources */,
 				75DE2F561CFCCE710052F8C1 /* cpHastySpace.c in Sources */,

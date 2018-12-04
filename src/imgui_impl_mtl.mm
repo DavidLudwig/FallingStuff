@@ -489,7 +489,10 @@ bool FSTUFF_ImGuiMetal::Init(void * _nativeView, bool install_callbacks)
 void FSTUFF_ImGuiMetal::Shutdown()
 {
     this->InvalidateDeviceObjects();
-    ImGui::Shutdown();
+    if (this->imGuiContext) {
+        ImGui::Shutdown(this->imGuiContext);
+        this->imGuiContext = nullptr;
+    }
 }
 
 void FSTUFF_ImGuiMetal::EndFrame()

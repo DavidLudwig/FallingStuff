@@ -635,16 +635,16 @@ void FSTUFF_Simulation::Update()
         if (ImGui::SliderFloat("Spawn Rate (marbles/second)", &this->game.addNumMarblesPerSecond, 0, 10, "%.3f", 3.0f)) {
             this->game.addMarblesInS = 1.f / this->game.addNumMarblesPerSecond;
         }
-        ImGui::InvisibleButton("padding1", ImVec2(0, 8));
+        ImGui::InvisibleButton("padding1", ImVec2(8, 8));
         ImGui::Separator();
-        ImGui::InvisibleButton("padding2", ImVec2(0, 8));
+        ImGui::InvisibleButton("padding2", ImVec2(8, 8));
         if (ImGui::Button("Restart Simulation", ImVec2(400, 32))) {
             this->ResetWorld();
         }
         if (this->configurationMode) {
-            ImGui::InvisibleButton("padding1", ImVec2(0, 8));
+            ImGui::InvisibleButton("padding1", ImVec2(8, 8));
             ImGui::Separator();
-            ImGui::InvisibleButton("padding2", ImVec2(0, 8));
+            ImGui::InvisibleButton("padding2", ImVec2(8, 8));
             if (ImGui::Button("OK", ImVec2(400, 32))) {
 //                FSTUFF_Log("%s, doEndConfiguration set to true for sim:%p\n", __PRETTY_FUNCTION__, this);
                 this->doEndConfiguration = true;

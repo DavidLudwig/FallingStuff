@@ -40,6 +40,7 @@ add_executable(FallingStuff
     external/imgui/imgui.cpp
     external/imgui/imgui_demo.cpp
     external/imgui/imgui_draw.cpp
+    external/imgui/imgui_widgets.cpp
     external/Chipmunk2D/src/chipmunk.c
     external/Chipmunk2D/src/cpArbiter.c
     external/Chipmunk2D/src/cpArray.c
