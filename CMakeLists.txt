@@ -14,6 +14,7 @@ if (NOT EMSCRIPTEN)
 endif()
 
 if (WIN32)
+    # "unofficial"-prefixed packages are from Microsoft's vcpkg
     find_package(unofficial-angle CONFIG REQUIRED)
 else()
     find_package(OpenGL REQUIRED)
@@ -110,6 +111,7 @@ if (EMSCRIPTEN)
 endif()
 
 if (WIN32)
+    # "unofficial"-prefixed targets are from Microsoft's vcpkg
     target_link_libraries(FallingStuff
         unofficial::angle::libEGL
         unofficial::angle::libGLESv2
