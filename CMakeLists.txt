@@ -97,16 +97,11 @@ target_link_libraries(FallingStuff
 )
 
 if (EMSCRIPTEN)
-    target_compile_options(FallingStuff
-        PRIVATE
-            -s USE_SDL=2
-            -fno-rtti
-            -fno-exceptions
-    )
     set_target_properties(FallingStuff
         PROPERTIES
             LINK_FLAGS "-s USE_SDL=2 --shell-file ${CMAKE_CURRENT_SOURCE_DIR}/emscripten_template_page.html"
             SUFFIX ".html"
+            COMPILE_FLAGS "-s USE_SDL=2 -fno-rtti -fno-exceptions"
     )
 endif()
 
