@@ -26,7 +26,11 @@ extern "C" {
 #ifndef FSTUFF_ENABLE_IMGUI_DEMO
     // If 1, allow the ImGUI demo window to be shown.  This can increase
     // compiled app-size by over 100 KB (measured with Emscripten)
-    #define FSTUFF_ENABLE_IMGUI_DEMO 0
+    #if defined(NDEBUG)
+        #define FSTUFF_ENABLE_IMGUI_DEMO 0
+    #else
+        #define FSTUFF_ENABLE_IMGUI_DEMO 1
+    #endif
 #endif
 
 #ifndef FSTUFF_USE_METAL
