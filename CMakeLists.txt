@@ -100,6 +100,7 @@ if (EMSCRIPTEN)
     target_compile_options(FallingStuff
         PRIVATE
             -s USE_SDL=2
+            -fno-rtti
     )
     set_target_properties(FallingStuff
         PROPERTIES
