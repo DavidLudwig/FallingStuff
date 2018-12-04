@@ -20,7 +20,7 @@ struct FSTUFF_SDLGLRenderer : public FSTUFF_GLESRenderer {
         FSTUFF_ViewSize vs;
         SDL_GetWindowSize(window, &vs.widthOS, &vs.heightOS);
         SDL_GL_GetDrawableSize(window, &vs.widthPixels, &vs.heightPixels);
-        const float osToMMApproximate = 1.f/8.f;
+        const float osToMMApproximate = 1.f/4.f;
         vs.widthMM = vs.widthOS * osToMMApproximate;
         vs.heightMM = vs.heightOS * osToMMApproximate;
         return vs;
