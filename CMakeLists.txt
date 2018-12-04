@@ -103,9 +103,9 @@ if (EMSCRIPTEN)
 
     set_target_properties(FallingStuff
         PROPERTIES
+            COMPILE_FLAGS "${EMSCRIPTEN_OPTIONS} -fno-rtti -fno-exceptions"
             LINK_FLAGS "${EMSCRIPTEN_OPTIONS} --shell-file ${CMAKE_CURRENT_SOURCE_DIR}/emscripten_template_page.html"
             SUFFIX ".html"
-            COMPILE_FLAGS "${EMSCRIPTEN_OPTIONS} -fno-rtti -fno-exceptions"
     )
 endif()
 
