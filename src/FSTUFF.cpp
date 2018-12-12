@@ -15,9 +15,14 @@
 #include <ctime>
 #include <chrono>
 #include <cctype>
+#include <sstream>
 
 #define GB_MATH_IMPLEMENTATION
 #include "gb_math.h"
+
+#if __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 //#define FSTUFF_USE_DEBUG_PEGS 1
 
@@ -35,6 +40,17 @@ int FSTUFF_RandRangeI(std::mt19937 & rng, int a, int b)
 {
     std::uniform_int_distribution<int> distribution(a, b);
     return distribution(rng);
+}
+
+
+#pragma mark - Misc
+
+void FSTUFF_OpenWebPage(const char * url) {
+#if __EMSCRIPTEN__
+    std::ostringstream os;
+    os << "window.open('" << url << "', '_self')";
+    emscripten_run_script(os.str().c_str());
+#endif
 }
 
 
@@ -677,9 +693,16 @@ void FSTUFF_Simulation::Update()
                 this->doEndConfiguration = true;
             }
         }
+        ImGui::InvisibleButton("padding2", ImVec2(8, 8));
+        ImGui::Separator();
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("written by David Lee Ludwig");
+        ImGui::SameLine();
+        if (ImGui::Button("http://dll.fyi")) {
+            FSTUFF_OpenWebPage("http://dll.fyi");
+        }
         ImGui::End();
     }
-
 
     // Copy simulation/game data to GPU-accessible buffers
     this->renderer->SetProjectionMatrix(this->projectionMatrix);

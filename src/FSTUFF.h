@@ -87,6 +87,8 @@ void FSTUFF_DefaultFatalErrorHandler(const char * formattedMessage, void *);
     #define FSTUFF_LOG_IMPLEMENT_ME(EXTRA)
 #endif
 
+void FSTUFF_OpenWebPage(const char * url);
+
 enum FSTUFF_ShapeType : uint8_t {
     FSTUFF_ShapeCircle = 0,
     FSTUFF_ShapeBox,
@@ -259,7 +261,7 @@ struct FSTUFF_Simulation {
 #if __EMSCRIPTEN__
     bool showSettings = true;
 #else
-    bool showSettings = false;
+    bool showSettings = true;
 #endif
     bool configurationMode = false;
     bool doEndConfiguration = false;
