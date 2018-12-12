@@ -10,8 +10,6 @@
 #include "FSTUFF_Apple.h"
 #include "FSTUFF_AppleMetal.h"
 
-#define FSTUFF_USE_IMGUI 1
-
 #include "imgui.h"
 #ifdef __APPLE__
 

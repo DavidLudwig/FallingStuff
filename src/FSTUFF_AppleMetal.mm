@@ -11,14 +11,8 @@
 
 #include "FSTUFF_AppleMetal.h"
 #include "FSTUFF_Apple.h"
-
-
-#define FSTUFF_USE_IMGUI 1
-
 #include "imgui.h"
-
 #include "AAPLShaderTypes.h"
-
 #import <Foundation/Foundation.h>
 
 #if TARGET_OS_IOS
@@ -27,7 +21,6 @@
 #elif TARGET_OS_OSX
 #import <AppKit/AppKit.h>
 #endif
-
 
 #import "FSTUFF_AppleMetalStructs.h"
 
