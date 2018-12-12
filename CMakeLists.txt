@@ -48,7 +48,6 @@ add_executable(FallingStuff
     src/FSTUFF_AppleMetal.mm
     src/FSTUFF_Log.cpp
     src/FSTUFF_SDLMain.cpp
-    src/imgui_impl_mtl.mm
     external/imgui/imgui.cpp
     external/imgui/imgui_demo.cpp
     external/imgui/imgui_draw.cpp

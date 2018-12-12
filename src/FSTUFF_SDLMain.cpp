@@ -20,23 +20,24 @@ struct FSTUFF_SDLGLRenderer : public FSTUFF_GLESRenderer {
         FSTUFF_ViewSize vs;
         SDL_GetWindowSize(window, &vs.widthOS, &vs.heightOS);
         SDL_GL_GetDrawableSize(window, &vs.widthPixels, &vs.heightPixels);
+
         const float osToMMApproximate = 1.f/4.f;
         vs.widthMM = vs.widthOS * osToMMApproximate;
         vs.heightMM = vs.heightOS * osToMMApproximate;
         return vs;
     }
-};
 
-static FSTUFF_CursorInfo FSTUFF_SDL_GetCursorInfo() {
-    int x = 0.f;
-    int y = 0.f;
-    const Uint32 sdlButtons = SDL_GetMouseState(&x, &y);
-    FSTUFF_CursorInfo cur;
-    cur.xOS = (int) x;
-    cur.yOS = (int) y;
-    cur.pressed = (sdlButtons != 0);
-    return cur;
-}
+    FSTUFF_CursorInfo GetCursorInfo() override {
+        int x = 0.f;
+        int y = 0.f;
+        const Uint32 sdlButtons = SDL_GetMouseState(&x, &y);
+        FSTUFF_CursorInfo cur;
+        cur.xOS = (int)x;
+        cur.yOS = (int)y;
+        cur.pressed = (sdlButtons != 0);
+        return cur;
+    }
+};
 
 FSTUFF_SDLGLRenderer * renderer = nullptr;
 FSTUFF_Simulation * sim = nullptr;
@@ -59,7 +60,7 @@ void tick() {
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP:
             case SDL_MOUSEMOTION: {
-                const FSTUFF_CursorInfo cursorInfo = FSTUFF_SDL_GetCursorInfo();
+                const FSTUFF_CursorInfo cursorInfo = renderer->GetCursorInfo();
                 sim->UpdateCursorInfo(cursorInfo);
             } break;
 
@@ -80,9 +81,10 @@ void tick() {
     if (SDL_GL_MakeCurrent(renderer->window, renderer->gl) != 0) {
         FSTUFF_FatalError("SDL_GL_MakeCurrent failed: %s\n", SDL_GetError());
     }
-    renderer->BeginFrame();
     sim->Update();
     sim->Render();
+    ImDrawData * imGuiDrawData = ImGui::GetDrawData();
+    renderer->RenderImGuiDrawData(imGuiDrawData);
     SDL_GL_SwapWindow(renderer->window);
 }
 
@@ -108,9 +110,12 @@ int main(int, char **) {
 
     switch (renderer->glVersion) {
         case FSTUFF_GLVersion::GLCorev3:
+#if __APPLE__
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
+#endif
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
             break;
         case FSTUFF_GLVersion::GLESv2:
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);

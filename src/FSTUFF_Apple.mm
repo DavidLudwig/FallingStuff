@@ -8,12 +8,12 @@
 
 #include "FSTUFF.h"
 #include "FSTUFF_Apple.h"
+#include "FSTUFF_AppleMetal.h"
 
 #define FSTUFF_USE_IMGUI 1
 
 #include "imgui.h"
 #ifdef __APPLE__
-#include "imgui_impl_mtl.h"
 
 #include "AAPLShaderTypes.h"
 
@@ -192,6 +192,22 @@ void FSTUFF_Log(NSString * fmt, ...) {
     va_start(args, fmt);
     FSTUFF_Log(fmt, args);
     va_end(args);
+}
+
+void FSTUFF_FatalError_Inner(FSTUFF_CodeLocation codeLocation, NSString * fmt, ...) {
+    va_list arg;
+    va_start(arg, fmt);
+    NSString * intermediateFormat = [[NSString alloc] initWithFormat:
+        @"\nFATAL ERROR:\n   Function: %s\n       Line: %d\n       File: %s:%d\n    Message: \%s\n",
+        (codeLocation.functionName ? codeLocation.functionName : ""),
+        codeLocation.line,
+        (codeLocation.fileName ? codeLocation.fileName : ""),
+        codeLocation.line,
+        (fmt ? [fmt UTF8String] : "")
+    ];
+    NSString * finalMessage = [[NSString alloc] initWithFormat:intermediateFormat arguments:arg];
+    FSTUFF_DefaultFatalErrorHandler([finalMessage UTF8String], nullptr);
+    va_end(arg);
 }
 
 #endif  // __APPLE__

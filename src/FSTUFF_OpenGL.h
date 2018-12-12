@@ -14,6 +14,8 @@
 #include "gb_math.h"
 #include <unordered_set>
 
+#define GL_SILENCE_DEPRECATION
+#define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
 #if __APPLE__
     #if TARGET_OS_IOS
         #include <OpenGLES/ES3/glext.h>
@@ -43,6 +45,16 @@ enum class FSTUFF_GLVersion {
     GLESv3,
 };
 
+template <typename T>
+struct FSTUFF_GL_Shaders {
+    T simulationVertex;
+    T simulationFragment;
+    T imGuiVertex;
+    T imGuiFragment;
+};
+typedef FSTUFF_GL_Shaders<const char *> FSTUFF_GL_ShaderCode;
+
+
 struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     FSTUFF_GLVersion glVersion = FSTUFF_GLVersion::GLESv3;
     
@@ -51,9 +63,10 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     
     std::function<void *(const char *)> getProcAddress;
     
-    void (FSTUFF_stdcall * glVertexAttribDivisor)(GLuint, GLuint) = nullptr;
+    void (FSTUFF_stdcall * glBindSampler)(GLuint, GLuint);
     void (FSTUFF_stdcall * glDrawArraysInstanced)(GLenum, GLint, GLsizei, GLsizei) = nullptr;
     const GLubyte * (FSTUFF_stdcall * glGetStringi)(GLenum, GLuint);
+    void (FSTUFF_stdcall * glVertexAttribDivisor)(GLuint, GLuint) = nullptr;
     
     std::unordered_set<std::string> glExtensionsCache;
 
@@ -74,20 +87,35 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     gbVec4 debugShapeColors[1];
     GLuint debugShapeColorsBufID = -1;
 
-    GLuint programObject = 0;
-    GLint vertexShaderAttribute_position = -1;
-    GLint vertexShaderAttribute_colorRGBX = -1;
-    GLint vertexShaderAttribute_alpha = -1;
-    GLint vertexShaderAttribute_modelMatrix = -1;
+    GLuint simProgram = 0;
+    GLint simVS_position = -1;
+    GLint simVS_colorRGBX = -1;
+    GLint simVS_alpha = -1;
+    GLint simVS_modelMatrix = -1;
+
+    GLuint imGuiProgram = 0;
+    GLuint imGuiVBO = 0;
+    GLuint imGuiElements = 0;
+    GLint imGui_tex = -1;
+    GLint imGui_projMtx = -1;
+    GLint imGui_position = -1;
+    GLint imGui_uv = -1;
+    GLint imGui_color = -1;
 
     FSTUFF_GLESRenderer();
     ~FSTUFF_GLESRenderer() override;
     void    Init();
-    void    BeginFrame();
-    void    DestroyVertexBuffer(void * gpuVertexBuffer) override;
+    void    BeginFrame() override;
+
     void *  NewVertexBuffer(void * src, size_t size) override;
+    void    DestroyVertexBuffer(void * gpuVertexBuffer) override;
+
+    FSTUFF_Texture NewTexture(const uint8_t * srcRGBA32, int width, int height) override;
+    void    DestroyTexture(FSTUFF_Texture tex) override;
+
     void    ViewChanged() override;
     void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) override;
+    void    RenderImGuiDrawData(ImDrawData * drawData);
     void    SetProjectionMatrix(const gbMat4 & matrix) override;
     void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) override;
     FSTUFF_CursorInfo GetCursorInfo() override;

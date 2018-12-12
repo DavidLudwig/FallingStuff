@@ -53,7 +53,6 @@
 		7568CBAE201121DB00FF086C /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CB1F201121BE00FF086C /* imgui.cpp */; };
 		7568CBAF2011220900FF086C /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA7201121BE00FF086C /* imgui_draw.cpp */; };
 		7568CBB02011222E00FF086C /* imgui_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA6201121BE00FF086C /* imgui_demo.cpp */; };
-		7568CBB3201122E200FF086C /* imgui_impl_mtl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */; };
 		756C8E4F200DB05C0019EA70 /* FSTUFF.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756C8E4E200DB05C0019EA70 /* FSTUFF.cpp */; };
 		756C8E50200DB05C0019EA70 /* FSTUFF.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756C8E4E200DB05C0019EA70 /* FSTUFF.cpp */; };
 		756C8E51200DB05C0019EA70 /* FSTUFF.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756C8E4E200DB05C0019EA70 /* FSTUFF.cpp */; };
@@ -185,7 +184,6 @@
 		75DE2F691CFCCE710052F8C1 /* cpSweep1D.c in Sources */ = {isa = PBXBuildFile; fileRef = 755856151CDFC96F00FC8EA4 /* cpSweep1D.c */; };
 		75DE2F6B1CFCCEFD0052F8C1 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75DE2F411CFCCE3B0052F8C1 /* MetalKit.framework */; };
 		75DE2F781CFCD4590052F8C1 /* libGBDeviceInfo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 75DE2F721CFCD3D60052F8C1 /* libGBDeviceInfo.a */; };
-		75DEDD06219B1A9400628736 /* imgui_impl_mtl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */; };
 		75E0A083219F0D8D009864D4 /* FSTUFF_AppleGL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75E0A081219F0D8D009864D4 /* FSTUFF_AppleGL.mm */; };
 		75E0B2B1219F8F8A005C572B /* FSTUFF_OpenGL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 75E0B2AF219F8F8A005C572B /* FSTUFF_OpenGL.cpp */; };
 		75EE9FB720144245004C065B /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CB1F201121BE00FF086C /* imgui.cpp */; };
@@ -197,7 +195,6 @@
 		75EE9FBD20144250004C065B /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA7201121BE00FF086C /* imgui_draw.cpp */; };
 		75EE9FBE20144251004C065B /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA7201121BE00FF086C /* imgui_draw.cpp */; };
 		75EE9FBF20144251004C065B /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBA7201121BE00FF086C /* imgui_draw.cpp */; };
-		75EE9FC220144259004C065B /* imgui_impl_mtl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */; };
 		75F6FD5F21B7063600F95C29 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 75F6FD5C21B7063600F95C29 /* imgui_widgets.cpp */; };
 		75F6FD6021B7064700F95C29 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 75F6FD5C21B7063600F95C29 /* imgui_widgets.cpp */; };
 		75F6FD6121B7064800F95C29 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 75F6FD5C21B7063600F95C29 /* imgui_widgets.cpp */; };
@@ -334,8 +331,6 @@
 		7568CBA5201121BE00FF086C /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
 		7568CBA6201121BE00FF086C /* imgui_demo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_demo.cpp; sourceTree = "<group>"; };
 		7568CBA7201121BE00FF086C /* imgui_draw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_draw.cpp; sourceTree = "<group>"; };
-		7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = imgui_impl_mtl.mm; sourceTree = "<group>"; };
-		7568CBB2201122E200FF086C /* imgui_impl_mtl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui_impl_mtl.h; sourceTree = "<group>"; };
 		7568CBB42012547500FF086C /* AAPLShaderTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AAPLShaderTypes.h; sourceTree = "<group>"; };
 		756C8E4E200DB05C0019EA70 /* FSTUFF.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FSTUFF.cpp; sourceTree = "<group>"; };
 		759DFD031FF58EEC00F1B2D8 /* FallingStuff_OSXScreenSaver.saver */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FallingStuff_OSXScreenSaver.saver; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -453,8 +448,6 @@
 				756C8E4E200DB05C0019EA70 /* FSTUFF.cpp */,
 				752B1A971CFD2C5E00BA2EE9 /* FSTUFF.h */,
 				759DFD48200424EA00F1B2D8 /* gb_math.h */,
-				7568CBB2201122E200FF086C /* imgui_impl_mtl.h */,
-				7568CBB1201122E200FF086C /* imgui_impl_mtl.mm */,
 				75DE2F281CFCCD4C0052F8C1 /* iOS */,
 				75036FC21CD540F10017DC04 /* mac */,
 			);
@@ -898,7 +891,6 @@
 				755856231CDFC96F00FC8EA4 /* cpMarch.c in Sources */,
 				755856311CDFC96F00FC8EA4 /* cpSpaceHash.c in Sources */,
 				7558562F1CDFC96F00FC8EA4 /* cpSpaceComponent.c in Sources */,
-				7568CBB3201122E200FF086C /* imgui_impl_mtl.mm in Sources */,
 				755856321CDFC96F00FC8EA4 /* cpSpaceQuery.c in Sources */,
 				7558562A1CDFC96F00FC8EA4 /* cpRotaryLimitJoint.c in Sources */,
 				7558562B1CDFC96F00FC8EA4 /* cpShape.c in Sources */,
@@ -969,7 +961,6 @@
 				759DFD241FF5987A00F1B2D8 /* cpRatchetJoint.c in Sources */,
 				759DFD251FF5987A00F1B2D8 /* cpRobust.c in Sources */,
 				759DFD261FF5987A00F1B2D8 /* cpRotaryLimitJoint.c in Sources */,
-				75EE9FC220144259004C065B /* imgui_impl_mtl.mm in Sources */,
 				75EE9FBC2014424D004C065B /* imgui_demo.cpp in Sources */,
 				759DFD271FF5987A00F1B2D8 /* cpShape.c in Sources */,
 				759DFD281FF5987A00F1B2D8 /* cpSimpleMotor.c in Sources */,
@@ -1058,7 +1049,6 @@
 				75DE2F561CFCCE710052F8C1 /* cpHastySpace.c in Sources */,
 				75DE2F571CFCCE710052F8C1 /* cpMarch.c in Sources */,
 				75EE9FB720144245004C065B /* imgui.cpp in Sources */,
-				75DEDD06219B1A9400628736 /* imgui_impl_mtl.mm in Sources */,
 				75DE2F581CFCCE710052F8C1 /* cpPinJoint.c in Sources */,
 				75DE2F591CFCCE710052F8C1 /* cpPivotJoint.c in Sources */,
 				75DE2F5A1CFCCE710052F8C1 /* cpPolyline.c in Sources */,

@@ -76,9 +76,6 @@ void * FSTUFF_AppleGL_GetProcAddress(const char * name)
     const FSTUFF_ViewSize viewSize = FSTUFF_Apple_GetViewSize(renderer->nativeView);
     sim->ViewChanged(viewSize);
     renderer->Init();
-
-    // Init the game/simulation
-    sim->Init();
 }
 
 - (void)dealloc
@@ -125,15 +122,15 @@ void * FSTUFF_AppleGL_GetProcAddress(const char * name)
 
 - (void)update
 {
-    FSTUFF_Assert(sim);
-    sim->Update();
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
     FSTUFF_Assert(sim);
-    renderer->BeginFrame();
+    sim->Update();
     sim->Render();
+    ImDrawData * imGuiDrawData = ImGui::GetDrawData();
+    renderer->RenderImGuiDrawData(imGuiDrawData);
 }
 
 @end

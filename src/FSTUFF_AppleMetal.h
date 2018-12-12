@@ -26,6 +26,7 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
     id <MTLDevice> device = nil;
     id <MTLRenderCommandEncoder> simRenderCommandEncoder = nil;
     id <MTLRenderCommandEncoder> mainRenderCommandEncoder = nil;
+    id <MTLTexture> imGuiTexture = nil;
     MTKView * nativeView = nil;
     FSTUFF_GPUData * appData = NULL;
     id <MTLCommandQueue> commandQueue;
@@ -40,10 +41,29 @@ struct FSTUFF_AppleMetalRenderer : public FSTUFF_Renderer
     id<MTLBuffer> rectVBO = nil;  // VBO for a single, full-screen (in normalized coords), rectangle
     NSUInteger rectVBOCount = 0;  // number of vertices in rectVBO
 
-    void    DestroyVertexBuffer(void * _gpuVertexBuffer) override;
+    id <MTLRenderCommandEncoder> imGuiRenderCommandEncoder = nil;
+    id <MTLDepthStencilState> imGuiDepthStencilState = nil;
+    id <MTLRenderPipelineState> imGuiRenderPipelineState = nil;
+    id <MTLBuffer> imGuiVertexBuffers[FSTUFF_MaxInflightBuffers];
+    id <MTLBuffer> imGuiIndexBuffers[FSTUFF_MaxInflightBuffers];
+
+    void    BeginFrame() override;
+
     void *  NewVertexBuffer(void * src, size_t size) override;
+    void    DestroyVertexBuffer(void * _gpuVertexBuffer) override;
+
+    FSTUFF_Texture NewTexture(const uint8_t * srcRGBA32, int width, int height) override;
+    void    DestroyTexture(FSTUFF_Texture tex) override;
+
     void    ViewChanged() override;
     void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) override;
+    void    RenderImGuiDrawData(
+        ImDrawData * drawData,
+        id<MTLCommandBuffer> commandBuffer,
+        id<MTLRenderCommandEncoder> commandEncoder,
+        id<MTLBuffer> __strong & vertexBuffer,
+        id<MTLBuffer> __strong & indexBuffer
+    );
     void    SetProjectionMatrix(const gbMat4 & matrix) override;
     void    SetShapeProperties(FSTUFF_ShapeType shape, size_t i, const gbMat4 & matrix, const gbVec4 & color) override;
     FSTUFF_CursorInfo GetCursorInfo() override;

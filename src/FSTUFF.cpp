@@ -494,7 +494,7 @@ FSTUFF_Simulation::~FSTUFF_Simulation() {
 }
 
 
-static void FSTUFF_DefaultFatalErrorHandler(const char * formattedMessage, void *) {
+void FSTUFF_DefaultFatalErrorHandler(const char * formattedMessage, void *) {
     fprintf(stderr, "%s\n", formattedMessage);
     std::abort();
 }
@@ -528,6 +528,11 @@ void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
     if ( ! this->renderer) {
         FSTUFF_FatalError("FSTUFF_Simulation's 'renderer' field must be set, before calling its Init() method!");
     }
+
+    if ( ! this->imGuiContext) {
+        this->imGuiContext = ImGui::CreateContext();
+        ImGui::SetCurrentContext(this->imGuiContext);
+    }
     
     // Don't re-initialize simulations that are already alive
     if (this->state != FSTUFF_DEAD) {
@@ -559,14 +564,6 @@ void FSTUFF_Simulation::ResetWorld()
 
 void FSTUFF_Simulation::Update()
 {
-    ImGui::StyleColorsDark(&ImGui::GetStyle());
-
-#if FSTUFF_ENABLE_IMGUI_DEMO
-    if (this->showGUIDemo) {
-        ImGui::ShowDemoWindow();
-    }
-#endif
-
     // Initialize the simulation, if need be.
     if (this->state == FSTUFF_DEAD) {
 //        this->renderer->ViewChanged();
@@ -589,6 +586,36 @@ void FSTUFF_Simulation::Update()
     const double deltaTimeS = nowS - this->game.lastUpdateUTCTimeS;
     this->game.elapsedTimeS += deltaTimeS;
     
+    // Rendering-initialization.  This is done *BEFORE* ImGui calls start,
+    // which may involve texture-creation.  (Is this necessary?)
+    this->renderer->BeginFrame();
+
+    // Update ImGui's low-level state
+    ImGuiIO & io = ImGui::GetIO();
+    if ( ! io.Fonts->TexID) {
+        unsigned char *pixels;
+        int width, height;
+        io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height); // Load as RGBA 32-bits (75% of the memory is wasted, but default font is so small) because it is more likely to be compatible with user's existing shaders. If your ImTextureId represent a higher-level concept than just a GL texture id, consider calling GetTexDataAsAlpha8() instead to save on GPU memory.
+        io.Fonts->TexID = this->renderer->NewTexture(pixels, width, height);
+    }
+    io.DeltaTime = deltaTimeS;
+    io.DisplaySize.x = this->viewSize.widthOS;
+    io.DisplaySize.y = this->viewSize.heightOS;
+    io.DisplayFramebufferScale.x = (float)this->viewSize.widthPixels / (float)this->viewSize.widthOS;
+    io.DisplayFramebufferScale.y = (float)this->viewSize.heightPixels / (float)this->viewSize.heightOS;
+    const FSTUFF_CursorInfo cursorPos = this->renderer->GetCursorInfo();
+    io.MousePos.x = cursorPos.xOS;
+    io.MousePos.y = cursorPos.yOS;
+    io.MouseDown[0] = cursorPos.pressed;
+    ImGui::NewFrame();
+    ImGui::StyleColorsDark(&ImGui::GetStyle());
+
+#if FSTUFF_ENABLE_IMGUI_DEMO
+    if (this->showGUIDemo) {
+        ImGui::ShowDemoWindow();
+    }
+#endif
+
     // Add marbles, as warranted
     if (this->game.marblesCount < this->game.marblesMax) {
         if (this->game.addNumMarblesPerSecond > 0) {
@@ -733,6 +760,8 @@ void FSTUFF_Simulation::Render()
     renderer->RenderShapes(&debugShape, 0, 1, 0.5678);
 #endif
 
+    ImGui::EndFrame();
+    ImGui::Render();
 }
 
 void FSTUFF_Simulation::ViewChanged(const FSTUFF_ViewSize & viewSize)
@@ -780,30 +809,35 @@ void FSTUFF_Simulation::UpdateProjectionMatrix()
 
 void FSTUFF_Simulation::UpdateCursorInfo(const FSTUFF_CursorInfo & newInfo)
 {
-    const FSTUFF_CursorInfo oldInfo = cursorInfo;
+    const FSTUFF_CursorInfo oldInfo = this->cursorInfo;
+    const bool doSendEvents = (this->state != FSTUFF_DEAD);
 
     if (newInfo.pressed != oldInfo.pressed) {
-        cursorInfo.pressed = newInfo.pressed;
+        this->cursorInfo.pressed = newInfo.pressed;
 
-        FSTUFF_Event event;
-        memset(&event, 0, sizeof(event));
-        event.type = FSTUFF_CursorButton;
-        event.data.cursorButton.xOS = cursorInfo.xOS;
-        event.data.cursorButton.yOS = cursorInfo.yOS;
-        event.data.cursorButton.down = cursorInfo.pressed;
-        this->EventReceived(&event);
+        if (doSendEvents) {
+            FSTUFF_Event event;
+            memset(&event, 0, sizeof(event));
+            event.type = FSTUFF_CursorButton;
+            event.data.cursorButton.xOS = this->cursorInfo.xOS;
+            event.data.cursorButton.yOS = this->cursorInfo.yOS;
+            event.data.cursorButton.down = this->cursorInfo.pressed;
+            this->EventReceived(&event);
+        }
     }
 
     if (newInfo.xOS != oldInfo.xOS || newInfo.yOS != oldInfo.yOS) {
-        cursorInfo.xOS = newInfo.xOS;
-        cursorInfo.yOS = newInfo.yOS;
+        this->cursorInfo.xOS = newInfo.xOS;
+        this->cursorInfo.yOS = newInfo.yOS;
 
-        FSTUFF_Event event;
-        memset(&event, 0, sizeof(event));
-        event.type = FSTUFF_CursorMotion;
-        event.data.cursorMotion.xOS = cursorInfo.xOS;
-        event.data.cursorMotion.yOS = cursorInfo.yOS;
-        this->EventReceived(&event);
+        if (doSendEvents) {
+            FSTUFF_Event event;
+            memset(&event, 0, sizeof(event));
+            event.type = FSTUFF_CursorMotion;
+            event.data.cursorMotion.xOS = this->cursorInfo.xOS;
+            event.data.cursorMotion.yOS = this->cursorInfo.yOS;
+            this->EventReceived(&event);
+        }
     }
 }
 

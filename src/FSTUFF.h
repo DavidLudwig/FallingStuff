@@ -14,7 +14,9 @@
 
 #include <array>    // C++ std library, fixed-size arrays
 #include <bitset>	// C++ std library, bit-sets
+#include <cstdint>  // C++ std library, fixed-width integer types
 #include <random>   // C++ std library, random numbers
+#include <tuple>    // C++ std library, tuples
 #include <chipmunk/chipmunk.h>  // Physics library
 extern "C" {
     //#include <chipmunk/chipmunk_structs.h>
@@ -71,10 +73,12 @@ struct FSTUFF_CodeLocation {
 #define FSTUFF_CODELOC { FSTUFF_CurrentFunction, __FILE__, __LINE__ }
 
 void FSTUFF_FatalError_Inner(FSTUFF_CodeLocation location, const char *fmt, ...) FSTUFF_FormatGuard(printf, 2, 3);
+void FSTUFF_DefaultFatalErrorHandler(const char * formattedMessage, void *);
 
 #define FSTUFF_FatalError(...) FSTUFF_FatalError_Inner(FSTUFF_CODELOC, __VA_ARGS__)
 
 #define FSTUFF_Assert(CONDITION) if (!(CONDITION)) { FSTUFF_FatalError("Assertion failed: %s", #CONDITION); }
+#define FSTUFF_AssertUnimplemented() FSTUFF_FatalError("UNIMPLEMENTED CODE!")
 
 
 #if 0
@@ -139,12 +143,21 @@ struct FSTUFF_CursorInfo {
 
 struct FSTUFF_Simulation;
 
+typedef void * FSTUFF_Texture;
+
 struct FSTUFF_Renderer {
     FSTUFF_Simulation * sim = nullptr;
 
     virtual         ~FSTUFF_Renderer();
-    virtual void    DestroyVertexBuffer(void * gpuVertexBuffer) = 0;
+    
+    virtual void    BeginFrame() = 0;
+
     virtual void *  NewVertexBuffer(void * src, size_t size) = 0;
+    virtual void    DestroyVertexBuffer(void * gpuVertexBuffer) = 0;
+
+    virtual FSTUFF_Texture NewTexture(const uint8_t * srcRGBA32, int width, int height) = 0;
+    virtual void    DestroyTexture(FSTUFF_Texture tex) = 0;
+
     virtual void    ViewChanged() = 0;
     virtual void    RenderShapes(FSTUFF_Shape * shape, size_t offset, size_t count, float alpha) = 0;
     virtual void    SetProjectionMatrix(const gbMat4 & matrix) = 0;
@@ -240,7 +253,8 @@ struct FSTUFF_Simulation {
     //
     // User Interface
     //
-    std::bitset<128> keysPressed;  // key-press state: 0|false for up, 1|true for pressed-down; indexed by 7-bit ASCII codes
+    ImGuiContext * imGuiContext = nullptr;
+    std::bitset<128> keysPressed;       // key-press state: 0|false for up, 1|true for pressed-down; indexed by 7-bit ASCII codes
     bool showGUIDemo = false;           // only works if '#define FSTUFF_ENABLE_IMGUI_DEMO 1' is set (increases app-size!)
     bool showSettings = false;
     bool configurationMode = false;
