@@ -349,6 +349,10 @@ void FSTUFF_AppleMetalRenderer::SetShapeProperties(FSTUFF_ShapeType shape, size_
             FSTUFF_Apple_CopyMatrix(this->appData->boxes[i].model_matrix, matrix);
             FSTUFF_Apple_CopyVector(this->appData->boxes[i].color, color);
         } break;
+        case FSTUFF_ShapeDebug: {
+            FSTUFF_Apple_CopyMatrix(this->appData->debugShapes[i].model_matrix, matrix);
+            FSTUFF_Apple_CopyVector(this->appData->debugShapes[i].color, color);
+        } break;
     }
 }
 
