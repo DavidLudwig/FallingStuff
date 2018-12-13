@@ -47,9 +47,9 @@ int FSTUFF_RandRangeI(std::mt19937 & rng, int a, int b)
 
 void FSTUFF_OpenWebPage(const char * url) {
 #if __EMSCRIPTEN__
-    std::ostringstream os;
-    os << "window.open('" << url << "', '_self')";
-    emscripten_run_script(os.str().c_str());
+    char buf[2048];
+    snprintf(buf, sizeof(buf), "window.open('%s','_self')", url);
+    emscripten_run_script(buf);
 #endif
 }
 
