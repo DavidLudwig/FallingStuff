@@ -41,6 +41,7 @@ struct FSTUFF_SDLGLRenderer : public FSTUFF_GLESRenderer {
 
 FSTUFF_SDLGLRenderer * renderer = nullptr;
 FSTUFF_Simulation * sim = nullptr;
+static bool didHideLoadingUI = false;
 
 void tick() {
     SDL_Event e;
@@ -85,6 +86,17 @@ void tick() {
     sim->Render();
     ImDrawData * imGuiDrawData = ImGui::GetDrawData();
     renderer->RenderImGuiDrawData(imGuiDrawData);
+    if (!didHideLoadingUI) {
+#if __EMSCRIPTEN__
+        EM_ASM(
+            var loading = document.getElementById("loading");
+            if (loading) {
+                loading.style.display = "none";
+            }
+        );
+#endif
+        didHideLoadingUI = true;
+    }
     SDL_GL_SwapWindow(renderer->window);
 }
 
