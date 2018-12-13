@@ -6,7 +6,7 @@ project(FallingStuff)
 if (EMSCRIPTEN)
     set(CMAKE_C_FLAGS_MINSIZEREL "-DNDEBUG -Oz")
     set(CMAKE_CXX_FLAGS_MINSIZEREL "-DNDEBUG -Oz")
-    set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-Oz --llvm-lto 3")
+    set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-Oz --llvm-lto 3 --closure 1")
 endif()
 
 if (NOT EMSCRIPTEN)
