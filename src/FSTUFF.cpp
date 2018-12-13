@@ -548,6 +548,13 @@ void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
     if ( ! this->imGuiContext) {
         this->imGuiContext = ImGui::CreateContext();
         ImGui::SetCurrentContext(this->imGuiContext);
+        ImGuiIO & io = ImGui::GetIO();
+
+        // Prevent ImGui::NewFrame from performing file I/O.  This
+        // can help lead to a smaller binary when compiling with
+        // Emscripten, when used in conjunction with the build
+        // setting, '-s FILESYSTEM=0'.
+        io.IniFilename = nullptr;
     }
     
     // Don't re-initialize simulations that are already alive
