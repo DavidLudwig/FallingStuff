@@ -241,6 +241,7 @@ void FSTUFF_ShapeInit(FSTUFF_Shape * shape, FSTUFF_Renderer * renderer)
 #pragma mark - Simulation
 
 static const cpFloat kPhysicsStepTimeS = 1./600.;
+static const cpFloat kMaxDeltaTimeS = 1.0;
 
 
 #define SPACE           (this->physicsSpace)
@@ -605,10 +606,22 @@ void FSTUFF_Simulation::Update()
         this->game.lastUpdateUTCTimeS = nowS;
     }
 
-    // Compute delta-time
-    const double deltaTimeS = nowS - this->game.lastUpdateUTCTimeS;
+    // Compute delta-time, adjusting it down to kMaxDeltaTimeS as necessary.
+    // Adjustments down to kMaxDeltaTimeS are done as a sort of fix whereby
+    // large delta-time values, such as those generated when hiding and resuming
+    // an app (or web-page!).
+    double deltaTimeS = nowS - this->game.lastUpdateUTCTimeS;
+    if (deltaTimeS > kMaxDeltaTimeS) {
+        // const auto oldUpdateTimeS = this->game.lastUpdateUTCTimeS;
+        // const auto oldDtS = deltaTimeS;
+        this->game.lastUpdateUTCTimeS = nowS - kMaxDeltaTimeS;
+        deltaTimeS = kMaxDeltaTimeS;
+        // FSTUFF_Log("... adjusted last-update time (seconds) down to %f (from %f; now=%f)\n",
+        //     this->game.lastUpdateUTCTimeS, oldUpdateTimeS, nowS);
+        // FSTUFF_Log("... adjusted dt (seconds) down to %f (from %f)\n", deltaTimeS, oldDtS);
+    }
     this->game.elapsedTimeS += deltaTimeS;
-    
+
     // Rendering-initialization.  This is done *BEFORE* ImGui calls start,
     // which may involve texture-creation.  (Is this necessary?)
     this->renderer->BeginFrame();
