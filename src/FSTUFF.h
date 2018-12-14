@@ -237,11 +237,9 @@ struct FSTUFF_Simulation {
         // Misc parameters
         //
         float addMarblesInS             = 0.0f;
-        float addNumMarblesPerSecond    = 1.0f;
         cpVect gravity                  = cpv(0, -196);
         cpFloat marbleRadius_Range[2]   = {2, 4};
         int32_t marblesCount            = 0;
-        int32_t marblesMax              = 200;
         double resetInS_default         = 15;
         double resetInS                 = 0;
 
@@ -250,8 +248,13 @@ struct FSTUFF_Simulation {
         size_t numBoxes     = 0;
         size_t numBodies    = 0;
     } game;
-    
-    
+
+    //
+    // User-adjustable parameters
+    //
+    float addNumMarblesPerSecond = 1.0f;
+    int32_t marblesMax = 200;
+
     //
     // User Interface
     //

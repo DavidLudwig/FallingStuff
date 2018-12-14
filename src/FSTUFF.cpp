@@ -653,12 +653,12 @@ void FSTUFF_Simulation::Update()
 #endif
 
     // Add marbles, as warranted
-    if (this->game.marblesCount < this->game.marblesMax) {
-        if (this->game.addNumMarblesPerSecond > 0) {
+    if (this->game.marblesCount < this->marblesMax) {
+        if (this->addNumMarblesPerSecond > 0) {
             this->game.addMarblesInS -= deltaTimeS;
             if (this->game.addMarblesInS <= 0) {
                 this->AddMarble();
-                this->game.addMarblesInS = 1.f / this->game.addNumMarblesPerSecond;
+                this->game.addMarblesInS = 1.f / this->addNumMarblesPerSecond;
             }
         }
     }
@@ -670,7 +670,7 @@ void FSTUFF_Simulation::Update()
     }
 
     // Reset world, if warranted
-    if (this->game.marblesCount >= this->game.marblesMax) {
+    if (this->game.marblesCount >= this->marblesMax) {
         if (this->game.resetInS_default > 0) {
             if (this->game.resetInS <= 0) {
                 this->game.resetInS = this->game.resetInS_default;
@@ -694,9 +694,9 @@ void FSTUFF_Simulation::Update()
             closeBoxState = &this->showSettings;
         }
         ImGui::Begin("Settings", closeBoxState, ImGuiWindowFlags_AlwaysAutoResize);
-        ImGui::SliderInt("Marbles, Max", &this->game.marblesMax, 0, 1000);
-        if (ImGui::SliderFloat("Spawn Rate (marbles/second)", &this->game.addNumMarblesPerSecond, 0, 10, "%.3f", 3.0f)) {
-            this->game.addMarblesInS = 1.f / this->game.addNumMarblesPerSecond;
+        ImGui::SliderInt("Marbles, Max", &this->marblesMax, 0, 1000);
+        if (ImGui::SliderFloat("Spawn Rate (marbles/second)", &this->addNumMarblesPerSecond, 0, 10, "%.3f", 3.0f)) {
+            this->game.addMarblesInS = 1.f / this->addNumMarblesPerSecond;
         }
         ImGui::InvisibleButton("padding1", ImVec2(8, 8));
         ImGui::Separator();
