@@ -108,8 +108,12 @@ if (EMSCRIPTEN)
     set_target_properties(FallingStuff
         PROPERTIES
             COMPILE_FLAGS "${EMSCRIPTEN_OPTIONS} -fno-rtti -fno-exceptions"
-            LINK_FLAGS "${EMSCRIPTEN_OPTIONS} --shell-file ${CMAKE_CURRENT_SOURCE_DIR}/emscripten_template_page.html"
-            SUFFIX ".html"
+            LINK_FLAGS "${EMSCRIPTEN_OPTIONS}"
+    )
+
+    add_custom_command(TARGET FallingStuff POST_BUILD
+        COMMAND
+            cp -v "${CMAKE_HOME_DIRECTORY}/docs/index.html" "${CMAKE_BINARY_DIR}/"
     )
 endif()
 
