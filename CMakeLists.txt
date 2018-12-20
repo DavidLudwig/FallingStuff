@@ -2,11 +2,20 @@ cmake_minimum_required(VERSION 3.12)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 project(FallingStuff)
 
-# Use -Oz on Emscripten-made MinSizeRel builds
 if (EMSCRIPTEN)
+    # Use -Oz on Emscripten-made MinSizeRel builds
     set(CMAKE_C_FLAGS_MINSIZEREL "-DNDEBUG -Oz")
     set(CMAKE_CXX_FLAGS_MINSIZEREL "-DNDEBUG -Oz")
     set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-Oz --llvm-lto 3 --closure 1")
+
+    set(CMAKE_C_FLAGS_RELEASE "-DNDEBUG -Oz")
+    set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Oz")
+
+    set(CMAKE_C_FLAGS_DEBUG "-g4 --source-map-base http://127.0.0.1:8080/")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g4 --source-map-base http://127.0.0.1:8080/")
+
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO "-DNDEBUG -Oz -g4 --source-map-base http://127.0.0.1:8080/")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-DNDEBUG -Oz -g4 --source-map-base http://127.0.0.1:8080/")
 endif()
 
 if (NOT EMSCRIPTEN)
