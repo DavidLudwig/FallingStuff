@@ -92,7 +92,8 @@ void FSTUFF_OpenWebPage(const char * url);
 enum FSTUFF_ShapeType : uint8_t {
     FSTUFF_ShapeCircle = 0,
     FSTUFF_ShapeBox,
-    FSTUFF_ShapeDebug
+    FSTUFF_ShapeSegment,
+    FSTUFF_ShapeDebug,
 };
 
 enum FSTUFF_ShapeAppearance : uint8_t {
@@ -215,6 +216,8 @@ struct FSTUFF_Simulation {
     FSTUFF_Shape circleEdged;
     FSTUFF_Shape boxFilled;
     FSTUFF_Shape boxEdged;
+    FSTUFF_Shape segmentFilled;
+    FSTUFF_Shape segmentEdged;
     FSTUFF_Shape debugShape;
     gbMat4 projectionMatrix;
     //cpVect viewSizeMM = {0, 0};
@@ -246,6 +249,7 @@ struct FSTUFF_Simulation {
         size_t numPegs      = 0;     // all pegs must be consecutive, starting at circles[0]
         size_t numCircles   = 0;  // pegs + circlular-marbles (with pegs first, then marbles)
         size_t numBoxes     = 0;
+        size_t numSegments  = 0;
         size_t numBodies    = 0;
     } game;
 
@@ -271,8 +275,10 @@ struct FSTUFF_Simulation {
     cpSpace * physicsSpace = NULL;
     cpCircleShape circles[FSTUFF_MaxCircles] = {0};
     gbVec4 circleColors[FSTUFF_MaxCircles] = {0};
-    cpSegmentShape boxes[FSTUFF_MaxBoxes] = {0};
+    cpPolyShape boxes[FSTUFF_MaxBoxes] = {0};
     gbVec4 boxColors[FSTUFF_MaxBoxes] = {0};
+    cpSegmentShape segments[FSTUFF_MaxSegments] = {0};
+    gbVec4 segmentColors[FSTUFF_MaxSegments] = {0};
     cpBody bodies[FSTUFF_MaxShapes] = {0};
 
 
@@ -304,14 +310,17 @@ public: // public is needed, here, for FSTUFF_Shutdown
 public:
     cpBody *          GetBody(size_t index)     { return &(this->bodies[index]); }
     cpCircleShape *   GetCircle(size_t index)   { return &(this->circles[index]); }
-    cpSegmentShape *  GetBox(size_t index)      { return &(this->boxes[index]); }
+    cpPolyShape *     GetBox(size_t index)      { return &(this->boxes[index]); }
+    cpSegmentShape *  GetSegment(size_t index)  { return &(this->segments[index]); }
 
     cpBody *          NewBody()     { return GetBody(this->game.numBodies++); }
     cpCircleShape *   NewCircle()   { return GetCircle(this->game.numCircles++); }
-    cpSegmentShape *  NewBox()      { return GetBox(this->game.numBoxes++); }
+    cpPolyShape *     NewBox()      { return GetBox(this->game.numBoxes++); }
+    cpSegmentShape *  NewSegment()  { return GetSegment(this->game.numSegments++); }
 
     size_t IndexOfCircle(cpShape * shape)   { return ((((uintptr_t)(shape)) - ((uintptr_t)(&this->circles[0]))) / sizeof(this->circles[0])); }
     size_t IndexOfBox(cpShape * shape)      { return ((((uintptr_t)(shape)) - ((uintptr_t)(&this->boxes[0]))) / sizeof(this->boxes[0])); }
+    size_t IndexOfSegment(cpShape * shape)  { return ((((uintptr_t)(shape)) - ((uintptr_t)(&this->segments[0]))) / sizeof(this->segments[0])); }
 };
 
 #endif /* FSTUFF_Simulation_hpp */

@@ -212,6 +212,32 @@ void FSTUFF_ShapeInit(FSTUFF_Shape * shape, FSTUFF_Renderer * renderer)
             vertices[3] = { .5f,  .5f, 0, 1};
         }
     }
+
+    //
+    // Segments
+    //
+    else if (shape->type == FSTUFF_ShapeSegment) {
+        if (shape->appearance == FSTUFF_ShapeAppearanceEdged) {
+            didSet = true;
+            shape->primitiveType = FSTUFF_PrimitiveLineStrip;
+            shape->numVertices = 5;
+            vertices[0] = {-.5f,  .5f,  0, 1};
+            vertices[1] = { .5f,  .5f,  0, 1};
+            vertices[2] = { .5f, -.5f,  0, 1};
+            vertices[3] = {-.5f, -.5f,  0, 1};
+            vertices[4] = {-.5f,  .5f,  0, 1};
+        } else if (shape->appearance == FSTUFF_ShapeAppearanceFilled) {
+            didSet = true;
+            shape->primitiveType = FSTUFF_PrimitiveTriangleFan;
+            shape->numVertices = 4;
+            vertices[0] = {-.5f, -.5f, 0, 1};
+            vertices[1] = {-.5f,  .5f, 0, 1};
+            vertices[2] = { .5f, -.5f, 0, 1};
+            vertices[3] = { .5f,  .5f, 0, 1};
+        }
+    }
+
+
     else if (shape->type == FSTUFF_ShapeDebug) {
         didSet = true;
 
@@ -245,18 +271,6 @@ static const cpFloat kMaxDeltaTimeS = 1.0;
 
 
 #define SPACE           (this->physicsSpace)
-
-//#define BODY(IDX)       (&this->world.bodies[(IDX)])
-//#define CIRCLE(IDX)     (&(this->world.circles[(IDX)]))
-//#define BOX(IDX)        (&(this->world.boxes[(IDX)]))
-
-//#define BODY_ALLOC()    (BODY(this->game.numBodies++))
-//#define CIRCLE_ALLOC()  (CIRCLE(this->game.numCircles++))
-//#define BOX_ALLOC()     (BOX(this->game.numBoxes++))
-//
-//#define CIRCLE_IDX(VAL) ((((uintptr_t)(VAL)) - ((uintptr_t)(&this->world.circles[0]))) / sizeof(sim->world.circles[0]))
-//#define BOX_IDX(VAL)    ((((uintptr_t)(VAL)) - ((uintptr_t)(&this->world.boxes[0]))) / sizeof(sim->world.boxes[0]))
-
 
 void FSTUFF_Simulation::InitGPUShapes()
 {
@@ -313,6 +327,16 @@ void FSTUFF_Simulation::InitGPUShapes()
     this->boxEdged.appearance = FSTUFF_ShapeAppearanceEdged;
     FSTUFF_ShapeInit(&(this->boxEdged), this->renderer);
 
+    this->segmentFilled.debugName = "FSTUFF_SegmentEdged";
+    this->segmentFilled.type = FSTUFF_ShapeSegment;
+    this->segmentFilled.appearance = FSTUFF_ShapeAppearanceFilled;
+    FSTUFF_ShapeInit(&(this->segmentFilled), this->renderer);
+
+    this->segmentEdged.debugName = "FSTUFF_SegmentEdged";
+    this->segmentEdged.type = FSTUFF_ShapeSegment;
+    this->segmentEdged.appearance = FSTUFF_ShapeAppearanceEdged;
+    FSTUFF_ShapeInit(&(this->segmentEdged), this->renderer);
+
     this->debugShape.debugName = "FSTUFF_DebugShape";
     this->debugShape.type = FSTUFF_ShapeDebug;
     this->debugShape.appearance = FSTUFF_ShapeAppearanceFilled;
@@ -328,6 +352,8 @@ void FSTUFF_Simulation::InitWorld()
     memset(&circleColors, 0, sizeof(circleColors));
     memset(&boxes, 0, sizeof(boxes));
     memset(&boxColors, 0, sizeof(boxColors));
+    memset(&segments, 0, sizeof(segments));
+    memset(&segmentColors, 0, sizeof(segmentColors));
     memset(&bodies, 0, sizeof(bodies));
     this->physicsSpace = cpSpaceNew();
     
@@ -356,23 +382,23 @@ void FSTUFF_Simulation::InitWorld()
     
 #if ! FSTUFF_USE_DEBUG_PEGS
     // Bottom
-    shape = (cpShape*)cpSegmentShapeInit(NewBox(), body, cpv(wallLeft,wallBottom), cpv(wallRight,wallBottom), wallThickness/2.);
+    shape = (cpShape*)cpSegmentShapeInit(NewSegment(), body, cpv(wallLeft,wallBottom), cpv(wallRight,wallBottom), wallThickness/2.);
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
-    this->boxColors[IndexOfBox(shape)] = FSTUFF_Color(0x000000, 0x00);
+    this->segmentColors[IndexOfSegment(shape)] = FSTUFF_Color(0x000000, 0x00);
     // Left
-    shape = (cpShape*)cpSegmentShapeInit(NewBox(), body, cpv(wallLeft,wallBottom), cpv(wallLeft,wallTop), wallThickness/2.);
+    shape = (cpShape*)cpSegmentShapeInit(NewSegment(), body, cpv(wallLeft,wallBottom), cpv(wallLeft,wallTop), wallThickness/2.);
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
-    this->boxColors[IndexOfBox(shape)] = FSTUFF_Color(0x000000, 0x00);
+    this->segmentColors[IndexOfSegment(shape)] = FSTUFF_Color(0x000000, 0x00);
     // Right
-    shape = (cpShape*)cpSegmentShapeInit(NewBox(), body, cpv(wallRight,wallBottom), cpv(wallRight,wallTop), wallThickness/2.);
+    shape = (cpShape*)cpSegmentShapeInit(NewSegment(), body, cpv(wallRight,wallBottom), cpv(wallRight,wallTop), wallThickness/2.);
     cpSpaceAddShape(SPACE, shape);
     cpShapeSetElasticity(shape, 0.8);
     cpShapeSetFriction(shape, 1);
-    this->boxColors[IndexOfBox(shape)] = FSTUFF_Color(0x000000, 0x00);
+    this->segmentColors[IndexOfSegment(shape)] = FSTUFF_Color(0x000000, 0x00);
 #endif
 
 
@@ -402,7 +428,8 @@ void FSTUFF_Simulation::InitWorld()
     int pegColorIndex;
     for (int i = 0; i < numPegs; ++i) {
 #if FSTUFF_USE_DEBUG_PEGS
-        const int which_peg_type = 0;
+        // const int which_peg_type = 0;
+        const int which_peg_type = 1;
 #else
         const int which_peg_type = rand() % 2;
 #endif
@@ -449,9 +476,9 @@ void FSTUFF_Simulation::InitWorld()
 #if FSTUFF_USE_DEBUG_PEGS
                 cx = this->GetWorldWidth() / 2.;
                 cy = this->GetWorldHeight() / 2.;
-                w = this->GetWorldWidth() * 4.;
-                h = this->GetWorldHeight() * 4.;
-                angleRad = 0.;
+                w = 20;
+                h = 50;
+                angleRad = M_PI / 4.;
                 pegColorIndex = 0;
 #else
                 cx = FSTUFF_RandRangeF(this->game.rng, 0., this->GetWorldWidth());
@@ -467,7 +494,7 @@ void FSTUFF_Simulation::InitWorld()
                 cpSpaceAddBody(SPACE, body);
                 cpBodySetPosition(body, cpv(cx, cy));
                 cpBodySetAngle(body, angleRad);
-                shape = (cpShape*)cpSegmentShapeInit(NewBox(), body, cpv(-w/2.,0.), cpv(w/2.,0.), h/2.);
+                shape = (cpShape*)cpBoxShapeInit(NewBox(), body, w, h, 0.);
                 cpSpaceAddShape(SPACE, shape);
                 cpShapeSetElasticity(shape, 0.8);
                 this->boxColors[IndexOfBox(shape)] = FSTUFF_Color(pegColors[pegColorIndex]);
@@ -744,11 +771,35 @@ void FSTUFF_Simulation::Update()
         this->renderer->SetShapeProperties(FSTUFF_ShapeCircle, i, dest, this->circleColors[i]);
     }
     for (size_t i = 0; i < this->game.numBoxes; ++i) {
-        cpVect a = cpSegmentShapeGetA((cpShape*)GetBox(i));
-        cpVect b = cpSegmentShapeGetB((cpShape*)GetBox(i));
+        FSTUFF_Assert(cpPolyShapeGetCount((cpShape*)GetBox(i)) == 4);
+        const cpVect bottomRight = cpPolyShapeGetVert((cpShape*)GetBox(i), 0);
+        const cpVect topRight    = cpPolyShapeGetVert((cpShape*)GetBox(i), 1);
+        const cpVect topLeft     = cpPolyShapeGetVert((cpShape*)GetBox(i), 2);
+        const auto w = topRight.x - topLeft.x;
+        FSTUFF_Assert(w >= 0);
+        const auto h = topRight.y - bottomRight.y;
+        FSTUFF_Assert(h >= 0);
+        const cpBody * body      = cpShapeGetBody((cpShape*)GetBox(i));
+        const cpVect bodyCenter  = cpBodyGetPosition(body);
+        const cpFloat bodyAngle  = cpBodyGetAngle(body);
+
+        gbMat4 dest, tmp;
+        gb_mat4_identity(&dest);
+        gb_mat4_translate(&tmp, {(float)bodyCenter.x, (float)bodyCenter.y, 0.});
+        dest *= tmp;
+        gb_mat4_rotate(&tmp, {0., 0., 1.}, bodyAngle);
+        dest *= tmp;
+        gb_mat4_scale(&tmp, {(float)w, (float)h, 1.});
+        dest *= tmp;
+
+        this->renderer->SetShapeProperties(FSTUFF_ShapeBox, i, dest, this->boxColors[i]);
+    }
+    for (size_t i = 0; i < this->game.numSegments; ++i) {
+        cpVect a = cpSegmentShapeGetA((cpShape*)GetSegment(i));
+        cpVect b = cpSegmentShapeGetB((cpShape*)GetSegment(i));
         cpVect center = cpvlerp(a, b, 0.5);
-        cpFloat radius = cpSegmentShapeGetRadius((cpShape*)GetBox(i));
-        cpBody * body = cpShapeGetBody((cpShape*)GetBox(i));
+        cpFloat radius = cpSegmentShapeGetRadius((cpShape*)GetSegment(i));
+        cpBody * body = cpShapeGetBody((cpShape*)GetSegment(i));
         cpVect bodyCenter = cpBodyGetPosition(body);
         cpFloat bodyAngle = cpBodyGetAngle(body);
 
@@ -765,9 +816,10 @@ void FSTUFF_Simulation::Update()
         gb_mat4_scale(&tmp, {(float)cpvlength(b-a), (float)(radius*2.), 1.});
         dest *= tmp;
         
-        this->renderer->SetShapeProperties(FSTUFF_ShapeBox, i, dest, this->boxColors[i]);
+        this->renderer->SetShapeProperties(FSTUFF_ShapeSegment, i, dest, this->segmentColors[i]);
     }
-    
+
+
 #if FSTUFF_USE_DEBUG_PEGS
     {
         gbMat4 dest, tmp;
@@ -798,6 +850,8 @@ void FSTUFF_Simulation::Render()
     renderer->RenderShapes(&circleEdged,  0,            game.numCircles,                1.0f);
     renderer->RenderShapes(&boxFilled,    0,            game.numBoxes,                  0.35f);
     renderer->RenderShapes(&boxEdged,     0,            game.numBoxes,                  1.0f);
+    renderer->RenderShapes(&segmentFilled,0,            game.numSegments,               0.35f);
+    renderer->RenderShapes(&segmentEdged, 0,            game.numSegments,               1.0f);
 
 #if FSTUFF_USE_DEBUG_PEGS
     renderer->RenderShapes(&debugShape, 0, 1, 0.5678);
@@ -892,6 +946,9 @@ void FSTUFF_Simulation::ShutdownWorld()
     for (size_t i = 0; i < this->game.numBoxes; ++i) {
         cpShapeDestroy((cpShape*)GetBox(i));
     }
+    for (size_t i = 0; i < this->game.numSegments; ++i) {
+        cpShapeDestroy((cpShape*)GetSegment(i));
+    }
     for (size_t i = 0; i < this->game.numBodies; ++i) {
         cpBodyDestroy(GetBody(i));
     }
@@ -918,6 +975,12 @@ void FSTUFF_Simulation::ShutdownGPU()
     }
     if (this->boxFilled.gpuVertexBuffer) {
         this->renderer->DestroyVertexBuffer(this->boxFilled.gpuVertexBuffer);
+    }
+    if (this->segmentEdged.gpuVertexBuffer) {
+        this->renderer->DestroyVertexBuffer(this->segmentEdged.gpuVertexBuffer);
+    }
+    if (this->segmentFilled.gpuVertexBuffer) {
+        this->renderer->DestroyVertexBuffer(this->segmentFilled.gpuVertexBuffer);
     }
 }
 

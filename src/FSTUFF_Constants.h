@@ -4,7 +4,8 @@
 #define FSTUFF_BuildNumber  1
 #define FSTUFF_MaxBoxes     2048
 #define FSTUFF_MaxCircles   2048
-#define FSTUFF_MaxShapes    (FSTUFF_MaxCircles + FSTUFF_MaxBoxes)
+#define FSTUFF_MaxSegments  64
+#define FSTUFF_MaxShapes    (FSTUFF_MaxCircles + FSTUFF_MaxBoxes + FSTUFF_MaxSegments)
 
 namespace FSTUFF_Colors {
     enum : uint32_t {

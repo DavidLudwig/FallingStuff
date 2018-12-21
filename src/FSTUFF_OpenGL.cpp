@@ -364,6 +364,8 @@ void FSTUFF_GLESRenderer::Init() {
     glGenBuffers(1, &circleColorsBufID);
     glGenBuffers(1, &boxMatricesBufID);
     glGenBuffers(1, &boxColorsBufID);
+    glGenBuffers(1, &segmentMatricesBufID);
+    glGenBuffers(1, &segmentColorsBufID);
     glGenBuffers(1, &debugShapeMatricesBufID);
     glGenBuffers(1, &debugShapeColorsBufID);
     FSTUFF_GLCheck();
@@ -736,6 +738,10 @@ void FSTUFF_GLESRenderer::SetShapeProperties(FSTUFF_ShapeType shape, size_t i, c
             this->boxMatrices[i] = matrix;
             this->boxColors[i] = color;
         } break;
+        case FSTUFF_ShapeSegment: {
+            this->segmentMatrices[i] = matrix;
+            this->segmentColors[i] = color;
+        } break;
         case FSTUFF_ShapeDebug: {
             this->debugShapeMatrices[i] = matrix;
             this->debugShapeColors[i] = color;
@@ -788,6 +794,10 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
             glBindBuffer(GL_ARRAY_BUFFER, this->boxColorsBufID);
             glBufferData(GL_ARRAY_BUFFER, count * sizeof(float) * 4, this->boxColors + offset, GL_DYNAMIC_DRAW);
             break;
+        case FSTUFF_ShapeSegment:
+            glBindBuffer(GL_ARRAY_BUFFER, this->segmentColorsBufID);
+            glBufferData(GL_ARRAY_BUFFER, count * sizeof(float) * 4, this->segmentColors + offset, GL_DYNAMIC_DRAW);
+            break;
         case FSTUFF_ShapeDebug:
             glBindBuffer(GL_ARRAY_BUFFER, this->debugShapeColorsBufID);
             glBufferData(GL_ARRAY_BUFFER, count * sizeof(float) * 4, this->debugShapeColors + offset, GL_DYNAMIC_DRAW);
@@ -809,6 +819,10 @@ void FSTUFF_GLESRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset, size
         case FSTUFF_ShapeBox:
             glBindBuffer(GL_ARRAY_BUFFER, this->boxMatricesBufID);
             glBufferData(GL_ARRAY_BUFFER, count * sizeof(gbMat4), this->boxMatrices + offset, GL_DYNAMIC_DRAW);
+            break;
+        case FSTUFF_ShapeSegment:
+            glBindBuffer(GL_ARRAY_BUFFER, this->segmentMatricesBufID);
+            glBufferData(GL_ARRAY_BUFFER, count * sizeof(gbMat4), this->segmentMatrices + offset, GL_DYNAMIC_DRAW);
             break;
         case FSTUFF_ShapeDebug:
             glBindBuffer(GL_ARRAY_BUFFER, this->debugShapeMatricesBufID);

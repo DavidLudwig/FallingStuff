@@ -183,6 +183,9 @@ void FSTUFF_AppleMetalRenderer::RenderShapes(FSTUFF_Shape * shape, size_t offset
         case FSTUFF_ShapeBox:
             shapesOffsetInGpuData = offsetof(FSTUFF_GPUData, boxes);
             break;
+        case FSTUFF_ShapeSegment:
+            shapesOffsetInGpuData = offsetof(FSTUFF_GPUData, segments);
+            break;
         default:
             FSTUFF_Log(@"Unknown or unmapped FSTUFF_ShapeType in shape: %u\n", shape->type);
             return;
@@ -348,6 +351,10 @@ void FSTUFF_AppleMetalRenderer::SetShapeProperties(FSTUFF_ShapeType shape, size_
         case FSTUFF_ShapeBox: {
             FSTUFF_Apple_CopyMatrix(this->appData->boxes[i].model_matrix, matrix);
             FSTUFF_Apple_CopyVector(this->appData->boxes[i].color, color);
+        } break;
+        case FSTUFF_ShapeSegment: {
+            FSTUFF_Apple_CopyMatrix(this->appData->segments[i].model_matrix, matrix);
+            FSTUFF_Apple_CopyVector(this->appData->segments[i].color, color);
         } break;
         case FSTUFF_ShapeDebug: {
             FSTUFF_Apple_CopyMatrix(this->appData->debugShapes[i].model_matrix, matrix);

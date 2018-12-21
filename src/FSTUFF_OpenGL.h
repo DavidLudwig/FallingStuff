@@ -82,6 +82,11 @@ struct FSTUFF_GLESRenderer : public FSTUFF_Renderer {
     GLuint boxMatricesBufID = -1;
     gbVec4 boxColors[FSTUFF_MaxBoxes];
     GLuint boxColorsBufID = -1;
+    gbMat4 segmentMatrices[FSTUFF_MaxSegments];
+    GLuint segmentMatricesBufID = -1;
+    gbVec4 segmentColors[FSTUFF_MaxSegments];
+    GLuint segmentColorsBufID = -1;
+
     gbMat4 debugShapeMatrices[1];
     GLuint debugShapeMatricesBufID = -1;
     gbVec4 debugShapeColors[1];
