@@ -103,6 +103,7 @@ target_include_directories(FallingStuff
     PRIVATE
         ./external/Chipmunk2D/include 
         ./external/imgui
+        ./external/utfcpp/source
         ${SDL2_INCLUDE_DIR}
 )
 target_link_libraries(FallingStuff

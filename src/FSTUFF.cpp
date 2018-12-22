@@ -17,6 +17,15 @@
 #include <cctype>
 #include <sstream>
 
+// part of the utf8cpp library (at https://github.com/nemtrif/utfcpp)
+#if (__clang__ || __GNUC__) && !__cpp_exceptions       // Some builds, such as for web/Emscripten, use -fno-exceptions
+    #include "utf8/unchecked.h"
+    namespace utf8_ = utf8::unchecked;
+#else
+    #include "utf8.h"
+    namespace utf8_ = utf8;
+#endif
+
 #define GB_MATH_IMPLEMENTATION
 #include "gb_math.h"
 
@@ -1000,21 +1009,31 @@ void FSTUFF_Simulation::ShutdownGPU()
 
 #pragma mark - Input Events
 
+std::string FSTUFF_Event::KeyToUTF8() const
+{
+    std::string result;
+    utf8_::utf32to8(&this->data.key.utf32, (&this->data.key.utf32) + 1, std::back_inserter(result));
+    return result;
+}
+
 FSTUFF_Event FSTUFF_Event::NewKeyEvent(FSTUFF_EventType eventType, const char * utf8Char)
+{
+    std::vector<char32_t> temp;
+    std::string_view src(utf8Char);
+    utf8_::utf8to32(src.begin(), src.end(), std::back_inserter(temp));
+    FSTUFF_Assert(temp.size() >= 1);
+    return NewKeyEvent(eventType, temp[0]);
+}
+
+FSTUFF_Event FSTUFF_Event::NewKeyEvent(FSTUFF_EventType keyEventType, char32_t utf32Char)
 {
     FSTUFF_Event event;
     memset(&event, 0, sizeof(event));
-    event.type = eventType;
-    const size_t srcSize = strlen(utf8Char) + 1;
-    const size_t copySize = std::min(sizeof(event.data.key.utf8), srcSize);
-#if _MSC_VER
-	strncpy_s(const_cast<char *>(event.data.key.utf8), copySize, utf8Char, _TRUNCATE);
-	const_cast<char *>(event.data.key.utf8)[sizeof(event.data.key.utf8)-1] = '\0';
-#else
-    strlcpy(const_cast<char *>(event.data.key.utf8), utf8Char, copySize);
-#endif
+    event.type = keyEventType;
+    event.data.key.utf32 = utf32Char;
     return event;
 }
+
 
 //FSTUFF_Event FSTUFF_Event::NewCursorMotionEvent(float xOS, float yOS)
 //{
@@ -1067,37 +1086,38 @@ void FSTUFF_Simulation::EventReceived(FSTUFF_Event *event)
         } break;
 
         case FSTUFF_EventKeyDown: {
-            if (event->data.key.utf8[0] >= 0 && event->data.key.utf8[0] <= 127) {
-                const auto key = event->data.key.utf8[0];
+            const std::string keyUTF8 = event->KeyToUTF8();
+            if (keyUTF8[0] >= 0 && keyUTF8[0] <= 127) {
+                const auto key = keyUTF8[0];
                 this->keysPressed[key] = 1;
                 guiIO.KeysDown[key] = 1;
-                bool unhandled = false;
-                switch (std::toupper(key)) {
-                    case 'D': {
-                        this->showGUIDemo = !this->showGUIDemo;
-                    } break;
-                    case 'R': {
-                        this->ResetWorld();
-                    } break;
-                    case 'S': {
-                        if ( ! this->configurationMode) {
-                            this->showSettings = !this->showSettings;
-                        }
-                    } break;
-                    default: {
-                        unhandled = true;
-                    } break;
-                }
-                if (!unhandled) {
-                    event->handled = true;
-                }
             }
-        
+            bool unhandled = false;
+            switch (std::toupper(event->KeyToUTF32())) {
+                case U'D': {
+                    this->showGUIDemo = !this->showGUIDemo;
+                } break;
+                case U'R': {
+                    this->ResetWorld();
+                } break;
+                case U'S': {
+                    if ( ! this->configurationMode) {
+                        this->showSettings = !this->showSettings;
+                    }
+                } break;
+                default: {
+                    unhandled = true;
+                } break;
+            }
+            if (!unhandled) {
+                event->handled = true;
+            }
         } break;
-        
+
         case FSTUFF_EventKeyUp: {
-            if (event->data.key.utf8[0] >= 0 && event->data.key.utf8[0] <= 127) {
-                const auto key = event->data.key.utf8[0];
+            const std::string keyUTF8 = event->KeyToUTF8();
+            if (keyUTF8[0] >= 0 && keyUTF8[0] <= 127) {
+                const auto key = keyUTF8[0];
                 this->keysPressed[key] = 0;
                 guiIO.KeysDown[key] = 0;
             }

@@ -183,7 +183,7 @@ struct FSTUFF_Event {
     union FSTUFF_EventData {
         FSTUFF_EventData() { memset( this, 0, sizeof(FSTUFF_EventData) ); }
         struct {
-            const char utf8[8];
+            char32_t utf32;
         } key;
         struct {
             float xOS;
@@ -198,11 +198,15 @@ struct FSTUFF_Event {
             bool contained;
         } cursorContain;
     } data;
-    
+
     static FSTUFF_Event NewKeyEvent(FSTUFF_EventType keyEventType, const char * utf8Char);
+    static FSTUFF_Event NewKeyEvent(FSTUFF_EventType keyEventType, char32_t utf32Char);
 //    static FSTUFF_Event NewCursorButtonEvent(float xOS, float yOS, bool down);
 //    static FSTUFF_Event NewCursorMotionEvent(float xOS, float yOS);
 //    static FSTUFF_Event NewCursorContainedEvent(bool contained);
+
+    std::string KeyToUTF8() const;
+    char32_t KeyToUTF32() const { return this->data.key.utf32; }
 };
 
 struct FSTUFF_Simulation {

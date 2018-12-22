@@ -54,7 +54,29 @@ void tick() {
                     (e.type == SDL_KEYDOWN) ?
                         FSTUFF_EventKeyDown :
                         FSTUFF_EventKeyUp;
-                FSTUFF_Event fstuffEvent = FSTUFF_Event::NewKeyEvent(eventType, keyName);
+                char32_t utf32Char = 0;
+                switch (e.key.keysym.sym) {
+                    case SDLK_DOWN:
+                        utf32Char = U'↓';
+                        break;
+                    case SDLK_LEFT:
+                        utf32Char = U'←';
+                        break;
+                    case SDLK_RIGHT:
+                        utf32Char = U'→';
+                        break;
+                    case SDLK_UP:
+                        utf32Char = U'↑';
+                        break;
+                    default:
+                        break;
+                }
+                FSTUFF_Event fstuffEvent;
+                if (utf32Char != 0) {
+                    fstuffEvent = FSTUFF_Event::NewKeyEvent(eventType, utf32Char);
+                } else {
+                    fstuffEvent = FSTUFF_Event::NewKeyEvent(eventType, keyName);
+                }
                 sim->EventReceived(&fstuffEvent);
             } break;
 

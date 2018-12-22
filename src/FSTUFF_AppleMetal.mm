@@ -741,11 +741,50 @@ return;
 }
 
 #if ! TARGET_OS_IOS
-- (void)keyDown:(NSEvent *)theEvent
-{
-    FSTUFF_Event event = FSTUFF_Event::NewKeyEvent(FSTUFF_EventKeyDown, [theEvent.characters cStringUsingEncoding:NSUTF8StringEncoding]);
+
+static FSTUFF_Event FSTUFF_NewKeyEventForNSEvent(NSEvent * nsEvent) {
+    FSTUFF_EventType fstuffEventType;
+    switch ([nsEvent type]) {
+        case NSEventTypeKeyDown:
+            fstuffEventType = FSTUFF_EventKeyDown;
+            break;
+        case NSEventTypeKeyUp:
+            fstuffEventType = FSTUFF_EventKeyUp;
+            break;
+        default:
+            return FSTUFF_Event();
+    }
     
-    if (std::toupper([theEvent.characters cStringUsingEncoding:NSUTF8StringEncoding][0]) == 'C') {
+    char32_t utf32Char = 0;
+    switch ([nsEvent keyCode]) {
+        case 125:    // Down arrow
+            utf32Char = U'↓';
+            break;
+        case 123:    // Left arrow
+            utf32Char = U'←';
+            break;
+        case 124:    // Right arrow
+            utf32Char = U'→';
+            break;
+        case 126:    // Up arrow
+            utf32Char = U'↑';
+            break;
+        default:
+            break;
+    }
+
+    if (utf32Char != 0) {
+        return FSTUFF_Event::NewKeyEvent(fstuffEventType, utf32Char);
+    } else {
+        return FSTUFF_Event::NewKeyEvent(fstuffEventType, [nsEvent.characters cStringUsingEncoding:NSUTF8StringEncoding]);
+    }
+}
+
+- (void)keyDown:(NSEvent *)nsEvent
+{
+    FSTUFF_Event fstuffEvent = FSTUFF_NewKeyEventForNSEvent(nsEvent);
+    
+    if (std::toupper([nsEvent.characters cStringUsingEncoding:NSUTF8StringEncoding][0]) == 'C') {
         NSWindow * window = FSTUFF_CreateConfigureSheet();
 #if 0
         [window makeKeyAndOrderFront:window];
@@ -754,22 +793,22 @@ return;
         {
             FSTUFF_Log(@"sheet completion handler reached, returnCode=%ld\n", (long)returnCode);
         }];
-        event.handled = true;
+        fstuffEvent.handled = true;
 #endif
     }
     
-    self.sim->EventReceived(&event);
-    if ( ! event.handled) {
-        [super keyDown:theEvent];
+    self.sim->EventReceived(&fstuffEvent);
+    if ( ! fstuffEvent.handled) {
+        [super keyDown:nsEvent];
     }
 }
 
-- (void)keyUp:(NSEvent *)theEvent
+- (void)keyUp:(NSEvent *)nsEvent
 {
-    FSTUFF_Event event = FSTUFF_Event::NewKeyEvent(FSTUFF_EventKeyUp, [theEvent.characters cStringUsingEncoding:NSUTF8StringEncoding]);
-    self.sim->EventReceived(&event);
-    if ( ! event.handled) {
-        [super keyUp:theEvent];
+    FSTUFF_Event fstuffEvent = FSTUFF_NewKeyEventForNSEvent(nsEvent);
+    self.sim->EventReceived(&fstuffEvent);
+    if ( ! fstuffEvent.handled) {
+        [super keyUp:nsEvent];
     }
 }
 

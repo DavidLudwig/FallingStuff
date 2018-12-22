@@ -12,6 +12,10 @@
 		75036FC91CD540F10017DC04 /* FSTUFF_AppleMetalShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 75036FC81CD540F10017DC04 /* FSTUFF_AppleMetalShaders.metal */; };
 		75036FCC1CD540F10017DC04 /* FSTUFF_MacAppAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75036FCB1CD540F10017DC04 /* FSTUFF_MacAppAssets.xcassets */; };
 		75036FCF1CD540F10017DC04 /* FSTUFF_MacMainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 75036FCD1CD540F10017DC04 /* FSTUFF_MacMainMenu.xib */; };
+		752BDE2621CED8D800094B31 /* FSTUFF_Log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 752BDE2521CED8D800094B31 /* FSTUFF_Log.cpp */; };
+		752BDE2721CED8D800094B31 /* FSTUFF_Log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 752BDE2521CED8D800094B31 /* FSTUFF_Log.cpp */; };
+		752BDE2821CED8D800094B31 /* FSTUFF_Log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 752BDE2521CED8D800094B31 /* FSTUFF_Log.cpp */; };
+		752BDE2921CED8D800094B31 /* FSTUFF_Log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 752BDE2521CED8D800094B31 /* FSTUFF_Log.cpp */; };
 		755856161CDFC96F00FC8EA4 /* chipmunk.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855F61CDFC96F00FC8EA4 /* chipmunk.c */; };
 		755856171CDFC96F00FC8EA4 /* cpArbiter.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855F71CDFC96F00FC8EA4 /* cpArbiter.c */; };
 		755856181CDFC96F00FC8EA4 /* cpArray.c in Sources */ = {isa = PBXBuildFile; fileRef = 755855F81CDFC96F00FC8EA4 /* cpArray.c */; };
@@ -242,6 +246,7 @@
 		75036FCE1CD540F10017DC04 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/FSTUFF_MacMainMenu.xib; sourceTree = "<group>"; };
 		75036FD01CD540F10017DC04 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		752B1A971CFD2C5E00BA2EE9 /* FSTUFF.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FSTUFF.h; sourceTree = "<group>"; };
+		752BDE2521CED8D800094B31 /* FSTUFF_Log.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FSTUFF_Log.cpp; sourceTree = "<group>"; };
 		755855F61CDFC96F00FC8EA4 /* chipmunk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = chipmunk.c; path = external/Chipmunk2D/src/chipmunk.c; sourceTree = "<group>"; };
 		755855F71CDFC96F00FC8EA4 /* cpArbiter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cpArbiter.c; path = external/Chipmunk2D/src/cpArbiter.c; sourceTree = "<group>"; };
 		755855F81CDFC96F00FC8EA4 /* cpArray.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cpArray.c; path = external/Chipmunk2D/src/cpArray.c; sourceTree = "<group>"; };
@@ -443,6 +448,7 @@
 				75036FC81CD540F10017DC04 /* FSTUFF_AppleMetalShaders.metal */,
 				75036FCA1CD540F10017DC04 /* FSTUFF_AppleMetalStructs.h */,
 				7568CB03200FD06200FF086C /* FSTUFF_Constants.h */,
+				752BDE2521CED8D800094B31 /* FSTUFF_Log.cpp */,
 				75E0B2AF219F8F8A005C572B /* FSTUFF_OpenGL.cpp */,
 				75E0B2B0219F8F8A005C572B /* FSTUFF_OpenGL.h */,
 				756C8E4E200DB05C0019EA70 /* FSTUFF.cpp */,
@@ -927,6 +933,7 @@
 				75036FC11CD540F10017DC04 /* FSTUFF_MacAppDelegate.m in Sources */,
 				755856161CDFC96F00FC8EA4 /* chipmunk.c in Sources */,
 				755856211CDFC96F00FC8EA4 /* cpHashSet.c in Sources */,
+				752BDE2621CED8D800094B31 /* FSTUFF_Log.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -974,6 +981,7 @@
 				759DFD301FF5987A00F1B2D8 /* cpSpatialIndex.c in Sources */,
 				756C8E52200DB05C0019EA70 /* FSTUFF.cpp in Sources */,
 				759DFD311FF5987A00F1B2D8 /* cpSweep1D.c in Sources */,
+				752BDE2921CED8D800094B31 /* FSTUFF_Log.cpp in Sources */,
 				759DFD081FF58EEC00F1B2D8 /* FallingStuff_OSXScreenSaverView.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -992,6 +1000,7 @@
 				75ADD61D1D035B600042FC3A /* cpCollision.c in Sources */,
 				75E0A083219F0D8D009864D4 /* FSTUFF_AppleGL.mm in Sources */,
 				75ADD61E1D035B600042FC3A /* cpConstraint.c in Sources */,
+				752BDE2821CED8D800094B31 /* FSTUFF_Log.cpp in Sources */,
 				75ADD61F1D035B600042FC3A /* cpDampedRotarySpring.c in Sources */,
 				75ADD6201D035B600042FC3A /* cpDampedSpring.c in Sources */,
 				75ADD6211D035B600042FC3A /* cpGearJoint.c in Sources */,
@@ -1042,6 +1051,7 @@
 				75DE2F501CFCCE710052F8C1 /* cpConstraint.c in Sources */,
 				75DE2F511CFCCE710052F8C1 /* cpDampedRotarySpring.c in Sources */,
 				75DE2F521CFCCE710052F8C1 /* cpDampedSpring.c in Sources */,
+				752BDE2721CED8D800094B31 /* FSTUFF_Log.cpp in Sources */,
 				75DE2F531CFCCE710052F8C1 /* cpGearJoint.c in Sources */,
 				75F6FD6021B7064700F95C29 /* imgui_widgets.cpp in Sources */,
 				75DE2F541CFCCE710052F8C1 /* cpGrooveJoint.c in Sources */,
@@ -1165,6 +1175,7 @@
 					external/Chipmunk2D/include,
 					external/GBDeviceInfo,
 					external/imgui,
+					external/utfcpp/source,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = YES;
@@ -1217,6 +1228,7 @@
 					external/Chipmunk2D/include,
 					external/GBDeviceInfo,
 					external/imgui,
+					external/utfcpp/source,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;

@@ -13,7 +13,6 @@
     #define FSTUFF_USE_OUTPUTDEBUGSTRING 1
 #endif
 
-#ifndef __APPLE__
 void FSTUFF_Log(const char * fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -25,4 +24,3 @@ void FSTUFF_Log(const char * fmt, ...) {
 #endif
     va_end(args);
 }
-#endif

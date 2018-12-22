@@ -130,14 +130,6 @@ void FSTUFF_Log(NSString * fmt, va_list args) {
     }
 }
 
-void FSTUFF_Log(const char * fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    NSString * nsfmt = [[NSString alloc] initWithUTF8String:fmt];
-    FSTUFF_Log(nsfmt, args);
-    va_end(args);
-}
-
 
 #pragma mark - Renderer
 
