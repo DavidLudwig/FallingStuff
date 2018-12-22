@@ -916,6 +916,9 @@ void FSTUFF_Simulation::UpdateProjectionMatrix()
         1
     });
     this->projectionMatrix *= tmp;
+
+    gb_mat4_translate(&tmp, this->game.viewTranslation);
+    this->projectionMatrix *= tmp;
 }
 
 void FSTUFF_Simulation::UpdateCursorInfo(const FSTUFF_CursorInfo & newInfo)
@@ -1104,6 +1107,22 @@ void FSTUFF_Simulation::EventReceived(FSTUFF_Event *event)
                     if ( ! this->configurationMode) {
                         this->showSettings = !this->showSettings;
                     }
+                } break;
+                case U'←': {
+                    this->game.viewTranslation.x -= 5.;
+                    this->UpdateProjectionMatrix();
+                } break;
+                case U'→': {
+                    this->game.viewTranslation.x += 5.;
+                    this->UpdateProjectionMatrix();
+                } break;
+                case U'↓': {
+                    this->game.viewTranslation.y -= 5.;
+                    this->UpdateProjectionMatrix();
+                } break;
+                case U'↑': {
+                    this->game.viewTranslation.y += 5.;
+                    this->UpdateProjectionMatrix();
                 } break;
                 default: {
                     unhandled = true;

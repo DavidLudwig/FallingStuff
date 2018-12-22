@@ -241,6 +241,11 @@ struct FSTUFF_Simulation {
         double elapsedTimeS = 0.0;              // elapsed time, in seconds; 0 == no time has passed
 
         //
+        // Display
+        //
+        gbVec3 viewTranslation = {0., 0., 0.};
+
+        //
         // Misc parameters
         //
         float addMarblesInS             = 0.0f;
