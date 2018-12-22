@@ -24,7 +24,7 @@
 #include <emscripten.h>
 #endif
 
-//#define FSTUFF_USE_DEBUG_PEGS 1
+// #define FSTUFF_USE_DEBUG_PEGS 1
 
 
 
@@ -883,25 +883,30 @@ void FSTUFF_Simulation::UpdateProjectionMatrix()
         this->globalScale.x, this->globalScale.y
     );
 
-    gbMat4 translation;
-    gb_mat4_translate(&translation, {-1, -1, 0});
+    //
+    // Start by setting projectionMatrix to an identity matrix,
+    // then apply transformations as directly as possible to it.
+    //
+    gb_mat4_identity(&this->projectionMatrix);
+
+    gbMat4 tmp;
+
+    gb_mat4_translate(&tmp, {-1, -1, 0});
+    this->projectionMatrix *= tmp;
     
-    gbMat4 scaling;
-    gb_mat4_scale(&scaling, {
+    gb_mat4_scale(&tmp, {
         (float)(2.0f / this->viewSize.widthMM),
         (float)(2.0f / this->viewSize.heightMM),
         1
     });
+    this->projectionMatrix *= tmp;
 
-    gbMat4 scaling2;
-    gb_mat4_identity(&scaling2);
-    gb_mat4_scale(&scaling2, {
+    gb_mat4_scale(&tmp, {
         (float)(this->globalScale.x),
         (float)(this->globalScale.y),
         1
     });
-
-    this->projectionMatrix = (translation * scaling) * scaling2;
+    this->projectionMatrix *= tmp;
 }
 
 void FSTUFF_Simulation::UpdateCursorInfo(const FSTUFF_CursorInfo & newInfo)
