@@ -487,7 +487,7 @@ void FSTUFF_Simulation::InitWorld()
                 cy = this->GetWorldHeight() / 2.;
                 w = 20;
                 h = 50;
-                angleRad = M_PI / 4.;
+                angleRad = M_PI / 2.;
                 pegColorIndex = 0;
 #else
                 cx = FSTUFF_RandRangeF(this->game.rng, 0., this->GetWorldWidth());
