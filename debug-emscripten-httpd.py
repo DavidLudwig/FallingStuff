@@ -30,8 +30,8 @@ DefaultAltRoots = [
 ]
 
 
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-import SocketServer
+from http.server import HTTPServer, BaseHTTPRequestHandler
+# import SocketServer
 
 import errno
 import mimetypes
@@ -80,7 +80,7 @@ class EmscriptenDebugServerHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write("""
+        html_string = """
 <html>
     <head>
         <title>%(title)s</title>
@@ -89,7 +89,8 @@ class EmscriptenDebugServerHandler(BaseHTTPRequestHandler):
         %(body)s
     </body>
 </html>
-""" % format_args)
+""" % format_args
+        self.wfile.write(html_string.encode('utf-8'))
         self._end_response()
 
     def _send_error(self, code, message=None):
