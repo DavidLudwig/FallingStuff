@@ -754,8 +754,8 @@ void FSTUFF_Simulation::Update()
         ImGui::AlignTextToFramePadding();
         ImGui::Text("written by David Lee Ludwig");
         ImGui::SameLine();
-        if (ImGui::Button("http://dll.fyi")) {
-            FSTUFF_OpenWebPage("http://dll.fyi");
+        if (ImGui::Button("http://dll.software")) {
+            FSTUFF_OpenWebPage("http://dll.software");
         }
         ImGui::End();
     }
