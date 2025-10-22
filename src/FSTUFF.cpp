@@ -277,7 +277,9 @@ void FSTUFF_ShapeInit(FSTUFF_Shape * shape, FSTUFF_Renderer * renderer)
 
 static const cpFloat kPhysicsStepTimeS = 1./600.;
 static const cpFloat kMaxDeltaTimeS = 1.0;
-
+static const cpFloat kFriction = 1.0;
+static const cpFloat kElasticity = 0.8;
+// static const cpFloat kSurfaceVelocity = 0.0;
 
 #define SPACE           (this->physicsSpace)
 
@@ -393,20 +395,20 @@ void FSTUFF_Simulation::InitWorld()
     // Bottom
     shape = (cpShape*)cpSegmentShapeInit(NewSegment(), body, cpv(wallLeft,wallBottom), cpv(wallRight,wallBottom), wallThickness/2.);
     cpSpaceAddShape(SPACE, shape);
-    cpShapeSetElasticity(shape, 0.8);
-    cpShapeSetFriction(shape, 1);
+    cpShapeSetElasticity(shape, kElasticity);
+    cpShapeSetFriction(shape, kFriction);
     this->segmentColors[IndexOfSegment(shape)] = FSTUFF_Color(0x000000, 0x00);
     // Left
     shape = (cpShape*)cpSegmentShapeInit(NewSegment(), body, cpv(wallLeft,wallBottom), cpv(wallLeft,wallTop), wallThickness/2.);
     cpSpaceAddShape(SPACE, shape);
-    cpShapeSetElasticity(shape, 0.8);
-    cpShapeSetFriction(shape, 1);
+    cpShapeSetElasticity(shape, kElasticity);
+    cpShapeSetFriction(shape, kFriction);
     this->segmentColors[IndexOfSegment(shape)] = FSTUFF_Color(0x000000, 0x00);
     // Right
     shape = (cpShape*)cpSegmentShapeInit(NewSegment(), body, cpv(wallRight,wallBottom), cpv(wallRight,wallTop), wallThickness/2.);
     cpSpaceAddShape(SPACE, shape);
-    cpShapeSetElasticity(shape, 0.8);
-    cpShapeSetFriction(shape, 1);
+    cpShapeSetElasticity(shape, kElasticity);
+    cpShapeSetFriction(shape, kFriction);
     this->segmentColors[IndexOfSegment(shape)] = FSTUFF_Color(0x000000, 0x00);
 #endif
 
@@ -464,8 +466,8 @@ void FSTUFF_Simulation::InitWorld()
                 shape = (cpShape*)cpCircleShapeInit(NewCircle(), body, radius, cpvzero);
                 ++this->game.numPegs;
                 cpSpaceAddShape(SPACE, shape);
-                cpShapeSetElasticity(shape, 0.8);
-                cpShapeSetFriction(shape, 1);
+                cpShapeSetElasticity(shape, kElasticity);
+                cpShapeSetFriction(shape, kFriction);
 #if FSTUFF_USE_DEBUG_PEGS
                 switch (i % 2) {
                     case 0:
@@ -505,7 +507,8 @@ void FSTUFF_Simulation::InitWorld()
                 cpBodySetAngle(body, angleRad);
                 shape = (cpShape*)cpBoxShapeInit(NewBox(), body, w, h, 0.);
                 cpSpaceAddShape(SPACE, shape);
-                cpShapeSetElasticity(shape, 0.8);
+                cpShapeSetElasticity(shape, kElasticity);
+                cpShapeSetFriction(shape, kFriction);
                 this->boxColors[IndexOfBox(shape)] = FSTUFF_Color(pegColors[pegColorIndex]);
             } break;
         }
@@ -526,8 +529,8 @@ void FSTUFF_Simulation::AddMarble()
     cpShape * shape = (cpShape*)cpCircleShapeInit(NewCircle(), body, marbleRadius, cpvzero);
     cpSpaceAddShape(sim->physicsSpace, shape);
     cpShapeSetDensity(shape, 10);
-    cpShapeSetElasticity(shape, 0.8);
-    cpShapeSetFriction(shape, 1);
+    cpShapeSetElasticity(shape, kElasticity);
+    cpShapeSetFriction(shape, kFriction);
     sim->circleColors[IndexOfCircle(shape)] = FSTUFF_Color(FSTUFF_Colors::White);
     sim->game.marblesCount += 1;
 }
