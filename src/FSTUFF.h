@@ -260,6 +260,9 @@ struct FSTUFF_Simulation {
         size_t numBoxes     = 0;
         size_t numSegments  = 0;
         size_t numBodies    = 0;
+
+        bool forceResetEnabled = false;
+        double forceResetInS = 0.0;
     } game;
 
     //

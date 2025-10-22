@@ -724,6 +724,12 @@ void FSTUFF_Simulation::Update()
             this->ResetWorld();
         }
     }
+    if (this->game.forceResetEnabled) {
+        this->game.forceResetInS -= deltaTimeS;
+        if (this->game.forceResetInS <= 0.) {
+            this->ResetWorld();
+        }
+    }
     
     // Process GUI
     if (this->showSettings) {
@@ -882,6 +888,10 @@ void FSTUFF_Simulation::ViewChanged(const FSTUFF_ViewSize & viewSize)
     this->UpdateProjectionMatrix();
     FSTUFF_Assert(this->renderer);
     this->renderer->ViewChanged();
+
+    // Reset the world when the view changes size
+    this->game.forceResetEnabled = true;
+    this->game.forceResetInS = 0.5f; // Wait a little bit before resetting, in case multiple ViewChanged calls come in
 }
 
 void FSTUFF_Simulation::SetGlobalScale(cpVect scale)
