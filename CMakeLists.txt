@@ -11,11 +11,11 @@ if (EMSCRIPTEN)
     set(CMAKE_C_FLAGS_RELEASE "-DNDEBUG -Oz")
     set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -Oz")
 
-    set(CMAKE_C_FLAGS_DEBUG "-g4 --source-map-base http://127.0.0.1:8080/")
-    set(CMAKE_CXX_FLAGS_DEBUG "-g4 --source-map-base http://127.0.0.1:8080/")
+    set(CMAKE_C_FLAGS_DEBUG "-gsource-map --source-map-base http://127.0.0.1:8080/ -Wno-unused-command-line-argument")
+    set(CMAKE_CXX_FLAGS_DEBUG "-gsource-map --source-map-base http://127.0.0.1:8080/ -Wno-unused-command-line-argument")
 
-    set(CMAKE_C_FLAGS_RELWITHDEBINFO "-DNDEBUG -Oz -g4 --source-map-base http://127.0.0.1:8080/")
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-DNDEBUG -Oz -g4 --source-map-base http://127.0.0.1:8080/")
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO "-DNDEBUG -Oz -gsource-map --source-map-base http://127.0.0.1:8080/")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-DNDEBUG -Oz -gsource-map --source-map-base http://127.0.0.1:8080/")
 endif()
 
 if (NOT EMSCRIPTEN)
@@ -113,17 +113,18 @@ target_link_libraries(FallingStuff
 if (EMSCRIPTEN)
     # EMSCRIPTEN_OPTIONS is for '-s KEY=VALUE' options, some of which are
     # needed when compiling, and others when linking.
-    set(EMSCRIPTEN_OPTIONS "-s USE_SDL=2 -s FILESYSTEM=0 -s ENVIRONMENT=web")
+    set(EMSCRIPTEN_OPTIONS "-sUSE_SDL=2")
 
     set_target_properties(FallingStuff
         PROPERTIES
             COMPILE_FLAGS "${EMSCRIPTEN_OPTIONS} -fno-rtti -fno-exceptions"
-            LINK_FLAGS "${EMSCRIPTEN_OPTIONS}"
+            LINK_FLAGS "${EMSCRIPTEN_OPTIONS} -sFILESYSTEM=0 -sENVIRONMENT=web -sSTACK_SIZE=1MB"
     )
 
     add_custom_command(TARGET FallingStuff POST_BUILD
-        COMMAND
-            cp -v "${CMAKE_HOME_DIRECTORY}/docs/index.html" "${CMAKE_BINARY_DIR}/"
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_HOME_DIRECTORY}/docs/index.html"
+            "${CMAKE_BINARY_DIR}/"
     )
 endif()
 

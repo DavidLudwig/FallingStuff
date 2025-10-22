@@ -94,6 +94,7 @@ class EmscriptenDebugServerHandler(BaseHTTPRequestHandler):
         self._end_response()
 
     def _send_error(self, code, message=None):
+        print("Error %d: %s" % (code, str(message)))
         self.send_response(code)
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
@@ -128,6 +129,7 @@ class EmscriptenDebugServerHandler(BaseHTTPRequestHandler):
             self._send_error(500, "Unknown error: %s\n" % str(sys.exc_info()[0]))
             return
 
+        print("Serving file: %s" % file_path)
         self.send_response(200)
         self.send_header('Content-type', content_type)
         self.end_headers()
