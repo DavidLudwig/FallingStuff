@@ -279,7 +279,7 @@ static const cpFloat FSTUFF_kPhysicsStepTimeS = 1./600.;
 static const cpFloat kMaxDeltaTimeS = 1.0;
 static const cpFloat kFriction = 1.0;
 static const cpFloat kElasticity = 0.8;
-static const cpVect kSurfaceVelocity = cpvzero;
+static const cpVect kSurfaceVelocity = cpVect { 0.0, 0.0 };
 
 void FSTUFF_Simulation::InitGPUShapes()
 {
