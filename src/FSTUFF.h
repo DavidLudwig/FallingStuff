@@ -274,7 +274,7 @@ struct FSTUFF_Simulation {
     ImGuiContext * imGuiContext = nullptr;
     std::bitset<128> keysPressed;       // key-press state: 0|false for up, 1|true for pressed-down; indexed by 7-bit ASCII codes
     bool showGUIDemo = false;           // only works if '#define FSTUFF_ENABLE_IMGUI_DEMO 1' is set (increases app-size!)
-    bool showSettings = false;
+    bool showSettings = true;
     bool configurationMode = false;
     bool doEndConfiguration = false;
 
