@@ -4,5 +4,14 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"*.ush": "hlsl",
+			"*.usf": "hlsl",
+			"bitset": "cpp",
+			"memory": "cpp",
+			"optional": "cpp",
+			"random": "cpp"
+		}
+	}
 }

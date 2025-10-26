@@ -623,6 +623,7 @@ void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
 
 void FSTUFF_Simulation::ResetWorld()
 {
+    this->resetWorldCount++;
     this->ShutdownWorld();
     this->game = FSTUFF_Simulation::Resettable();
     this->InitWorld();
@@ -890,8 +891,10 @@ void FSTUFF_Simulation::ViewChanged(const FSTUFF_ViewSize & viewSize)
     this->renderer->ViewChanged();
 
     // Reset the world when the view changes size
-    this->game.forceResetEnabled = true;
-    this->game.forceResetInS = 0.5f; // Wait a little bit before resetting, in case multiple ViewChanged calls come in
+    if (this->resetWorldCount > 0) {    // Don't reset on the very first ViewChanged call
+        this->game.forceResetEnabled = true;
+        this->game.forceResetInS = 0.5f; // Wait a little bit before resetting, in case multiple ViewChanged calls come in
+    }
 }
 
 void FSTUFF_Simulation::SetGlobalScale(cpVect scale)

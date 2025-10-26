@@ -272,6 +272,11 @@ struct FSTUFF_Simulation {
     int32_t marblesMax = 200;
 
     //
+    // Misc State
+    //
+    int32_t resetWorldCount = 0;
+
+    //
     // User Interface
     //
     ImGuiContext * imGuiContext = nullptr;
