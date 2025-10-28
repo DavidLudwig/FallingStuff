@@ -113,11 +113,12 @@ target_link_libraries(FallingStuff
 if (EMSCRIPTEN)
     # EMSCRIPTEN_OPTIONS is for '-s KEY=VALUE' options, some of which are
     # needed when compiling, and others when linking.
-    set(EMSCRIPTEN_OPTIONS "-sUSE_SDL=2")
+    set(EMSCRIPTEN_OPTIONS "-sUSE_SDL=2") # -g")
 
     set_target_properties(FallingStuff
         PROPERTIES
-            COMPILE_FLAGS "${EMSCRIPTEN_OPTIONS} -fno-rtti -fno-exceptions"
+            # FIXME: remove -Wno-deprecated-declarations
+            COMPILE_FLAGS "${EMSCRIPTEN_OPTIONS} -fno-rtti -fno-exceptions -Wno-deprecated-declarations"
             LINK_FLAGS "${EMSCRIPTEN_OPTIONS} -sFILESYSTEM=0 -sENVIRONMENT=web -sSTACK_SIZE=1MB"
     )
 

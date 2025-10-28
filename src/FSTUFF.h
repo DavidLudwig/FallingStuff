@@ -274,7 +274,7 @@ struct FSTUFF_Simulation {
     //
     // Misc State
     //
-    int32_t resetWorldCount = 0;
+    int32_t viewChangedCount = 0;
 
     //
     // User Interface

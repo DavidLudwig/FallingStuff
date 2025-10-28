@@ -379,33 +379,43 @@ void FSTUFF_Simulation::InitWorld()
     // Walls
     //
 
+    static const cpFloat wallThickness = 5.0;
+    const cpFloat wallLeft   = -wallThickness / 2.;
+    const cpFloat wallRight  = this->GetWorldWidth() + (wallThickness / 2.);
+    const cpFloat wallBottom = -wallThickness / 2.;
+    const cpFloat wallTop    = this->GetWorldHeight() * 2.;   // use a high ceiling, to make sure off-screen falling things don't go over walls
+    
+#if ! FSTUFF_USE_DEBUG_PEGS
+    // Bottom
     body = cpBodyInit(NewBody(), 0, 0);
     cpBodySetType(body, CP_BODY_TYPE_STATIC);
     cpSpaceAddBody(this->physicsSpace, body);
     cpBodySetPosition(body, cpv(0, 0));
-    static const cpFloat wallThickness = 5.0;
-    static const cpFloat wallLeft   = -wallThickness / 2.;
-    static const cpFloat wallRight  = this->GetWorldWidth() + (wallThickness / 2.);
-    static const cpFloat wallBottom = -wallThickness / 2.;
-    static const cpFloat wallTop    = this->GetWorldHeight() * 2.;   // use a high ceiling, to make sure off-screen falling things don't go over walls
-    
-#if ! FSTUFF_USE_DEBUG_PEGS
-    // Bottom
-    shape = (cpShape*)cpSegmentShapeInit(NewSegment(), body, cpv(wallLeft,wallBottom), cpv(wallRight,wallBottom), wallThickness/2.);
+    shape = (cpShape *)cpSegmentShapeInit(NewSegment(), body, cpv(wallLeft, wallBottom), cpv(wallRight, wallBottom), wallThickness / 2.);
     cpSpaceAddShape(this->physicsSpace, shape);
     cpShapeSetElasticity(shape, kElasticity);
     cpShapeSetFriction(shape, kFriction);
     cpShapeSetSurfaceVelocity(shape, kSurfaceVelocity);
     this->segmentColors[IndexOfSegment(shape)] = FSTUFF_Color(0x000000, 0x00);
+
     // Left
-    shape = (cpShape*)cpSegmentShapeInit(NewSegment(), body, cpv(wallLeft,wallBottom), cpv(wallLeft,wallTop), wallThickness/2.);
+    body = cpBodyInit(NewBody(), 0, 0);
+    cpBodySetType(body, CP_BODY_TYPE_STATIC);
+    cpSpaceAddBody(this->physicsSpace, body);
+    cpBodySetPosition(body, cpv(0, 0));
+    shape = (cpShape *)cpSegmentShapeInit(NewSegment(), body, cpv(wallLeft, wallBottom), cpv(wallLeft, wallTop), wallThickness / 2.);
     cpSpaceAddShape(this->physicsSpace, shape);
     cpShapeSetElasticity(shape, kElasticity);
     cpShapeSetFriction(shape, kFriction);
     cpShapeSetSurfaceVelocity(shape, kSurfaceVelocity);
     this->segmentColors[IndexOfSegment(shape)] = FSTUFF_Color(0x000000, 0x00);
+
     // Right
-    shape = (cpShape*)cpSegmentShapeInit(NewSegment(), body, cpv(wallRight,wallBottom), cpv(wallRight,wallTop), wallThickness/2.);
+    body = cpBodyInit(NewBody(), 0, 0);
+    cpBodySetType(body, CP_BODY_TYPE_STATIC);
+    cpSpaceAddBody(this->physicsSpace, body);
+    cpBodySetPosition(body, cpv(0, 0));
+    shape = (cpShape *)cpSegmentShapeInit(NewSegment(), body, cpv(wallRight, wallBottom), cpv(wallRight, wallTop), wallThickness / 2.);
     cpSpaceAddShape(this->physicsSpace, shape);
     cpShapeSetElasticity(shape, kElasticity);
     cpShapeSetFriction(shape, kFriction);
@@ -623,7 +633,6 @@ void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
 
 void FSTUFF_Simulation::ResetWorld()
 {
-    this->resetWorldCount++;
     this->ShutdownWorld();
     this->game = FSTUFF_Simulation::Resettable();
     this->InitWorld();
@@ -885,15 +894,16 @@ void FSTUFF_Simulation::Render()
 
 void FSTUFF_Simulation::ViewChanged(const FSTUFF_ViewSize & viewSize)
 {
+    this->viewChangedCount++;
     this->viewSize = viewSize;
     this->UpdateProjectionMatrix();
     FSTUFF_Assert(this->renderer);
     this->renderer->ViewChanged();
 
     // Reset the world when the view changes size
-    if (this->resetWorldCount > 0) {    // Don't reset on the very first ViewChanged call
+    if (this->viewChangedCount > 1) {    // Don't reset on the very first ViewChanged call
         this->game.forceResetEnabled = true;
-        this->game.forceResetInS = 0.5f; // Wait a little bit before resetting, in case multiple ViewChanged calls come in
+        this->game.forceResetInS = 2.0f; // Wait a little bit before resetting, in case multiple ViewChanged calls come in
     }
 }
 
@@ -905,11 +915,11 @@ void FSTUFF_Simulation::SetGlobalScale(cpVect scale)
 
 void FSTUFF_Simulation::UpdateProjectionMatrix()
 {
-    FSTUFF_Log("%s: viewSize=%f,%f (mm); globalScale=%f,%f\n",
-        __FUNCTION__,
-        this->viewSize.widthMM, this->viewSize.heightMM,
-        this->globalScale.x, this->globalScale.y
-    );
+    // FSTUFF_Log("%s: viewSize=%f,%f (mm); globalScale=%f,%f\n",
+    //     __FUNCTION__,
+    //     this->viewSize.widthMM, this->viewSize.heightMM,
+    //     this->globalScale.x, this->globalScale.y
+    // );
 
     //
     // Start by setting projectionMatrix to an identity matrix,
