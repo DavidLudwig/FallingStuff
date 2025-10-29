@@ -70,6 +70,10 @@
         z-index: 10;
       }
 
+      #app-controls.panel-visible {
+        pointer-events: auto;
+      }
+
       #options-button {
         position: absolute;
         top: 20px;
@@ -145,6 +149,7 @@
           e.stopPropagation();
           optionsButton.classList.add('hidden');
           optionsPanel.classList.add('visible');
+          appControls.classList.add('panel-visible');
         });
 
         // Hide options panel when clicking outside of it
@@ -152,6 +157,7 @@
           if (!optionsPanel.contains(e.target)) {
             optionsPanel.classList.remove('visible');
             optionsButton.classList.remove('hidden');
+            appControls.classList.remove('panel-visible');
           }
         });
 
