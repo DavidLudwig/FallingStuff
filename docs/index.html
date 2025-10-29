@@ -60,15 +60,107 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
+      #app-controls {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      #options-button {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        padding: 10px 20px;
+        background-color: rgba(255, 255, 255, 0.9);
+        border: 2px solid #333;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        pointer-events: auto;
+        transition: background-color 0.2s;
+      }
+
+      #options-button:hover {
+        background-color: rgba(255, 255, 255, 1);
+      }
+
+      #options-button.hidden {
+        display: none;
+      }
+
+      #options-panel {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        min-width: 250px;
+        padding: 20px;
+        background-color: rgba(255, 255, 255, 0.95);
+        border: 2px solid #333;
+        border-radius: 5px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        font-family: Arial, sans-serif;
+        pointer-events: auto;
+        display: none;
+      }
+
+      #options-panel.visible {
+        display: block;
+      }
+
+      #options-panel h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #ccc;
+      }
     </style>
   </head>
   <body>
     <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    <div id="app-controls">
+      <button id="options-button">Options</button>
+      <div id="options-panel">
+        <h3>Options</h3>
+        <!-- Options content will go here -->
+      </div>
+    </div>
     <div id="loading">
       <div class="spinner"></div>
       <div class="loading_text" id="loading_text">LOADING...</div>
     </div>
     <script type='text/javascript'>
+      // Handle options button and panel interactions
+      document.addEventListener('DOMContentLoaded', function() {
+        const optionsButton = document.getElementById('options-button');
+        const optionsPanel = document.getElementById('options-panel');
+        const appControls = document.getElementById('app-controls');
+
+        // Show options panel when button is clicked
+        optionsButton.addEventListener('click', function(e) {
+          e.stopPropagation();
+          optionsButton.classList.add('hidden');
+          optionsPanel.classList.add('visible');
+        });
+
+        // Hide options panel when clicking outside of it
+        appControls.addEventListener('click', function(e) {
+          if (!optionsPanel.contains(e.target)) {
+            optionsPanel.classList.remove('visible');
+            optionsButton.classList.remove('hidden');
+          }
+        });
+
+        // Prevent clicks inside the panel from closing it
+        optionsPanel.addEventListener('click', function(e) {
+          e.stopPropagation();
+        });
+      });
+
       var Module = {
         onAbort: function (err) {
           document.getElementById('loading_text').innerHTML = "ERROR!";
