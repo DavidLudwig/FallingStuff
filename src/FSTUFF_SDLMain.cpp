@@ -43,62 +43,92 @@ FSTUFF_SDLGLRenderer * renderer = nullptr;
 FSTUFF_Simulation * sim = nullptr;
 static bool didHideLoadingUI = false;
 
+void process_event(SDL_Event & e) {
+    switch (e.type) {
+        case SDL_KEYDOWN:
+        case SDL_KEYUP: {
+            const char * keyName = SDL_GetKeyName(e.key.keysym.sym);
+            const FSTUFF_EventType eventType = \
+                (e.type == SDL_KEYDOWN) ?
+                    FSTUFF_EventKeyDown :
+                    FSTUFF_EventKeyUp;
+            char32_t utf32Char = 0;
+            switch (e.key.keysym.sym) {
+                case SDLK_DOWN:
+                    utf32Char = U'↓';
+                    break;
+                case SDLK_LEFT:
+                    utf32Char = U'←';
+                    break;
+                case SDLK_RIGHT:
+                    utf32Char = U'→';
+                    break;
+                case SDLK_UP:
+                    utf32Char = U'↑';
+                    break;
+                default:
+                    break;
+            }
+            FSTUFF_Event fstuffEvent;
+            if (utf32Char != 0) {
+                fstuffEvent = FSTUFF_Event::NewKeyEvent(eventType, utf32Char);
+            } else {
+                fstuffEvent = FSTUFF_Event::NewKeyEvent(eventType, keyName);
+            }
+            sim->EventReceived(&fstuffEvent);
+        } break;
+
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONUP:
+        case SDL_MOUSEMOTION: {
+            const FSTUFF_CursorInfo cursorInfo = renderer->GetCursorInfo();
+            sim->UpdateCursorInfo(cursorInfo);
+        } break;
+
+        case SDL_QUIT:
+            std::exit(0);
+            break;
+        case SDL_WINDOWEVENT:
+            switch (e.window.event) {
+                #if !__EMSCRIPTEN__
+
+                case SDL_WINDOWEVENT_SIZE_CHANGED: {
+                    const FSTUFF_ViewSize viewSize = renderer->GetViewSize();
+                    sim->ViewChanged(viewSize);
+                } break;
+
+                #else
+
+                case SDL_WINDOWEVENT_RESIZED: {
+                    if (renderer && sim) {
+                        const FSTUFF_ViewSize viewSize = renderer->GetViewSize();
+                        sim->ViewChanged(viewSize);
+                    }
+                    break;
+                }
+
+                #endif
+            }
+            break;
+    }
+}
+
+int FSTUFF_SDL_EventWatcher(void * userdata, SDL_Event * event) {
+    if (!event) {
+        return 1;
+    }
+
+#if __EMSCRIPTEN__
+    process_event(*event);
+#endif
+
+    return 1;
+}
+
 void tick() {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
-        switch (e.type) {
-            case SDL_KEYDOWN:
-            case SDL_KEYUP: {
-                const char * keyName = SDL_GetKeyName(e.key.keysym.sym);
-                const FSTUFF_EventType eventType = \
-                    (e.type == SDL_KEYDOWN) ?
-                        FSTUFF_EventKeyDown :
-                        FSTUFF_EventKeyUp;
-                char32_t utf32Char = 0;
-                switch (e.key.keysym.sym) {
-                    case SDLK_DOWN:
-                        utf32Char = U'↓';
-                        break;
-                    case SDLK_LEFT:
-                        utf32Char = U'←';
-                        break;
-                    case SDLK_RIGHT:
-                        utf32Char = U'→';
-                        break;
-                    case SDLK_UP:
-                        utf32Char = U'↑';
-                        break;
-                    default:
-                        break;
-                }
-                FSTUFF_Event fstuffEvent;
-                if (utf32Char != 0) {
-                    fstuffEvent = FSTUFF_Event::NewKeyEvent(eventType, utf32Char);
-                } else {
-                    fstuffEvent = FSTUFF_Event::NewKeyEvent(eventType, keyName);
-                }
-                sim->EventReceived(&fstuffEvent);
-            } break;
-
-            case SDL_MOUSEBUTTONDOWN:
-            case SDL_MOUSEBUTTONUP:
-            case SDL_MOUSEMOTION: {
-                const FSTUFF_CursorInfo cursorInfo = renderer->GetCursorInfo();
-                sim->UpdateCursorInfo(cursorInfo);
-            } break;
-
-            case SDL_QUIT:
-                std::exit(0);
-                break;
-            case SDL_WINDOWEVENT:
-                switch (e.window.event) {
-                    case SDL_WINDOWEVENT_SIZE_CHANGED: {
-                        const FSTUFF_ViewSize viewSize = renderer->GetViewSize();
-                        sim->ViewChanged(viewSize);
-                    } break;
-                }
-                break;
-        }
+        process_event(e);
     }
 
     if (SDL_GL_MakeCurrent(renderer->window, renderer->gl) != 0) {
