@@ -78,15 +78,20 @@
         position: absolute;
         top: 20px;
         left: 20px;
-        padding: 10px 20px;
+        padding: 8px;
         background-color: rgba(255, 255, 255, 0.9);
         border: 2px solid #333;
         border-radius: 5px;
         cursor: pointer;
-        font-family: Arial, sans-serif;
-        font-size: 14px;
         pointer-events: auto;
         transition: background-color 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        font-size: 32px;
+        color: #333;
       }
 
       #options-button:hover {
@@ -127,7 +132,7 @@
   <body>
     <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
     <div id="app-controls">
-      <button id="options-button">Options</button>
+      <button id="options-button">⚙</button>
       <div id="options-panel">
         <h3>Options</h3>
         <!-- Options content will go here -->
