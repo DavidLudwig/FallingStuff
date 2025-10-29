@@ -58,6 +58,8 @@ FSTUFF_SDLGLRenderer * renderer = nullptr;
 FSTUFF_Simulation * sim = nullptr;
 static bool didHideLoadingUI = false;
 
+void tick();
+
 #if __EMSCRIPTEN__
 
 struct CanvasState {
@@ -79,8 +81,8 @@ EM_BOOL onRender(double time, void *userData) {
         canvasState.needsResize = false;
     }
 
-    // Your drawing code here
-    
+    tick();
+    emscripten_request_animation_frame(onRender, nullptr);
     return EM_TRUE;
 }
 
@@ -212,6 +214,8 @@ int FSTUFF_SDL_EventWatcher(void * userdata, SDL_Event * event) {
 }
 
 void tick() {
+    // FSTUFF_Log("tick\n");
+
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         process_event(e);
@@ -309,7 +313,7 @@ int main(int, char **) {
 
 #if __EMSCRIPTEN__
     start_application();
-    emscripten_set_main_loop(tick, 0, 1);
+    // emscripten_set_main_loop(tick, 0, 1);
 #else
     while (true) {
         tick();
