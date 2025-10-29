@@ -121,11 +121,37 @@
         display: block;
       }
 
-      #options-panel h3 {
-        margin-top: 0;
+      #options-panel-header {
+        display: flex;
+        align-items: center;
         margin-bottom: 15px;
         padding-bottom: 10px;
         border-bottom: 1px solid #ccc;
+      }
+
+      #options-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        margin: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+        transition: color 0.2s;
+      }
+
+      #options-close:hover {
+        color: #000;
+      }
+
+      #options-panel h3 {
+        margin: 0;
+        margin-left: 10px;
       }
     </style>
   </head>
@@ -134,7 +160,10 @@
     <div id="app-controls">
       <button id="options-button">⚙</button>
       <div id="options-panel">
-        <h3>Options</h3>
+        <div id="options-panel-header">
+          <button id="options-close">×</button>
+          <h3>Options</h3>
+        </div>
         <!-- Options content will go here -->
       </div>
     </div>
@@ -147,7 +176,14 @@
       document.addEventListener('DOMContentLoaded', function() {
         const optionsButton = document.getElementById('options-button');
         const optionsPanel = document.getElementById('options-panel');
+        const optionsClose = document.getElementById('options-close');
         const appControls = document.getElementById('app-controls');
+
+        function hideOptionsPanel() {
+          optionsPanel.classList.remove('visible');
+          optionsButton.classList.remove('hidden');
+          appControls.classList.remove('panel-visible');
+        }
 
         // Show options panel when button is clicked
         optionsButton.addEventListener('click', function(e) {
@@ -157,12 +193,16 @@
           appControls.classList.add('panel-visible');
         });
 
+        // Hide options panel when close button is clicked
+        optionsClose.addEventListener('click', function(e) {
+          e.stopPropagation();
+          hideOptionsPanel();
+        });
+
         // Hide options panel when clicking outside of it
         appControls.addEventListener('click', function(e) {
           if (!optionsPanel.contains(e.target)) {
-            optionsPanel.classList.remove('visible');
-            optionsButton.classList.remove('hidden');
-            appControls.classList.remove('panel-visible');
+            hideOptionsPanel();
           }
         });
 
