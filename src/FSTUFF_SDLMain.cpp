@@ -123,6 +123,11 @@ extern "C" {
         emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, 
                                        nullptr, false, onWindowResize);
         
+        // Disable keyboard event handling by SDL, so as to not interfere with browser keyboard handling
+        emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, nullptr);
+        emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, nullptr);
+        emscripten_set_keypress_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, nullptr);
+
         // Start render loop
         emscripten_request_animation_frame(onRender, nullptr);
     }
