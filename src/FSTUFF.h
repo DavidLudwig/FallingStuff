@@ -133,8 +133,8 @@ struct FSTUFF_ViewSize {
     float heightMM      = 0.f;
     int widthPixels     = 0;
     int heightPixels    = 0;
-    int widthOS         = 0;
-    int heightOS        = 0;
+    double widthOS      = 0;
+    double heightOS     = 0;
 };
 
 struct FSTUFF_CursorInfo {

@@ -8,8 +8,8 @@
 
 #if __EMSCRIPTEN__
 #include <emscripten.h>
+#include <emscripten/html5.h>
 #endif
-
 
 struct FSTUFF_SDLGLRenderer : public FSTUFF_GLESRenderer {
     SDL_Window * window = nullptr;
@@ -18,12 +18,27 @@ struct FSTUFF_SDLGLRenderer : public FSTUFF_GLESRenderer {
     FSTUFF_ViewSize GetViewSize()
     {
         FSTUFF_ViewSize vs;
+
+        #if __EMSCRIPTEN__
+
+        emscripten_get_canvas_element_size("#canvas", &vs.widthPixels, &vs.heightPixels);
+        emscripten_get_element_css_size("#canvas", &vs.widthOS, &vs.heightOS);
+
+        const double dpr = emscripten_get_device_pixel_ratio();
+        vs.widthOS *= dpr;
+        vs.heightOS *= dpr;
+
+        #else
+
         SDL_GetWindowSize(window, &vs.widthOS, &vs.heightOS);
         SDL_GL_GetDrawableSize(window, &vs.widthPixels, &vs.heightPixels);
 
-        const float osToMMApproximate = 1.f/4.f;
+        #endif
+
+        const float osToMMApproximate = 1.f / 4.f;
         vs.widthMM = vs.widthOS * osToMMApproximate;
         vs.heightMM = vs.heightOS * osToMMApproximate;
+
         return vs;
     }
 
@@ -42,6 +57,77 @@ struct FSTUFF_SDLGLRenderer : public FSTUFF_GLESRenderer {
 FSTUFF_SDLGLRenderer * renderer = nullptr;
 FSTUFF_Simulation * sim = nullptr;
 static bool didHideLoadingUI = false;
+
+#if __EMSCRIPTEN__
+
+struct CanvasState {
+    double width = 0;
+    double height = 0;
+    bool needsResize = false;
+};
+
+CanvasState canvasState;
+
+EM_BOOL onRender(double time, void *userData) {
+    // FSTUFF_Log("onRender: time=%f\n", time);
+
+    if (canvasState.needsResize)
+    {
+        emscripten_set_canvas_element_size("#canvas", 
+                                           canvasState.width, 
+                                           canvasState.height);
+        canvasState.needsResize = false;
+    }
+
+    // Your drawing code here
+    
+    return EM_TRUE;
+}
+
+EM_BOOL onWindowResize(int eventType, const EmscriptenUiEvent *e, void *userData) {
+    FSTUFF_Log("onWindowResize: eventType=%d\n", eventType);
+
+    double width, height;
+    emscripten_get_element_css_size("#canvas", &width, &height);
+
+    if (renderer && sim) {
+        FSTUFF_ViewSize viewSize = renderer->GetViewSize();
+        sim->ViewChanged(viewSize);
+    }
+    
+    if (canvasState.width != width || canvasState.height != height) {
+        canvasState.width = width;
+        canvasState.height = height;
+        canvasState.needsResize = true;
+        emscripten_request_animation_frame(onRender, nullptr);
+    }
+    
+    return EM_TRUE;
+}
+
+// This gets called when everything is ready
+extern "C" {
+    EMSCRIPTEN_KEEPALIVE
+    void start_application() {
+        FSTUFF_Log("start_application\n");
+
+        // Initialize canvas size
+        emscripten_get_element_css_size("#canvas", 
+                                        &canvasState.width, 
+                                        &canvasState.height);
+        canvasState.needsResize = true;
+        
+        // Set up event listeners
+        emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, 
+                                       nullptr, false, onWindowResize);
+        
+        // Start render loop
+        emscripten_request_animation_frame(onRender, nullptr);
+    }
+}
+
+#endif
+
 
 void process_event(SDL_Event & e) {
     switch (e.type) {
@@ -99,13 +185,13 @@ void process_event(SDL_Event & e) {
 
                 #else
 
-                case SDL_WINDOWEVENT_RESIZED: {
-                    if (renderer && sim) {
-                        const FSTUFF_ViewSize viewSize = renderer->GetViewSize();
-                        sim->ViewChanged(viewSize);
-                    }
-                    break;
-                }
+                // case SDL_WINDOWEVENT_RESIZED: {
+                //     if (renderer && sim) {
+                //         const FSTUFF_ViewSize viewSize = renderer->GetViewSize();
+                //         sim->ViewChanged(viewSize);
+                //     }
+                //     break;
+                // }
 
                 #endif
             }
@@ -222,6 +308,7 @@ int main(int, char **) {
     sim->Init();
 
 #if __EMSCRIPTEN__
+    start_application();
     emscripten_set_main_loop(tick, 0, 1);
 #else
     while (true) {
