@@ -241,6 +241,28 @@
       #reset-button:active {
         background-color: #061A33;
       }
+
+      #fullscreen-button {
+        width: 100%;
+        padding: 10px;
+        background-color: #2A2A2A;
+        color: white;
+        border: 1px solid #555;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.2s, box-shadow 0.2s;
+      }
+
+      #fullscreen-button:hover {
+        background-color: #3A3A3A;
+        box-shadow: 0 0 10px rgba(42, 42, 42, 0.3);
+      }
+
+      #fullscreen-button:active {
+        background-color: #1A1A1A;
+      }
     </style>
   </head>
   <body>
@@ -267,6 +289,8 @@
           <input type="range" class="option-slider" id="spawn-rate-slider" min="0" max="10" value="5" step="0.1">
         </div>
         <button id="reset-button">Reset Simulation</button>
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #444;">
+        <button id="fullscreen-button">Toggle Fullscreen</button>
       </div>
     </div>
     <div id="loading">
@@ -327,6 +351,31 @@
             // You can call your Emscripten module functions here when connected
             // For example: Module.ccall('resetSimulation', null, [], []);
             Module.ccall('ResetWorld', null, [], []);
+          });
+
+          // Handle fullscreen button
+          const fullscreenButton = document.getElementById('fullscreen-button');
+          fullscreenButton.addEventListener('click', function (e) {
+            if (!document.fullscreenElement) {
+              // Enter fullscreen
+              const elem = document.documentElement;
+              if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+              } else if (elem.webkitRequestFullscreen) { // Safari
+                elem.webkitRequestFullscreen();
+              } else if (elem.msRequestFullscreen) { // IE/Edge
+                elem.msRequestFullscreen();
+              }
+            } else {
+              // Exit fullscreen
+              if (document.exitFullscreen) {
+                document.exitFullscreen();
+              } else if (document.webkitExitFullscreen) { // Safari
+                document.webkitExitFullscreen();
+              } else if (document.msExitFullscreen) { // IE/Edge
+                document.msExitFullscreen();
+              }
+            }
           });
 
           // Connect sliders to Emscripten module functions
