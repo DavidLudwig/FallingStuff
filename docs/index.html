@@ -219,10 +219,9 @@
         box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
       }
 
-      #reset-button {
+      .option-button {
         width: 100%;
         padding: 10px;
-        margin-top: 20px;
         background-color: #0A2E5C;
         color: white;
         border: 1px solid #1976D2;
@@ -233,35 +232,21 @@
         transition: background-color 0.2s, box-shadow 0.2s;
       }
 
-      #reset-button:hover {
+      .option-button:hover {
         background-color: #0D47A1;
         box-shadow: 0 0 10px rgba(10, 46, 92, 0.3);
       }
 
-      #reset-button:active {
+      .option-button:active {
         background-color: #061A33;
       }
 
+      #reset-button {
+        margin-top: 20px;
+      }
+
       #fullscreen-button {
-        width: 100%;
-        padding: 10px;
-        background-color: #2A2A2A;
-        color: white;
-        border: 1px solid #555;
-        border-radius: 4px;
-        font-size: 14px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background-color 0.2s, box-shadow 0.2s;
-      }
-
-      #fullscreen-button:hover {
-        background-color: #3A3A3A;
-        box-shadow: 0 0 10px rgba(42, 42, 42, 0.3);
-      }
-
-      #fullscreen-button:active {
-        background-color: #1A1A1A;
+        /* Uses shared .option-button styling */
       }
     </style>
   </head>
@@ -288,9 +273,9 @@
           </div>
           <input type="range" class="option-slider" id="spawn-rate-slider" min="0" max="10" value="5" step="0.1">
         </div>
-        <button id="reset-button">Reset Simulation</button>
+        <button id="reset-button" class="option-button">Reset Simulation</button>
         <hr style="margin: 20px 0; border: none; border-top: 1px solid #444;">
-        <button id="fullscreen-button">Toggle Fullscreen</button>
+        <button id="fullscreen-button" class="option-button">Toggle Fullscreen</button>
       </div>
     </div>
     <div id="loading">
