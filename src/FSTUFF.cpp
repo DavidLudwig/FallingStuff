@@ -611,11 +611,11 @@ bool FSTUFF_Simulation::DidInit() const
 }
 
 FSTUFF_Simulation::FSTUFF_Simulation() {
-    FSTUFF_Log("%s, this:%p\n", __FUNCTION__, this);
+    // FSTUFF_Log("%s, this:%p\n", __FUNCTION__, this);
 }
 
 FSTUFF_Simulation::~FSTUFF_Simulation() {
-    FSTUFF_Log("%s, this:%p, this->state:%d\n", __FUNCTION__, this, this->state);
+    // FSTUFF_Log("%s, this:%p, this->state:%d\n", __FUNCTION__, this, this->state);
 }
 
 
@@ -645,8 +645,7 @@ void FSTUFF_FatalError_Inner(FSTUFF_CodeLocation codeLocation, const char * fmt,
 
 void FSTUFF_Simulation::Init() //, void * gpuDevice, void * nativeView)
 {
-    FSTUFF_Log("%s, this:%p, state:%d, renderer:%p\n",
-        __FUNCTION__, this, this->state, this->renderer);
+    // FSTUFF_Log("%s, this:%p, state:%d, renderer:%p\n", __FUNCTION__, this, this->state, this->renderer);
 
     // FSTUFF_FatalError("uh oh: %d", 123);
     

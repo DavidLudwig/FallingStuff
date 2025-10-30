@@ -278,12 +278,12 @@ FSTUFF_GLESRenderer::FSTUFF_GLESRenderer() {
 void FSTUFF_GLESRenderer::Init() {
     const char * info = nullptr;
 
-    info = (const char *) glGetString(GL_VERSION);
-    FSTUFF_Log("GL version: \"%s\"\n", (info ? info : ""));
+    // info = (const char *) glGetString(GL_VERSION);
+    // FSTUFF_Log("GL version: \"%s\"\n", (info ? info : ""));
 
-    info = (const char *) glGetString(GL_SHADING_LANGUAGE_VERSION);
-    FSTUFF_Log("GLSL version: \"%s\"\n", (info ? info : ""));
-    FSTUFF_GLCheck();
+    // info = (const char *) glGetString(GL_SHADING_LANGUAGE_VERSION);
+    // FSTUFF_Log("GLSL version: \"%s\"\n", (info ? info : ""));
+    // FSTUFF_GLCheck();
     
     FSTUFF_Assert((bool)this->getProcAddress);
     this->glGetStringi = (decltype(this->glGetStringi)) this->getProcAddress("glGetStringi");
@@ -292,8 +292,8 @@ void FSTUFF_GLESRenderer::Init() {
     {
         int numExtensions = 0;
         glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
-        FSTUFF_Log("GL num extensions: %d\n", numExtensions);
-        FSTUFF_Log("GL extensions: ");
+        // FSTUFF_Log("GL num extensions: %d\n", numExtensions);
+        // FSTUFF_Log("GL extensions: ");
         for (int i = 0; i < numExtensions; ++i) {
             info = (const char *) this->glGetStringi(GL_EXTENSIONS, i);
             FSTUFF_Log("%s ", (info ? info : ""));
@@ -304,7 +304,7 @@ void FSTUFF_GLESRenderer::Init() {
         FSTUFF_Log("\n");
     } else {
         info = (const char *) glGetString(GL_EXTENSIONS);
-        FSTUFF_Log("GL extensions: \"%s\"\n", (info ? info : ""));
+        // FSTUFF_Log("GL extensions: \"%s\"\n", (info ? info : ""));
         if (info) {
             // Copy the list of extensions into an indexed collection
             const char * start = info;

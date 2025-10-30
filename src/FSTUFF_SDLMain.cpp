@@ -111,8 +111,6 @@ EM_BOOL onWindowResize(int eventType, const EmscriptenUiEvent *e, void *userData
 extern "C" {
     EMSCRIPTEN_KEEPALIVE
     void start_application() {
-        FSTUFF_Log("start_application\n");
-
         // Initialize canvas size
         emscripten_get_element_css_size("#canvas", 
                                         &canvasState.width, 
