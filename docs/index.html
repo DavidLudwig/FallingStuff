@@ -284,7 +284,6 @@
         function hideOptionsPanel() {
           optionsPanel.classList.remove('visible');
           optionsButton.classList.remove('hidden');
-          appControls.classList.remove('panel-visible');
         }
 
         // Show options panel when button is clicked
@@ -292,25 +291,12 @@
           e.stopPropagation();
           optionsButton.classList.add('hidden');
           optionsPanel.classList.add('visible');
-          appControls.classList.add('panel-visible');
         });
 
         // Hide options panel when close button is clicked
         optionsClose.addEventListener('click', function(e) {
           e.stopPropagation();
           hideOptionsPanel();
-        });
-
-        // Hide options panel when clicking outside of it
-        appControls.addEventListener('click', function(e) {
-          if (!optionsPanel.contains(e.target)) {
-            hideOptionsPanel();
-          }
-        });
-
-        // Prevent clicks inside the panel from closing it
-        optionsPanel.addEventListener('click', function(e) {
-          e.stopPropagation();
         });
 
         // Handle slider updates
