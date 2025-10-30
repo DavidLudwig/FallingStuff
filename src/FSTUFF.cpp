@@ -35,11 +35,68 @@
 
 // #define FSTUFF_USE_DEBUG_PEGS 1
 
+#pragma mark - Global state
+extern FSTUFF_Simulation *sim;
+
+
+#pragma mark - JavaScript / Emscripten Interop
+#if __EMSCRIPTEN__
+
+EM_JS(void, FSTUFF_OnSimInitSignalEmscripten, (), {
+    if (typeof Module.FSTUFF_OnSimInitSignal === 'function') {
+        Module.FSTUFF_OnSimInitSignal();
+    }
+});
+
+extern "C" {
+    EMSCRIPTEN_KEEPALIVE
+    void ResetWorld()
+    {
+        if (sim) {
+            sim->ResetWorld();
+        }
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    int GetMaxMarbles()
+    {
+        if (sim) {
+            return sim->marblesMax;
+        }
+        return 0;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void SetMaxMarbles(int maxMarbles)
+    {
+        if (sim) {
+            sim->marblesMax = maxMarbles;
+        }
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    float GetSpawnRate()
+    {
+        if (sim) {
+            return sim->addNumMarblesPerSecond;
+        }
+        return 0.f;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void SetSpawnRate(float marblesPerSecond)
+    {
+        if (sim) {
+            sim->addNumMarblesPerSecond = marblesPerSecond;
+        }
+    }
+}
+#endif
 
 
 #pragma mark - Random Number Generation
 
-cpFloat FSTUFF_RandRangeF(std::mt19937 & rng, cpFloat a, cpFloat b)
+cpFloat FSTUFF_RandRangeF(std::mt19937 &rng, cpFloat a, cpFloat b)
 {
     std::uniform_real_distribution<cpFloat> distribution(a, b);
     return distribution(rng);
@@ -61,7 +118,6 @@ void FSTUFF_OpenWebPage(const char * url) {
     emscripten_run_script(buf);
 #endif
 }
-
 
 #pragma mark - Rendering
 
@@ -638,21 +694,6 @@ void FSTUFF_Simulation::ResetWorld()
     this->InitWorld();
 }
 
-#if __EMSCRIPTEN__
-
-extern FSTUFF_Simulation * sim;
-
-extern "C" {
-    EMSCRIPTEN_KEEPALIVE
-    void ResetWorld()
-    {
-        if (sim) {
-            sim->ResetWorld();
-        }
-    }
-}
-#endif
-
 void FSTUFF_Simulation::Update()
 {
     // Initialize the simulation, if need be.
@@ -660,6 +701,13 @@ void FSTUFF_Simulation::Update()
 //        this->renderer->ViewChanged();
         this->Init();
     }
+
+#if __EMSCRIPTEN__
+    if (! this->didSignalInit) {
+        this->didSignalInit = true;
+        FSTUFF_OnSimInitSignalEmscripten();
+    }
+#endif
 
     // Compute current time
     //

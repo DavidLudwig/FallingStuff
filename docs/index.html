@@ -313,17 +313,45 @@
           spawnRateValue.textContent = parseFloat(e.target.value).toFixed(1);
         });
 
-        // Handle reset button
-        const resetButton = document.getElementById('reset-button');
-        resetButton.addEventListener('click', function(e) {
-          // This will need to be connected to your actual simulation reset logic
-          // You can call your Emscripten module functions here when connected
-          // For example: Module.ccall('resetSimulation', null, [], []);
-          Module.ccall('ResetWorld', null, [], []);
-        });
       });
 
       var Module = {
+        onRuntimeInitialized: function() {
+        },
+        FSTUFF_OnSimInitSignal: function() {
+          // console.log("FSTUFF_OnSimInitSignal called");
+          // Handle reset button
+          const resetButton = document.getElementById('reset-button');
+          resetButton.addEventListener('click', function (e) {
+            // This will need to be connected to your actual simulation reset logic
+            // You can call your Emscripten module functions here when connected
+            // For example: Module.ccall('resetSimulation', null, [], []);
+            Module.ccall('ResetWorld', null, [], []);
+          });
+
+          // Connect sliders to Emscripten module functions
+          const maxMarblesSlider = document.getElementById('max-marbles-slider');
+          const maxMarblesLabel = document.getElementById('max-marbles-value');
+          const maxMarblesValue = Module.ccall('GetMaxMarbles', 'number', [], []);
+          maxMarblesSlider.value = maxMarblesValue;
+          maxMarblesLabel.textContent = maxMarblesValue;          
+          maxMarblesSlider.addEventListener('input', function (e) {
+            console.log("Max Marbles slider changed");
+            const value = parseInt(e.target.value);
+            Module.ccall('SetMaxMarbles', null, ['number'], [value]);
+          });
+
+          const spawnRateSlider = document.getElementById('spawn-rate-slider');
+          const spawnRateLabel = document.getElementById('spawn-rate-value');
+          const spawnRateValue = Module.ccall('GetSpawnRate', 'number', [], []);
+          spawnRateSlider.value = spawnRateValue;
+          spawnRateLabel.textContent = spawnRateValue.toFixed(1);
+          spawnRateSlider.addEventListener('input', function (e) {
+            const value = parseFloat(e.target.value);
+            Module.ccall('SetSpawnRate', null, ['number'], [value]);
+          });
+
+        },
         onAbort: function (err) {
           document.getElementById('loading_text').innerHTML = "ERROR!";
         },

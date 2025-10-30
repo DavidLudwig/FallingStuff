@@ -274,6 +274,7 @@ struct FSTUFF_Simulation {
     //
     // Misc State
     //
+    bool didSignalInit = false;
     int32_t viewChangedCount = 0;
 
     //
