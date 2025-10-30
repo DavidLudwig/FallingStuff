@@ -638,6 +638,21 @@ void FSTUFF_Simulation::ResetWorld()
     this->InitWorld();
 }
 
+#if __EMSCRIPTEN__
+
+extern FSTUFF_Simulation * sim;
+
+extern "C" {
+    EMSCRIPTEN_KEEPALIVE
+    void ResetWorld()
+    {
+        if (sim) {
+            sim->ResetWorld();
+        }
+    }
+}
+#endif
+
 void FSTUFF_Simulation::Update()
 {
     // Initialize the simulation, if need be.

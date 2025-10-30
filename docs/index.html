@@ -331,9 +331,9 @@
         const resetButton = document.getElementById('reset-button');
         resetButton.addEventListener('click', function(e) {
           // This will need to be connected to your actual simulation reset logic
-          console.log('Reset simulation clicked');
           // You can call your Emscripten module functions here when connected
           // For example: Module.ccall('resetSimulation', null, [], []);
+          Module.ccall('ResetWorld', null, [], []);
         });
       });
 

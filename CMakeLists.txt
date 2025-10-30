@@ -113,7 +113,7 @@ target_link_libraries(FallingStuff
 if (EMSCRIPTEN)
     # EMSCRIPTEN_OPTIONS is for '-s KEY=VALUE' options, some of which are
     # needed when compiling, and others when linking.
-    set(EMSCRIPTEN_OPTIONS "-sUSE_SDL=2") # -g")
+    set(EMSCRIPTEN_OPTIONS "-sUSE_SDL=2 -sEXPORTED_RUNTIME_METHODS=ccall") # -g")
 
     set_target_properties(FallingStuff
         PROPERTIES
