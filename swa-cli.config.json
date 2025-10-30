@@ -1,0 +1,9 @@
+{
+  "$schema": "https://aka.ms/azure/static-web-apps-cli/schema",
+  "configurations": {
+    "\u0016fallingstuff": {
+      "appLocation": "build-release",
+      "outputLocation": "."
+    }
+  }
+}
